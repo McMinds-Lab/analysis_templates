@@ -151,7 +151,7 @@ system(paste0('sed \'1d\' ', file.path(output_prefix,'zip_test_data_3.json'), ' 
 cmdstanr::write_stan_json(inits, file.path(output_prefix,'zip_test_inits.json'))
 
 setwd(cmdstanr::cmdstan_path())
-system(paste0('make ', file.path(model_dir,'zip_glm')))
+system(paste0(c('make ', 'make STAN_OPENCL=true ')[opencl+1], file.path(model_dir,'zip_glm')))
 
 sampling_commands <- list(hmc = paste('./zip_glm',
                                       paste0('data file=',file.path(output_prefix,'zip_test_data.json')),
