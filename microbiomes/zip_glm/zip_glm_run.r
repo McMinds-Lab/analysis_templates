@@ -168,7 +168,7 @@ sampling_commands <- list(hmc = paste('./zip_glm',
                                       'kappa=0.75',
                                       'num_warmup=200',
                                       'num_samples=200',
-                                      ('opencl platform=0 device=0')[opencl],
+                                      ('opencl platform=0 device=1')[opencl],
                                       sep=' '),
                           advi = paste('./zip_glm',
                                        paste0('data file=',file.path(output_prefix,'zip_test_data.json')),
@@ -185,7 +185,7 @@ sampling_commands <- list(hmc = paste('./zip_glm',
                                        'tol_rel_obj=0.001',
                                        #'eval_elbo=1',
                                        'output_samples=1000',
-                                       ('opencl platform=0 device=0')[opencl],
+                                       ('opencl platform=0 device=1')[opencl],
                                        sep=' '))
 
 setwd(model_dir)
