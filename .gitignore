@@ -1,2 +1,4 @@
+*local_dev
 *.env
 *DS_Store
+.Rapp.history
