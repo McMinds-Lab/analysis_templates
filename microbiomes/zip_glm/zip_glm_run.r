@@ -180,12 +180,12 @@ sampling_commands <- list(hmc = paste('./zip_glm',
                                        #'grad_samples=1',
                                        #'elbo_samples=1',
                                        'iter=20000',
-                                       'eta=0.1',
+                                       'eta=0.01',
                                        'adapt engaged=0',
                                        'tol_rel_obj=0.001',
                                        #'eval_elbo=1',
                                        'output_samples=1000',
-                                       ('opencl platform=0 device=1')[opencl],
+                                       (paste0('opencl platform=0 device=', opencl_device))[opencl],
                                        sep=' '))
 
 setwd(model_dir)
