@@ -52,7 +52,7 @@ parameters {
     vector<lower=0>[(NSB+K_s)*(NFB+K_f)-2] sd_prevalence_norm;
     vector<lower=0>[(NSB+K_s)*(NFB+K_f-1)-1] sd_abundance_norm;
     matrix[NB_s+K_s,NB_f+K_f] beta_prevalence_tilde;
-    matrix[NB_s+K_s,NB_s-1+K_f] beta_abundance_tilde;
+    matrix[NB_s+K_s,NB_f-1+K_f] beta_abundance_tilde;
     cholesky_factor_cov[NS,K_s] L_s;
     cholesky_factor_cov[NF,K_f] L_f;
     vector[NS] multinomial_nuisance;
