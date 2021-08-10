@@ -34,6 +34,7 @@ data {
 transformed data {
     matrix[NB_s+K_s,NB_s+K_s] X_s_full = append_row(append_col(append_col(R_inv_s, Q_I_s), rep_matrix(0,NB_s,K_s)), append_col(rep_matrix(0,K_s,NB_s), identity_matrix(K_s)));
     matrix[NB_f+K_f,NB_f+K_f] X_f_full = append_col(append_row(append_row(R_inv_f, Q_I_f), rep_matrix(0,K_f,NB_f)), append_row(rep_matrix(0,NB_f,K_f), identity_matrix(K_f)));
+    matrix[NB_f-1+K_f,NB_f-1+K_f] X_f2_full = append_col(append_row(append_row(R_inv_f[2:,2:], Q_I_f2), rep_matrix(0,K_f,NB_f-1)), append_row(rep_matrix(0,NB_f-1,K_f), identity_matrix(K_f)));
     array[NB_f-1] int idx_f2;
     array[NB_s+K_s] int idxk_s;
     array[NB_f+K_f] int idxk_f;
@@ -61,7 +62,7 @@ transformed parameters {
     matrix<lower=0>[NSB+K_s,NFB+K_f] sd_prevalence = to_matrix(append_row(100 * global_scale_prevalence, append_row(sd_prevalence_norm, global_scale_prevalence)), NSB+K_s, NFB+K_f) * prior_scale_p;
     matrix<lower=0>[NSB+K_s,NFB+K_f-1] sd_abundance = to_matrix(append_row(sd_abundance_norm, global_scale_abundance), NSB+K_s, NFB+K_f-1) * prior_scale_a;
     matrix[NB_s+K_s,NB_f+K_f] beta_prevalence = X_s_full * beta_prevalence_tilde * X_f_full;
-    matrix[NB_s+K_s,NB_f+K_f-1] beta_abundance = X_s_full * beta_abundance_tilde * X_f_full[2:,];
+    matrix[NB_s+K_s,NB_f-1+K_f] beta_abundance = X_s_full * beta_abundance_tilde * X_f2_full;
 }
 model {
     matrix[NS,rank_X_s+K_s] QL_s = append_col(Q_s,L_s);
