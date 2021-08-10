@@ -67,9 +67,9 @@ model {
     matrix[NS,rank_X_s+K_s] QL_s = append_col(Q_s,L_s);
     matrix[rank_X_f+K_f,NF] QL_f = append_row(Q_f,L_f');
     matrix[NS,NF] prevalence
-        = QL_s * beta_prevalence_tilde[1:rank_X_s,1:rank_X_f] * QL_f;
+        = QL_s * beta_prevalence_tilde[1:(rank_X_s+K_s),1:(rank_X_f+K_f)] * QL_f;
     matrix[NS,NF] abundance
-        = QL_s * beta_abundance_tilde[1:rank_X_s,1:(rank_X_f-1)] * QL_f[2:,]
+        = QL_s * beta_abundance_tilde[1:(rank_X_s+K_s),1:(rank_X_f-1+K_f)] * QL_f[2:,]
           + rep_matrix(multinomial_nuisance, NF);
     // priors
     target += std_normal_lpdf(global_scale_prevalence);
