@@ -132,7 +132,7 @@ standat <- list(NS       = NS,
                 K_s      = K_s,
                 K_f      = K_f)
 
-beta_abundance_tilde_init <- cbind(rbind(t(Q_s / (NS-1)) %*% logcountsmod %*% Q_f[,-1] / (NF-1), matrix(0, nrow=K_s, ncol=rank_X_f-1)), matrix(0, nrow=rank_X_s+K_s, ncol=K_f))
+beta_abundance_tilde_init <- cbind(rbind(t(Q_s / (NS-1)) %*% logcountsmod %*% Q_f[,-1] / (NF-1), matrix(0, nrow=(NB_s-rank_X_s)+K_s, ncol=rank_X_f-1)), matrix(0, nrow=NB_s+K_s, ncol=(NB_f-rank_X_f)+K_f))
 
 inits <- list(beta_abundance_tilde = beta_abundance_tilde_init,
               multinomial_nuisance = apply(logcountsmod,1,mean))
