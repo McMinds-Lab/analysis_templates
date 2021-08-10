@@ -32,8 +32,8 @@ data {
     int K_f;
 }
 transformed data {
-    matrix[NB_s+K_s,NB_s+K_s] X_s_full = append_row(append_col(R_inv_s, Q_I_s), append_col(rep_matrix(0,K_s,K_s), identity_matrix(K_s)));
-    matrix[NB_f+K_f,NB_f+K_f] X_f_full = append_col(append_row(R_inv_f, Q_I_f), append_row(rep_matrix(0,K_f,K_f), identity_matrix(K_f)));
+    matrix[NB_s+K_s,NB_s+K_s] X_s_full = append_row(append_col(R_inv_s, Q_I_s), append_col(rep_matrix(0,K_s,NB_s), identity_matrix(K_s)));
+    matrix[NB_f+K_f,NB_f+K_f] X_f_full = append_col(append_row(R_inv_f, Q_I_f), append_row(rep_matrix(0,NB_f,K_f), identity_matrix(K_f)));
     array[NB_f-1] int idx_f2;
     array[NB_s+K_s] int idxk_s;
     array[NB_f+K_f] int idxk_f;
