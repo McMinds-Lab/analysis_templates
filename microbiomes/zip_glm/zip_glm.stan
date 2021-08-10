@@ -34,7 +34,7 @@ data {
 transformed data {
     matrix[NB_s+K_s,NB_s+K_s] X_s_full = append_row(append_col(append_col(R_inv_s, rep_matrix(0,NB_s,K_s)), Q_I_s), append_col(append_col(rep_matrix(0,K_s,rank_X_s), identity_matrix(K_s)), rep_matrix(0,K_s,NB_s-rank_X_s)));
     matrix[NB_f+K_f,NB_f+K_f] X_f_full = append_col(append_row(append_row(R_inv_f, rep_matrix(0,K_f,NB_f)), Q_I_f), append_row(append_row(rep_matrix(0,rank_X_f,K_f), identity_matrix(K_f)), rep_matrix(0,NB_f-rank_X_f,K_f)));
-    matrix[NB_f-1+K_f,NB_f-1+K_f] X_f2_full = append_col(append_row(append_row(R_inv_f[2:,2:], rep_matrix(0,K_f,NB_f-1)), Q_I_f2)), append_row(append_row(rep_matrix(0,rank_X_f-1,K_f), identity_matrix(K_f)), rep_matrix(0,NB_f-rank_X_f,K_f)));
+    matrix[NB_f-1+K_f,NB_f-1+K_f] X_f2_full = append_col(append_row(append_row(R_inv_f[2:,2:], rep_matrix(0,K_f,NB_f-1)), Q_I_f2), append_row(append_row(rep_matrix(0,rank_X_f-1,K_f), identity_matrix(K_f)), rep_matrix(0,NB_f-rank_X_f,K_f)));
     array[NB_f-1] int idx_f2;
     array[NB_s+K_s] int idxk_s;
     array[NB_f+K_f] int idxk_f;
