@@ -114,25 +114,25 @@ standat <- list(NS       = NS,
                 NSB      = NSB,
                 idx_s    = idx_s,
                 rank_X_s = rank_X_s,
-                Q_s      = Q_s,
-                R_inv_s  = R_inv_s,
-                Q_I_s    = Q_I_s,
+                Q_s      = Q_s / 1000,
+                R_inv_s  = R_inv_s / 1000,
+                Q_I_s    = Q_I_s / 1000,
                 NF       = NF,
                 NB_f     = NB_f,
                 NFB      = NFB,
                 idx_f    = idx_f,
                 rank_X_f = rank_X_f,
-                Q_f      = t(Q_f),
-                R_inv_f  = t(R_inv_f),
-                Q_I_f    = t(Q_I_f),
-                Q_I_f2   = t(Q_I_f2),
+                Q_f      = t(Q_f) / 1000,
+                R_inv_f  = t(R_inv_f) / 1000,
+                Q_I_f    = t(Q_I_f) / 1000,
+                Q_I_f2   = t(Q_I_f2) / 1000,
                 count    = counts,
                 prior_scale_a = prior_scale_a,
                 prior_scale_p = prior_scale_p,
                 K_s      = K_s,
                 K_f      = K_f)
 
-beta_abundance_tilde_init <- cbind(rbind(t(Q_s / (NS-1)) %*% logcountsmod %*% Q_f[,-1] / (NF-1), matrix(0, nrow=(NB_s-rank_X_s)+K_s, ncol=rank_X_f-1)), matrix(0, nrow=NB_s+K_s, ncol=(NB_f-rank_X_f)+K_f))
+beta_abundance_tilde_init <- 1000^2 * cbind(rbind(t(Q_s / (NS-1)) %*% logcountsmod %*% Q_f[,-1] / (NF-1), matrix(0, nrow=(NB_s-rank_X_s)+K_s, ncol=rank_X_f-1)), matrix(0, nrow=NB_s+K_s, ncol=(NB_f-rank_X_f)+K_f))
 
 inits <- list(beta_abundance_tilde = beta_abundance_tilde_init,
               multinomial_nuisance = apply(logcountsmod,1,mean))
@@ -180,7 +180,7 @@ sampling_commands <- list(hmc = paste('./zip_glm',
                                        #'grad_samples=1',
                                        #'elbo_samples=1',
                                        'iter=20000',
-                                       'eta=0.01',
+                                       'eta=0.1',
                                        'adapt engaged=0',
                                        'tol_rel_obj=0.001',
                                        #'eval_elbo=1',
@@ -193,3 +193,12 @@ print(sampling_commands[[algorithm]])
 print(date())
 system(sampling_commands[[algorithm]])
 
+
+
+X_s_qr <- qr(t(X_s))
+X_s_q <- qr.Q(X_s_qr, complete=T)
+X_s_r <- qr.R(X_s_qr, complete=F)
+container <- diag(1,489)
+container[1:429,1:429] <- X_s_r
+D <- t(X_s_q %*% container)
+X_s_inv <- solve(D)
