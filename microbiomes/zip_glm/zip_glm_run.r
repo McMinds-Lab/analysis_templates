@@ -53,17 +53,12 @@ idx_s <- c(1, 2, rep(3, nlevels(meta$Group)), rep(4, nlevels(meta$Individual)), 
 NSB <- max(idx_s)
 NB_s <- length(idx_s)
 
-
-qr.xs <- qr(X_s)
-rank_X_s <- qr.xs$rank
-Q_s <- qr.Q(qr.xs)[,1:rank_X_s] * sqrt(NS-1)
-R_s <- qr.R(qr.xs) / sqrt(NS-1)
-R_inv_s <- MASS::ginv(R_s)[,1:rank_X_s]
-
-I_diff_AA_reduced_s <- diag(1,nrow(R_inv_s)) - R_inv_s %*% R_s[1:rank_X_s,]
-qr.is <- qr(I_diff_AA_reduced_s)
-top_rows <- sort(order(abs(diag(qr.R(qr.is))),decreasing=T)[1:(NB_s-rank_X_s)])
-Q_I_s <- qr.Q(qr.is)[,top_rows] * sqrt(nrow(R_inv_s)-1)
+###
+X_s_full <- diag(1,NB_s)
+X_s_full[(NB_s-NS+1):NB_s,] <- X_s
+X_s_full[,(NB_s-NS+1):NB_s] <- t(X_s)
+X_s_full_inv <- solve(X_s_full)
+###
 
 
 taxvec <- sapply(unique(counts_raw$taxon_id), function(x) {
@@ -85,67 +80,45 @@ idx_f = c(1, rep(2,ncol(X_f)-1-NF), rep(3,NF))
 NFB   = max(idx_f)
 NB_f  = length(idx_f)
 
-qr.xf <- qr(X_f)
-rank_X_f <- qr.xf$rank
-Q_f <- qr.Q(qr.xf)[,1:rank_X_f] * sqrt(NF-1)
-R_f <- qr.R(qr.xf) / sqrt(NF-1)
-R_inv_f <- MASS::ginv(R_f)[,1:rank_X_f]
-
-I_diff_AA_reduced_f <- diag(1,nrow(R_inv_f)) - R_inv_f %*% R_f[1:rank_X_f,]
-qr.if <- qr(I_diff_AA_reduced_f)
-top_rows <- sort(order(abs(diag(qr.R(qr.if))),decreasing=T)[1:(NB_f-rank_X_f)])
-Q_I_f <- qr.Q(qr.if)[,top_rows] * sqrt(nrow(R_inv_f)-1)
-
-I_diff_AA_reduced_f2 <- diag(1,nrow(R_inv_f)-1) - R_inv_f[-1,-1] %*% R_f[-1,-1]
-qr.if2 <- qr(I_diff_AA_reduced_f2)
-top_rows <- sort(order(abs(diag(qr.R(qr.if2))),decreasing=T)[1:(NB_f-rank_X_f)])
-Q_I_f2 <- qr.Q(qr.if2)[,top_rows] * sqrt(nrow(R_inv_f)-2)
-
+###
+X_f_full <- diag(1,NB_f)
+X_f_full[(NB_f-NF+1):NB_f,] <- X_f
+X_f_full[,(NB_f-NF+1):NB_f] <- t(X_f)
+X_f_full_inv <- solve(X_f_full)
+###
 
 prior_scale_p <- sqrt(exp(mean(log(apply(countsbin,2,var)[apply(countsbin,2,var) > 0]))))
 prior_scale_a <- sqrt(exp(mean(log(apply(counts,2,function(x) var(log(x[x>0])))))))
 
 
-K_s <- 3
-K_f <- 3
-
 standat <- list(NS       = NS,
                 NB_s     = NB_s,
                 NSB      = NSB,
                 idx_s    = idx_s,
-                rank_X_s = rank_X_s,
-                Q_s      = Q_s / 1000,
-                R_inv_s  = R_inv_s / 1000,
-                Q_I_s    = Q_I_s / 1000,
+                X_s_full_inv      = X_s_full_inv,
                 NF       = NF,
                 NB_f     = NB_f,
                 NFB      = NFB,
                 idx_f    = idx_f,
-                rank_X_f = rank_X_f,
-                Q_f      = t(Q_f) / 1000,
-                R_inv_f  = t(R_inv_f) / 1000,
-                Q_I_f    = t(Q_I_f) / 1000,
-                Q_I_f2   = t(Q_I_f2) / 1000,
+                X_f_full_inv      = X_f_full_inv,
                 count    = counts,
                 prior_scale_a = prior_scale_a,
-                prior_scale_p = prior_scale_p,
-                K_s      = K_s,
-                K_f      = K_f)
+                prior_scale_p = prior_scale_p)
 
-beta_abundance_tilde_init <- 1000^2 * cbind(rbind(t(Q_s / (NS-1)) %*% logcountsmod %*% Q_f[,-1] / (NF-1), matrix(0, nrow=(NB_s-rank_X_s)+K_s, ncol=rank_X_f-1)), matrix(0, nrow=NB_s+K_s, ncol=(NB_f-rank_X_f)+K_f))
+abundance_init <- X_s_full %*% X_s_full_inv[,(NB_s-NS+1):NB_s] %*% logcountsmod %*% X_f_full_inv[(NB_f-NF+1):NB_f,-1] %*% X_f_full[-1,-1]
 
-inits <- list(beta_abundance_tilde = beta_abundance_tilde_init,
+inits <- list(abundance = abundance_init,
               multinomial_nuisance = apply(logcountsmod,1,mean))
 
 save.image(file.path(output_prefix,'zip_glm_setup.RData'))
 
-cmdstanr::write_stan_json(standat[1:16], file.path(output_prefix,'zip_test_data_1.json'))
-cmdstanr::write_stan_json(standat[17], file.path(output_prefix,'zip_test_data_2.json'))
-cmdstanr::write_stan_json(standat[18:length(standat)], file.path(output_prefix,'zip_test_data_3.json'))
+cmdstanr::write_stan_json(standat[1:13], file.path(output_prefix,'zip_test_data.json'))
+#cmdstanr::write_stan_json(standat[14:7], file.path(output_prefix,'zip_test_data_2.json'))
+#cmdstanr::write_stan_json(standat[18:length(standat)], file.path(output_prefix,'zip_test_data_3.json'))
 
-system(paste0('sed \'$d\' ', file.path(output_prefix,'zip_test_data_1.json'), ' | sed \'$s/$/,/\' > ', file.path(output_prefix,'zip_test_data.json')))
-system(paste0('sed \'1d\' ', file.path(output_prefix,'zip_test_data_2.json'), ' | sed \'$d\' | sed \'$s/$/,/\' >> ', file.path(output_prefix,'zip_test_data.json')))
-system(paste0('sed \'1d\' ', file.path(output_prefix,'zip_test_data_3.json'), ' >> ', file.path(output_prefix,'zip_test_data.json')))
+#system(paste0('sed \'$d\' ', file.path(output_prefix,'zip_test_data_1.json'), ' | sed \'$s/$/,/\' > ', file.path(output_prefix,'zip_test_data.json')))
+#system(paste0('sed \'1d\' ', file.path(output_prefix,'zip_test_data_2.json'), ' | sed \'$d\' | sed \'$s/$/,/\' >> ', file.path(output_prefix,'zip_test_data.json')))
+#system(paste0('sed \'1d\' ', file.path(output_prefix,'zip_test_data_3.json'), ' >> ', file.path(output_prefix,'zip_test_data.json')))
 
 
 cmdstanr::write_stan_json(inits, file.path(output_prefix,'zip_test_inits.json'))
@@ -194,11 +167,3 @@ print(date())
 system(sampling_commands[[algorithm]])
 
 
-
-X_s_qr <- qr(t(X_s))
-X_s_q <- qr.Q(X_s_qr, complete=T)
-X_s_r <- qr.R(X_s_qr, complete=F)
-container <- diag(1,489)
-container[1:429,1:429] <- X_s_r
-D <- t(X_s_q %*% container)
-X_s_inv <- solve(D)
