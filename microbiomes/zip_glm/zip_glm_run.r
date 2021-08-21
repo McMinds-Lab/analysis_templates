@@ -56,7 +56,8 @@ NB_s <- length(idx_s)
 ###
 X_s_full <- diag(1,NB_s)
 X_s_full[(NB_s-NS+1):NB_s,] <- X_s
-X_s_full[,(NB_s-NS+1):NB_s] <- t(X_s)
+X_s_qr <- qr(t(X_s_full[,1:(NB_s-NS)]))
+X_s_full[1:(NB_s-NS),] <- qr.R(X_s_qr)[,order(X_s_qr$pivot)]
 X_s_full_inv <- solve(X_s_full)
 ###
 
@@ -83,7 +84,8 @@ NB_f  = length(idx_f)
 ###
 X_f_full <- diag(1,NB_f)
 X_f_full[(NB_f-NF+1):NB_f,] <- X_f
-X_f_full[,(NB_f-NF+1):NB_f] <- t(X_f)
+X_f_qr <- qr(t(X_f_full[,1:(NB_f-NF)]))
+X_f_full[1:(NB_f-NF),] <- qr.R(X_f_qr)[,order(X_f_qr$pivot)]
 X_f_full_inv <- solve(X_f_full)
 ###
 
@@ -100,14 +102,16 @@ standat <- list(NS       = NS,
                 NB_f     = NB_f,
                 NFB      = NFB,
                 idx_f    = idx_f,
-                X_f_full_inv      = X_f_full_inv,
+                X_f_full_inv      = t(X_f_full_inv),
                 count    = counts,
                 prior_scale_a = prior_scale_a,
                 prior_scale_p = prior_scale_p)
 
-abundance_init <- X_s_full %*% X_s_full_inv[,(NB_s-NS+1):NB_s] %*% logcountsmod %*% X_f_full_inv[(NB_f-NF+1):NB_f,-1] %*% X_f_full[-1,-1]
+abundance_init <- X_s_full %*%  MASS::ginv(X_s_full[(NB_s-NS+1):NB_s,]) %*% logcountsmod %*% t(MASS::ginv(X_f_full[(NB_f-NF+1):NB_f,-1])) %*% t(X_f_full)[-1,-1]
+prevalence_init <- X_s_full %*%  MASS::ginv(X_s_full[(NB_s-NS+1):NB_s,]) %*% countsbin %*% t(MASS::ginv(X_f_full[(NB_f-NF+1):NB_f,])) %*% t(X_f_full)
 
-inits <- list(abundance = abundance_init,
+inits <- list(prevalence = prevalence_init,
+              abundance = abundance_init,
               multinomial_nuisance = apply(logcountsmod,1,mean))
 
 save.image(file.path(output_prefix,'zip_glm_setup.RData'))
@@ -135,7 +139,7 @@ sampling_commands <- list(hmc = paste('./zip_glm',
                                       'method=sample algorithm=hmc',
                                       'stepsize=0.01',
                                       'engine=nuts',
-                                      'max_depth=10',
+                                      'max_depth=6',
                                       'adapt t0=10',
                                       'delta=0.8',
                                       'kappa=0.75',
@@ -155,7 +159,7 @@ sampling_commands <- list(hmc = paste('./zip_glm',
                                        'iter=20000',
                                        'eta=0.1',
                                        'adapt engaged=0',
-                                       'tol_rel_obj=0.001',
+                                       'tol_rel_obj=0.01',
                                        #'eval_elbo=1',
                                        'output_samples=1000',
                                        (paste0('opencl platform=0 device=', opencl_device))[opencl],
