@@ -7,20 +7,20 @@ module purge
 module load apps/sratoolkit/2.10.7
 fasterq-dump --split-3 ${sample} -O ${output_dir}/${sample}
 
-## assemble genome. IRL this should be done with concatenated set of all samples from study, not once-per-sample. Otherwise of course use a reference genome if available
-module purge 
-module load apps/spades/3.11.1
-spades.py --pe1-1 ${output_dir}/${sample}/${sample}_1.fastq --pe1-2 ${output_dir}/${sample}/${sample}_2.fastq -o ${output_dir}/${sample}/spades
-
-## align to genome
+## convert fastqs to bams
 module purge 
 module load hub.apps/anaconda3
-conda activate bowtie2
+conda activate picard
+picard FastqToSam -F1 ${output_dir}/${sample}/${sample}_1.fastq -F2 ${output_dir}/${sample}/${sample}_2.fastq -O ${output_dir}/${sample}/unaligned_read_pairs.bam -SM ${sample} -SO unsorted
+
+## telomerecat requires a specific header format for some reason
 module load apps/samtools/1.3.1
-bowtie2-build ${output_dir}/${sample}/spades/scaffolds.fasta ${output_dir}/${sample}/spades/genome
-bowtie2 -x ${output_dir}/${sample}/spades/genome -1 ${output_dir}/${sample}/${sample}_1.fastq -2 ${output_dir}/${sample}/${sample}_2.fastq | samtools view -bS - > ${output_dir}/${sample}/aligned_reads.bam
+samtools view -H ${output_dir}/${sample}/unaligned_read_pairs.bam > ${output_dir}/${sample}/myheader.sam
+printf "@SQ\tSN:fake_contig\tLN:1\n" >> ${output_dir}/${sample}/myheader.sam 
+samtools reheader ${output_dir}/${sample}/myheader.sam ${output_dir}/${sample}/unaligned_read_pairs.bam > ${output_dir}/${sample}/unaligned_read_pairs.bam_tmp
+mv ${output_dir}/${sample}/unaligned_read_pairs.bam_tmp ${output_dir}/${sample}/unaligned_read_pairs.bam
 
 ## run telomerecat
 conda deactivate
 conda activate telomerecat
-telomerecat bam2length --output ${output_dir}/${sample}.csv ${output_dir}/${sample}/aligned_reads.bam
+telomerecat bam2length --output ${output_dir}/${sample}.csv ${output_dir}/${sample}/unaligned_read_pairs.bam
