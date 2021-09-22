@@ -18,7 +18,7 @@ module load hub.apps/anaconda3
 conda activate bowtie2
 module load apps/samtools/1.3.1
 bowtie2-build ${output_dir}/${sample}/spades/scaffolds.fasta ${output_dir}/${sample}/spades/genome
-bowtie2 -x ${output_dir}/${sample}/spades/genome -1 ${output_dir}/${sample}/${sample}5_1.fastq -2 ${output_dir}/${sample}/${sample}5_2.fastq | samtools view -bS - > ${output_dir}/${sample}/aligned_reads.bam
+bowtie2 -x ${output_dir}/${sample}/spades/genome -1 ${output_dir}/${sample}/${sample}_1.fastq -2 ${output_dir}/${sample}/${sample}_2.fastq | samtools view -bS - > ${output_dir}/${sample}/aligned_reads.bam
 
 ## run telomerecat
 conda deactivate
