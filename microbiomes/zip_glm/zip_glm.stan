@@ -38,10 +38,10 @@ parameters {
 transformed parameters {
     matrix<lower=0>[NSB,NFB] sd_prevalence = to_matrix(append_row(100 * global_scale_prevalence, append_row(sd_prevalence_norm, global_scale_prevalence)), NSB, NFB) * prior_scale_p;
     matrix<lower=0>[NSB,NFB-1] sd_abundance = to_matrix(append_row(sd_abundance_norm, global_scale_abundance), NSB, NFB-1) * prior_scale_a;
-    matrix[NB_s,NB_f] beta_prevalence = X_s_full_inv * prevalence * X_f_full_inv ./ sd_prevalence[idx_s,idx_f];
+    matrix[NB_s,NB_f] beta_prevalence = X_s_full_inv * prevalence * X_f_full_inv;
     matrix[NB_s,NB_f-1] beta_abundance = abundance;
     beta_abundance[(NB_s-NS+1):,(NB_f-NF):] = beta_abundance[(NB_s-NS+1):,(NB_f-NF):] - rep_matrix(multinomial_nuisance, NF);
-    beta_abundance = X_s_full_inv * beta_abundance * X_f_full_inv[2:,2:] ./ sd_abundance[idx_s,idx_f2];
+    beta_abundance = X_s_full_inv * beta_abundance * X_f_full_inv[2:,2:];
 }
 model {
     // priors
@@ -49,8 +49,8 @@ model {
     target += std_normal_lpdf(global_scale_abundance);
     target += student_t_lpdf(sd_prevalence_norm | 5, 0, global_scale_prevalence);
     target += student_t_lpdf(sd_abundance_norm | 5, 0, global_scale_abundance);
-    target += student_t_lpdf(to_vector(beta_prevalence) | 5, 0, 1);
-    target += student_t_lpdf(to_vector(beta_abundance) | 5, 0, 1);
+    target += student_t_lpdf(to_vector(beta_prevalence) | 5, 0, to_vector(sd_prevalence[idx_s,idx_f]));
+    target += student_t_lpdf(to_vector(beta_abundance) | 5, 0, to_vector(sd_abundance[idx_s,idx_f2]));
     // likelihood
     for(f in 1:NF) {
         int f2 = NB_f - NF + f;
@@ -59,4 +59,8 @@ model {
             target += zip_lpmf(count[f,s] | prevalence[s2,f2], abundance[s2,f2-1]);
         }
     }
+}
+generated quantities {
+    matrix[NB_s,NB_f] beta_prevalence_norm = beta_prevalence ./ sd_prevalence[idx_s,idx_f];
+    matrix[NB_s,NB_f-1] beta_abundance_norm = beta_abundance ./ sd_abundance[idx_s,idx_f2];
 }
