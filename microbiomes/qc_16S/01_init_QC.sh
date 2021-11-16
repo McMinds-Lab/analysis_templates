@@ -1,22 +1,24 @@
+# get local variables
+source local.env
+
+mkdir -p ${outdir}/01_init_QC
+
+cat <<EOF > ${outdir}/01_init_QC/01_init_QC.sbatch
 #!/bin/bash
 #SBATCH --job-name=01_init_QC
-#SBATCH --partition=rra
-#SBATCH --qos=rra
-#SBATCH --mail-user=salexander4@usf.edu
+#SBATCH --partition=${partition}
+#SBATCH --qos=${qos}
+#SBATCH --mail-user=${email}
 #SBATCH --mail-type=END,FAIL
-#SBATCH --output=logs/01_init_QC.out
+#SBATCH --output=${outdir}/01_init_QC/01_init_QC.log
 #SBATCH --ntasks=1
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=20
 #SBATCH --time=01:00:00
 
-outdir=$WORK/output/dada2_tutorial
-in_fwd=
-in_rev=
-barcodes_fwd=barcodes_fwd.fasta
-barcodes_rev=barcodes_rev.fasta
-nthreads=1
+# get local variables
+source local.env
 
 mkdir -p ${outdir}/01_init_QC/demultiplexed/
 mkdir -p ${outdir}/01_init_QC/merged
@@ -39,8 +41,8 @@ cutadapt \
 for file in ${outdir}/01_init_QC/demultiplexed/*_R1.fastq; do
 
   # trim "R1" from filenames to get Sample IDs that match mapping file
-  filename=$(basename $file)
-  sampleid=${filename/_*/} ## need to somehow translate the filenames to sample IDs (this doesn't actually do that)
+  filename=\$(basename \$file)
+  sampleid=\${filename/_*/} ## need to somehow translate the filenames to sample IDs (this doesn't actually do that)
 
   # merge paired-end reads such that short reads, where the read is longer than the insertion (such as mitochondria), are not discarded, and nucleotides are trimmed that extend past the beginning of the paired read (which are just adaptor sequences)
 
@@ -48,12 +50,17 @@ for file in ${outdir}/01_init_QC/demultiplexed/*_R1.fastq; do
   module purge
   module load apps/vsearch
   vsearch \
-    --fastq_mergepairs ${file} \
-    --reverse ${file/R1/R2} \
+    --fastq_mergepairs \${file} \
+    --reverse \${file/R1/R2} \
     --fastq_allowmergestagger \
     --fasta_width 0 \
     --threads ${nthreads} \
-    --fastqout ${outdir}/01_init_QC/merged/${sampleid}.fastq
+    --fastqout ${outdir}/01_init_QC/merged/\${sampleid}.fastq
 
 done
 
+EOF
+
+if $autorun; then
+    sbatch ${outdir}/01_init_QC/01_init_QC.sbatch
+fi
