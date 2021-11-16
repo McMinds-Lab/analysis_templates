@@ -11,7 +11,7 @@ cat <<EOF > ${outdir}/01_init_QC/01_init_QC.sbatch
 #SBATCH --mail-user=${email}
 #SBATCH --mail-type=END,FAIL
 #SBATCH --output=${outdir}/01_init_QC/01_init_QC.log
-#SBATCH --ntasks=1
+#SBATCH --ntasks=${nthreads}
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=20
