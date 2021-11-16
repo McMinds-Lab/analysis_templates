@@ -1,0 +1,3 @@
+make a copy of local.env.txt to local.env and fill in the blanks
+
+run each script by changing into this directory and then using 'bash scriptname.sh'. If 'autorun=true' in the local.env file, this will internally submit an sbatch command
