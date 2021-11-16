@@ -37,12 +37,13 @@ cutadapt \
   -p ${outdir}/01_init_QC/demultiplexed/{name1}-{name2}_R2.fastq \
   ${in_fwd} \
   ${in_rev}
+# double check that reads are oriented consistently (does the above need to be re-run with the forward and reverse indices and or primers switched?)
 
 for file in ${outdir}/01_init_QC/demultiplexed/*_R1.fastq; do
 
   # trim "R1" from filenames to get Sample IDs that match mapping file
   filename=\$(basename \$file)
-  sampleid=\${filename/_*/} ## need to somehow translate the filenames to sample IDs (this doesn't actually do that)
+  sampleid=\${filename/-*/} ## double check that all files have matching name1 and name2 or else this could overwrite a good file with a bad one
 
   # merge paired-end reads such that short reads, where the read is longer than the insertion (such as mitochondria), are not discarded, and nucleotides are trimmed that extend past the beginning of the paired read (which are just adaptor sequences)
 
