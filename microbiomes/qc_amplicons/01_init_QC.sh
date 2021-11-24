@@ -1,3 +1,4 @@
+
 # get local variables
 source local.env
 
@@ -63,5 +64,7 @@ done
 EOF
 
 if $autorun; then
-    sbatch ${outdir}/01_init_QC/01_init_QC.sbatch
+
+sbatch ${outdir}/01_init_QC/01_init_QC.sbatch
+
 fi
