@@ -15,8 +15,8 @@ cat <<EOF > ${outdir}/01_init_QC/01_init_QC.sbatch
 #SBATCH --ntasks=${nthreads}
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
-#SBATCH --mem=20
-#SBATCH --time=01:00:00
+#SBATCH --mem=20G
+#SBATCH --time=24:00:00
 
 # get local variables
 source local.env
