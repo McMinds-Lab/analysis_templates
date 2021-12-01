@@ -43,7 +43,7 @@ for file in ${outdir}/01_init_QC/demultiplexed/*_R1.fastq; do
 
   # trim "R1" from filenames to get Sample IDs that match mapping file
   filename=\$(basename \$file)
-  sampleid=\${filename/_R1*/} ## double check that all files have matching name1 and name2 or else this could overwrite a good file with a bad one
+  sampleid=\${filename/_R1*/}
 
   # merge paired-end reads such that short reads, where the read is longer than the insertion (such as mitochondria), are not discarded, and nucleotides are trimmed that extend past the beginning of the paired read (which are just adaptor sequences)
 
