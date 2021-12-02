@@ -13,22 +13,23 @@ cat <<EOF > ${outdir}/download_SRA.sbatch
 #SBATCH --qos=rra
 #SBATCH --partition=rra
 #SBATCH --time=6-00:00:00
-#SBATCH --mem=10G
+#SBATCH --mem=${maxram}
+#SBATCH --ntasks=${nthreads}
 #SBATCH --job-name=download_SRA
 #SBATCH --output=${outdir}/download_SRA.log
+#SBATCH --array=0-$((${#samples[@]}-1))%10
+
+samples=(${samples[@]})
+sample=\${samples[\$SLURM_ARRAY_TASK_ID]}
 
 module purge
 module load apps/sratoolkit/2.10.7
 
-for sample in ${samples[@]}; do
-
-fasterq-dump --split-3 \${sample} -O ${outdir}/\${sample}
+fasterq-dump -e ${nthreads} \${sample} -O ${outdir}/\${sample}
 gzip -c ${outdir}/\${sample}/\${sample}_1.fastq > ${outdir}/\${sample}/\${sample}_1.fastq.gz
 rm ${outdir}/\${sample}/\${sample}_1.fastq
 gzip -c ${outdir}/\${sample}/\${sample}_2.fastq > ${outdir}/\${sample}/\${sample}_2.fastq.gz
 rm ${outdir}/\${sample}/\${sample}_2.fastq
-
-done
 
 EOF
 
