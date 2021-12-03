@@ -38,6 +38,7 @@ conda activate entrez-direct
 
 biosample=\$(grep \${sample} ${outdir}/runInfo.csv | cut -d ',' -f 26)
 esearch -db biosample -query \${biosample} | efetch > ${outdir}/\${subdir}/\${sample}/metadata.txt
+esearch -db biosample -query \${biosample} | efetch -format xml > ${outdir}/\${subdir}/\${sample}/metadata.xml
 
 conda deactivate
 module purge
