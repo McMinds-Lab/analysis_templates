@@ -1,12 +1,13 @@
-## two positional arguments specifying the directory of SRA downloads (with sample_list.txt in it) and the output analysis directory
-readarray -t samples < $1/sample_list.txt
-indir=$1
-outdir=$2
-
 # get local variables
 source local.env
 
+## two positional arguments specifying the directory of SRA downloads (with sample_list.txt in it) and the output analysis directory
+indir=$1
+outdir=$2
+
 mkdir -p ${outdir}/01_telomerecat/logs
+
+samples=($(grep SRR ${indir}/runInfo.csv | cut -d ',' -f 1))
 
 cat <<EOF > ${outdir}/01_telomerecat/01_telomerecat.sbatch
 #!/bin/bash
@@ -21,16 +22,17 @@ cat <<EOF > ${outdir}/01_telomerecat/01_telomerecat.sbatch
 samples=(${samples[@]})
 sample=\${samples[\$SLURM_ARRAY_TASK_ID]}
 
+mkdir ${outdir}/\${sample}/
+
 ##convert fastqs to bams
 module purge 
 module load hub.apps/anaconda3
 source activate picard
 
 echo picard
-
 picard FastqToSam \
-  -F1 ${outdir}/\${sample}/\${sample}_1.fastq.gz \
-  -F2 ${outdir}/\${sample}/\${sample}_2.fastq.gz \
+  -F1 ${indir}/WGS/\${sample}/\${sample}_1.fastq.gz \
+  -F2 ${indir}/WGS/\${sample}/\${sample}_2.fastq.gz \
   -O ${outdir}/\${sample}/unaligned_read_pairs.bam \
   -SM \${sample} \
   -SO unsorted
