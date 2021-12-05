@@ -1,13 +1,13 @@
 # get local variables
 source local.env
 
-## two positional arguments specifying the directory of SRA downloads (with sample_list.txt in it) and the output analysis directory
+## two positional arguments specifying the directory of SRA downloads (with runInfo.csv in it) and the output analysis directory
 indir=$1
 outdir=$2
 
 mkdir -p ${outdir}/01_telomerecat/logs
 
-samples=($(grep SRR ${indir}/runInfo.csv | cut -d ',' -f 1))
+samples=($(grep SRR ${indir}/runInfo.csv | grep 'WGA\|WGS' | cut -d ',' -f 1))
 
 cat <<EOF > ${outdir}/01_telomerecat/01_telomerecat.sbatch
 #!/bin/bash
@@ -22,36 +22,38 @@ cat <<EOF > ${outdir}/01_telomerecat/01_telomerecat.sbatch
 samples=(${samples[@]})
 sample=\${samples[\$SLURM_ARRAY_TASK_ID]}
 
-mkdir ${outdir}/\${sample}/
+mkdir ${outdir}/01_telomerecat/\${sample}/
 
 ##convert fastqs to bams
-module purge 
+module purge
 module load hub.apps/anaconda3
 source activate picard
 
 echo picard
 picard FastqToSam \
-  -F1 ${indir}/WGS/\${sample}/\${sample}_1.fastq.gz \
-  -F2 ${indir}/WGS/\${sample}/\${sample}_2.fastq.gz \
-  -O ${outdir}/\${sample}/unaligned_read_pairs.bam \
+  -F1 ${indir}/*/\${sample}/\${sample}_1.fastq.gz \
+  -F2 ${indir}/*/\${sample}/\${sample}_2.fastq.gz \
+  -O ${outdir}/01_telomerecat/\${sample}/unaligned_read_pairs.bam \
   -SM \${sample} \
   -SO unsorted
 
 ##telomerecat requires a specific header format for some reason
 conda deactivate
-module purge 
+module purge
 module load apps/samtools/1.3.1
-samtools view -H ${outdir}/\${sample}/unaligned_read_pairs.bam > ${outdir}/\${sample}/myheader.sam
-printf "@SQ\tSN:fake_contig\tLN:1\n" >> ${outdir}/\${sample}/myheader.sam
-samtools reheader ${outdir}/\${sample}/myheader.sam ${outdir}/\${sample}/unaligned_read_pairs.bam > ${outdir}/\${sample}/unaligned_read_pairs.bam_tmp
-mv ${outdir}/\${sample}/unaligned_read_pairs.bam_tmp ${outdir}/\${sample}/unaligned_read_pairs.bam
+samtools view -H ${outdir}/01_telomerecat/\${sample}/unaligned_read_pairs.bam > ${outdir}/01_telomerecat/\${sample}/myheader.sam
+printf "@SQ\tSN:fake_contig\tLN:1\n" >> ${outdir}/01_telomerecat/\${sample}/myheader.sam
+samtools reheader ${outdir}/01_telomerecat/\${sample}/myheader.sam ${outdir}/01_telomerecat/\${sample}/unaligned_read_pairs.bam > ${outdir}/01_telomerecat/\${sample}/unaligned_read_pairs.bam_tmp
+mv ${outdir}/01_telomerecat/\${sample}/unaligned_read_pairs.bam_tmp ${outdir}/01_telomerecat/\${sample}/unaligned_read_pairs.bam
 
 ## run telomerecat
-module purge 
+module purge
 module load hub.apps/anaconda3
 source /shares/omicshub/apps/anaconda3/etc/profile.d/conda.sh
 source activate telomerecat
-telomerecat bam2length --output ${outdir}/\${sample}.csv ${outdir}/\${sample}/unaligned_read_pairs.bam
+telomerecat bam2length --output ${outdir}/01_telomerecat/\${sample}.csv ${outdir}/01_telomerecat/\${sample}/unaligned_read_pairs.bam
+
+rm -rf ${outdir}/01_telomerecat/\${sample}
 
 EOF
 

@@ -34,7 +34,7 @@ mkdir -p ${outdir}/\${subdir}/\${sample}
 
 module purge
 module load hub.apps/anaconda3
-conda activate entrez-direct
+source activate entrez-direct
 
 biosample=\$(grep \${sample} ${outdir}/runInfo.csv | cut -d ',' -f 26)
 esearch -db biosample -query \${biosample} | efetch > ${outdir}/\${subdir}/\${sample}/metadata.txt
