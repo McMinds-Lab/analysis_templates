@@ -30,14 +30,14 @@ mkdir -p ${outdir}/01_init_QC/merged
 # trim indices and primers from sequences, demultiplex, and discard any sequences that don't contain both full barcodes and primers
 module purge
 module load hub.apps/anaconda3
-source activate cutadapt
+source activate cutadapt-3.5
 
-# find all pairs with both primers in forward orientation
+# find all pairs with both primers plus at least 8 extra bp in forward orientation, trim everything before the adapter
 cutadapt \
   --cores=${nthreads} \
-  --action=none \
-  -g "${primer_fwd};min_overlap=${#primer_fwd}" \
-  -G "${primer_rev};min_overlap=${#primer_rev}" \
+  --action=retain \
+  -g "N{8}${primer_fwd};min_overlap=$((${#primer_fwd}+8))" \
+  -G "N{8}${primer_rev};min_overlap=$((${#primer_rev}+8))" \
   --output ${outdir}/01_init_QC/oriented_R1.fastq.gz \
   --paired-output ${outdir}/01_init_QC/oriented_R2.fastq.gz \
   --untrimmed-output ${outdir}/01_init_QC/disoriented_R1.fastq.gz \
@@ -45,12 +45,12 @@ cutadapt \
   ${in_fwd} \
   ${in_rev}
 
-# find all pairs with both primers in reverse orientation
+# find all pairs with both primers plus at least 8 extra bp in reverse orientation, trim everything before the adapter
 cutadapt \
   --cores=${nthreads} \
-  --action=none \
-  -g "${primer_fwd};min_overlap=${#primer_fwd}" \
-  -G "${primer_rev};min_overlap=${#primer_rev}" \
+  --action=retain \
+  -g "N{8}${primer_fwd};min_overlap=$((${#primer_fwd}+8))" \
+  -G "N{8}${primer_rev};min_overlap=$((${#primer_rev}+8))" \
   --output ${outdir}/01_init_QC/reoriented_R1.fastq.gz \
   --paired-output ${outdir}/01_init_QC/reoriented_R2.fastq.gz \
   --discard-untrimmed \
@@ -59,7 +59,7 @@ cutadapt \
 
 # demultiplex, allowing a single error in each 8bp index
 cutadapt \
-  -e 0.15 \
+  -e 1 \
   --overlap 8 \
   --no-indels \
   -g file:${barcodes_fwd} \
@@ -78,7 +78,7 @@ for file in ${outdir}/01_init_QC/demultiplexed/*_R1.fastq.gz; do
   sampleid=\${filename/_R1*/}
   
   # trim primers
-  source activate cutadapt
+  source activate cutadapt-3.5
   cutadapt \
     --cores=${nthreads} \
     -g ${primer_fwd} \
@@ -95,7 +95,7 @@ for file in ${outdir}/01_init_QC/demultiplexed/*_R1.fastq.gz; do
     --fastq_mergepairs ${outdir}/01_init_QC/demultiplexed/\${sampleid}_trimmed_R1.fastq.gz \
     --reverse ${outdir}/01_init_QC/demultiplexed/\${sampleid}_trimmed_R2.fastq.gz \
     --fastq_allowmergestagger \
-    --fastq_maxdiffs 50 \
+    --fastq_maxdiffs 100 \
     --fasta_width 0 \
     --fastqout_notmerged_fwd ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R1.fastq \
     --fastqout_notmerged_rev ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R2.fastq \
@@ -103,12 +103,14 @@ for file in ${outdir}/01_init_QC/demultiplexed/*_R1.fastq.gz; do
 
   # add concatenated fwd and reverse reads that could not be merged, assuming that they were not merged because they had a gap between reads
   vsearch \
-    --fastx_join ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R1.fastq \
+    --fastq_join ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R1.fastq \
     --reverse ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R2.fastq \
     --join_padgap '' \
     --fastqout - | gzip --best >> ${outdir}/01_init_QC/merged/\${sampleid}.fastq.gz
   
 done
+
+rm ${outdir}/01_init_QC/merged/*unmerged*
 
 EOF
 
