@@ -78,6 +78,7 @@ for file in ${outdir}/01_init_QC/demultiplexed/*_R1.fastq.gz; do
   sampleid=\${filename/_R1*/}
   
   # trim primers
+  source activate cutadapt
   cutadapt \
     --cores=${nthreads} \
     -g ${primer_fwd} \
@@ -88,20 +89,24 @@ for file in ${outdir}/01_init_QC/demultiplexed/*_R1.fastq.gz; do
     \${file/R1/R2}
   
   # merge paired-end reads such that short reads, where the read is longer than the insertion (such as mitochondria), are not discarded, and nucleotides are trimmed that extend past the beginning of the paired read (which are just adaptor sequences)
-  module load apps/vsearch
+  source activate vsearch
   vsearch \
     --threads ${nthreads}\
     --fastq_mergepairs ${outdir}/01_init_QC/demultiplexed/\${sampleid}_trimmed_R1.fastq.gz \
     --reverse ${outdir}/01_init_QC/demultiplexed/\${sampleid}_trimmed_R2.fastq.gz \
     --fastq_allowmergestagger \
+    --fastq_maxdiffs 50 \
     --fasta_width 0 \
-    --threads ${nthreads} \
     --fastqout_notmerged_fwd ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R1.fastq \
     --fastqout_notmerged_rev ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R2.fastq \
     --fastqout - | gzip --best > ${outdir}/01_init_QC/merged/\${sampleid}.fastq.gz
 
   # add concatenated fwd and reverse reads that could not be merged, assuming that they were not merged because they had a gap between reads
-  paste -d '' ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R1.fastq <(vsearch --fastx_revcomp ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R2.fastq --fastqout - | awk '(NR % 2) {print ""} !(NR % 2) {print \$0}') | gzip --best >> ${outdir}/01_init_QC/merged/\${sampleid}.fastq.gz
+  vsearch \
+    --fastx_join ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R1.fastq \
+    --reverse ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R2.fastq \
+    --join_padgap '' \
+    --fastqout - | gzip --best >> ${outdir}/01_init_QC/merged/\${sampleid}.fastq.gz
   
 done
 
