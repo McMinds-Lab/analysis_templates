@@ -21,8 +21,6 @@ cat <<EOF > ${outdir}/01_init_QC/01_init_QC.sbatch
 #SBATCH --mail-type=END,FAIL
 #SBATCH --output=${outdir}/01_init_QC/01_init_QC.log
 #SBATCH --ntasks=${nthreads}
-#SBATCH --nodes=1
-#SBATCH --cpus-per-task=1
 #SBATCH --mem=20G
 #SBATCH --time=24:00:00
 
@@ -34,63 +32,77 @@ module purge
 module load hub.apps/anaconda3
 source activate cutadapt
 
+# find all pairs with both primers in forward orientation
 cutadapt \
+  --cores=${nthreads} \
   --action=none \
   -g "${primer_fwd};min_overlap=${#primer_fwd}" \
   -G "${primer_rev};min_overlap=${#primer_rev}" \
-  --output ${outdir}/01_init_QC/oriented_R1.fastq \
-  --paired-output ${outdir}/01_init_QC/oriented_R2.fastq \
-  --untrimmed-output ${outdir}/01_init_QC/disoriented_R1.fastq \
-  --untrimmed-paired-output ${outdir}/01_init_QC/disoriented_R2.fastq \
+  --output ${outdir}/01_init_QC/oriented_R1.fastq.gz \
+  --paired-output ${outdir}/01_init_QC/oriented_R2.fastq.gz \
+  --untrimmed-output ${outdir}/01_init_QC/disoriented_R1.fastq.gz \
+  --untrimmed-paired-output ${outdir}/01_init_QC/disoriented_R2.fastq.gz \
   ${in_fwd} \
   ${in_rev}
 
+# find all pairs with both primers in reverse orientation
 cutadapt \
+  --cores=${nthreads} \
   --action=none \
   -g "${primer_fwd};min_overlap=${#primer_fwd}" \
   -G "${primer_rev};min_overlap=${#primer_rev}" \
-  --output ${outdir}/01_init_QC/reoriented_R1.fastq \
-  --paired-output ${outdir}/01_init_QC/reoriented_R2.fastq \
-  ${outdir}/01_init_QC/disoriented_R2.fastq \
-  ${outdir}/01_init_QC/disoriented_R1.fastq
+  --output ${outdir}/01_init_QC/reoriented_R1.fastq.gz \
+  --paired-output ${outdir}/01_init_QC/reoriented_R2.fastq.gz \
+  --discard-untrimmed \
+  ${outdir}/01_init_QC/disoriented_R2.fastq.gz \
+  ${outdir}/01_init_QC/disoriented_R1.fastq.gz
 
+# demultiplex, allowing a single error in each 8bp index
 cutadapt \
   -e 0.15 \
   --overlap 8 \
   --no-indels \
   -g file:${barcodes_fwd} \
   -G file:${barcodes_rev} \
-  -o ${outdir}/01_init_QC/demultiplexed/{name1}-{name2}_R1.fastq \
-  -p ${outdir}/01_init_QC/demultiplexed/{name1}-{name2}_R2.fastq \
-  <(cat ${outdir}/01_init_QC/oriented_R1.fastq ${outdir}/01_init_QC/reoriented_R1.fastq) \
-  <(cat ${outdir}/01_init_QC/oriented_R2.fastq ${outdir}/01_init_QC/reoriented_R2.fastq)
+  --output ${outdir}/01_init_QC/demultiplexed/{name1}-{name2}_R1.fastq.gz \
+  --paired-output ${outdir}/01_init_QC/demultiplexed/{name1}-{name2}_R2.fastq.gz \
+  <(zcat ${outdir}/01_init_QC/oriented_R1.fastq.gz ${outdir}/01_init_QC/reoriented_R1.fastq.gz) \
+  <(zcat ${outdir}/01_init_QC/oriented_R2.fastq.gz ${outdir}/01_init_QC/reoriented_R2.fastq.gz)
 
 rm ${outdir}/01_init_QC/demultiplexed/*unknown*
 
-for file in ${outdir}/01_init_QC/demultiplexed/*_R1.fastq; do
+for file in ${outdir}/01_init_QC/demultiplexed/*_R1.fastq.gz; do
 
   # trim "R1" from filenames to get Sample IDs that match mapping file
   filename=\$(basename \$file)
   sampleid=\${filename/_R1*/}
   
+  # trim primers
   cutadapt \
+    --cores=${nthreads} \
     -g ${primer_fwd} \
     -G ${primer_rev} \
-    --output ${outdir}/01_init_QC/demultiplexed/\${sampleid}_trimmed_R1.fastq \
-    --paired-output ${outdir}/01_init_QC/demultiplexed/\${sampleid}_trimmed_R2.fastq \
+    --output ${outdir}/01_init_QC/demultiplexed/\${sampleid}_trimmed_R1.fastq.gz \
+    --paired-output ${outdir}/01_init_QC/demultiplexed/\${sampleid}_trimmed_R2.fastq.gz \
     \${file} \
     \${file/R1/R2}
   
   # merge paired-end reads such that short reads, where the read is longer than the insertion (such as mitochondria), are not discarded, and nucleotides are trimmed that extend past the beginning of the paired read (which are just adaptor sequences)
   module load apps/vsearch
   vsearch \
-    --fastq_mergepairs ${outdir}/01_init_QC/demultiplexed/\${sampleid}_trimmed_R1.fastq \
-    --reverse ${outdir}/01_init_QC/demultiplexed/\${sampleid}_trimmed_R2.fastq \
+    --threads ${nthreads}\
+    --fastq_mergepairs ${outdir}/01_init_QC/demultiplexed/\${sampleid}_trimmed_R1.fastq.gz \
+    --reverse ${outdir}/01_init_QC/demultiplexed/\${sampleid}_trimmed_R2.fastq.gz \
     --fastq_allowmergestagger \
     --fasta_width 0 \
     --threads ${nthreads} \
+    --fastqout_notmerged_fwd ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R1.fastq \
+    --fastqout_notmerged_rev ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R2.fastq \
     --fastqout - | gzip --best > ${outdir}/01_init_QC/merged/\${sampleid}.fastq.gz
-    
+
+  # add concatenated fwd and reverse reads that could not be merged, assuming that they were not merged because they had a gap between reads
+  paste -d '' ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R1.fastq <(vsearch --fastx_revcomp ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R2.fastq --fastqout - | awk '(NR % 2) {print ""} !(NR % 2) {print \$0}') | gzip --best >> ${outdir}/01_init_QC/merged/\${sampleid}.fastq.gz
+  
 done
 
 EOF
