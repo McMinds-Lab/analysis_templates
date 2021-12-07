@@ -24,7 +24,7 @@ sample=\${samples[\$SLURM_ARRAY_TASK_ID]}
 
 mkdir ${outdir}/01_telomerecat/\${sample}/
 
-##convert fastqs to bams
+##convert fastqs to bams (this step and the samtools steps should probably be replaced by an alignment of reads using e.g. bowtie2 if a reference genome is available)
 module purge
 module load hub.apps/anaconda3
 source activate picard
@@ -45,6 +45,7 @@ samtools view -H ${outdir}/01_telomerecat/\${sample}/unaligned_read_pairs.bam > 
 printf "@SQ\tSN:fake_contig\tLN:1\n" >> ${outdir}/01_telomerecat/\${sample}/myheader.sam
 samtools reheader ${outdir}/01_telomerecat/\${sample}/myheader.sam ${outdir}/01_telomerecat/\${sample}/unaligned_read_pairs.bam > ${outdir}/01_telomerecat/\${sample}/unaligned_read_pairs.bam_tmp
 mv ${outdir}/01_telomerecat/\${sample}/unaligned_read_pairs.bam_tmp ${outdir}/01_telomerecat/\${sample}/unaligned_read_pairs.bam
+##
 
 ## run telomerecat
 module purge
