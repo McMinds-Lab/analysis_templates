@@ -14,6 +14,7 @@ cat <<EOF > ${outdir}/01_telomerecat/01_telomerecat_build_index.sbatch
 #!/bin/bash
 #SBATCH --qos=rra
 #SBATCH --partition=rra
+#SBATCH --mem=${maxram}
 #SBATCH --output=${outdir}/01_telomerecat/logs/01_telomerecat_index.log
 module purge
 module load hub.apps/anaconda3
@@ -23,7 +24,7 @@ conda deactivate
 source activate bowtie2
 
 zcat ${reference} > ${outdir}/01_telomerecat/reference.fasta
-bowtie2-build ${outdir}/01_telomerecat/reference.fasta ${outdir}/01_telomerecat/reference
+bowtie2-build --threads ${nthreads} ${outdir}/01_telomerecat/reference.fasta ${outdir}/01_telomerecat/reference
 EOF
 
 jid=$(sbatch ${outdir}/01_telomerecat/01_telomerecat_build_index.sbatch | cut -d ' ' -f4)
@@ -39,7 +40,7 @@ cat <<EOF > ${outdir}/01_telomerecat/01_telomerecat.sbatch
 #SBATCH --qos=rra
 #SBATCH --partition=rra
 #SBATCH --time=6-00:00:00
-#SBATCH --mem=10G
+#SBATCH --mem=${maxram}
 #SBATCH --job-name=01_telomerecat
 #SBATCH --output=${outdir}/01_telomerecat/logs/01_telomerecat_%a.log
 #SBATCH --array=0-$((${#samples[@]}-1))%10
@@ -50,17 +51,38 @@ sample=\${samples[\$SLURM_ARRAY_TASK_ID]}
 
 mkdir ${outdir}/01_telomerecat/\${sample}/
 
+#trim adapters
+module purge
+module load hub.apps/anaconda3
+source /shares/omicshub/apps/anaconda3/etc/profile.d/conda.sh
+conda deactivate
+conda deactivate
+source activate bbtools
+
+in1=(${indir}/*/\${sample}/\${sample}_1.fastq.gz)
+in2=(${indir}/*/\${sample}/\${sample}_2.fastq.gz)
+
+bbduk.sh \
+  in1=\${in1} \
+  in2=\${in2} \
+  out1=${outdir}/01_telomerecat/\${sample}/trimmed_R1.fastq \
+  out2=${outdir}/01_telomerecat/\${sample}/trimmed_R2.fastq \
+  ref=/shares/omicshub/apps/anaconda3/envs/bbtools/bbtools/lib/resources/adapters.fa \
+  ktrim=r k=23 mink=11 hdist=1 tpe tbo
+
+echo \$((\$(zcat ${outdir}/01_telomerecat/\${sample}/trimmed_R1.fastq | wc -l) / 4)) > ${outdir}/01_telomerecat/\${sample}_nreads.txt
+
 if [ ${reference} = NONE ]; then
 
-##convert fastqs to bams
+##convert fastqs to unaligned bams
 module purge
 module load hub.apps/anaconda3
 source activate picard
 
 echo picard
 picard FastqToSam \
-  -F1 ${indir}/*/\${sample}/\${sample}_1.fastq.gz \
-  -F2 ${indir}/*/\${sample}/\${sample}_2.fastq.gz \
+  -F1 ${outdir}/01_telomerecat/\${sample}/trimmed_R1.fastq \
+  -F2 ${outdir}/01_telomerecat/\${sample}/trimmed_R2.fastq \
   -O ${outdir}/01_telomerecat/\${sample}/unaligned_read_pairs.bam \
   -SM \${sample} \
   -SO unsorted
@@ -86,8 +108,8 @@ source activate bowtie2
 
 bowtie2 --threads ${nthreads} \
   -x ${outdir}/01_telomerecat/reference \
-  -1 ${indir}/*/\${sample}/\${sample}_1.fastq.gz \
-  -2 ${indir}/*/\${sample}/\${sample}_2.fastq.gz |
+  -1 ${outdir}/01_telomerecat/\${sample}/trimmed_R1.fastq \
+  -2 ${outdir}/01_telomerecat/\${sample}/trimmed_R2.fastq |
 samtools view -b - > ${outdir}/01_telomerecat/\${sample}/\${sample}.bam
 
 fi
