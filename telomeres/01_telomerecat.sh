@@ -70,7 +70,7 @@ bbduk.sh \
   ref=/shares/omicshub/apps/anaconda3/envs/bbtools/bbtools/lib/resources/adapters.fa \
   ktrim=r k=23 mink=11 hdist=1 tpe tbo
 
-echo \$((\$(zcat ${outdir}/01_telomerecat/\${sample}/trimmed_R1.fastq | wc -l) / 4)) > ${outdir}/01_telomerecat/\${sample}_nreads.txt
+echo \$((\$(wc -l ${outdir}/01_telomerecat/\${sample}/trimmed_R1.fastq) / 4)) > ${outdir}/01_telomerecat/\${sample}_nreads.txt
 
 if [ ${reference} = NONE ]; then
 
