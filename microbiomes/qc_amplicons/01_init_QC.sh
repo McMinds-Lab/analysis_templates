@@ -97,6 +97,7 @@ for file in ${outdir}/01_init_QC/demultiplexed/*_R1.fastq.gz; do
     --fastq_allowmergestagger \
     --fastq_maxdiffs 100 \
     --fasta_width 0 \
+    --fastq_maxns 0 \
     --fastqout_notmerged_fwd ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R1.fastq \
     --fastqout_notmerged_rev ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R2.fastq \
     --fastqout - | gzip --best > ${outdir}/01_init_QC/merged/\${sampleid}.fastq.gz
@@ -106,7 +107,12 @@ for file in ${outdir}/01_init_QC/demultiplexed/*_R1.fastq.gz; do
     --fastq_join ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R1.fastq \
     --reverse ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R2.fastq \
     --join_padgap '' \
-    --fastqout - | gzip --best >> ${outdir}/01_init_QC/merged/\${sampleid}.fastq.gz
+    --fastqout - |
+  vsearch \
+    --fastx_filter - \
+    --fastq_maxns 0 \
+    --fastqout - |
+  gzip --best >> ${outdir}/01_init_QC/merged/\${sampleid}.fastq.gz
   
 done
 

@@ -67,10 +67,10 @@ bbduk.sh \
   in2=\${in2} \
   out1=${outdir}/01_telomerecat/\${sample}/trimmed_R1.fastq \
   out2=${outdir}/01_telomerecat/\${sample}/trimmed_R2.fastq \
-  ref=/shares/omicshub/apps/anaconda3/envs/bbtools/bbtools/lib/resources/adapters.fa \
-  ktrim=r k=23 mink=11 hdist=1 tpe tbo
-
-echo \$((\$(wc -l ${outdir}/01_telomerecat/\${sample}/trimmed_R1.fastq) / 4)) > ${outdir}/01_telomerecat/\${sample}_nreads.txt
+  ref=adapters,artifacts,phix \
+  ktrim=l k=23 mink=11 hdist=2 qtrim=r minlength=40 forcetrimright=70 tpe maq=10 trimq=10 maxgc=0.6 mingc=0.4
+  
+echo \$((\$(wc -l ${outdir}/01_telomerecat/\${sample}/trimmed_R1.fastq | cut -d' ' -f1) / 4)) > ${outdir}/01_telomerecat/\${sample}_nreads.txt
 
 if [ ${reference} = NONE ]; then
 
