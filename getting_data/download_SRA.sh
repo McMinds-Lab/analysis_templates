@@ -36,6 +36,11 @@ module purge
 module load hub.apps/anaconda3
 source activate entrez-direct
 
+## make sure the web requests of all array jobs aren't submitted at once
+if [ \$SLURM_ARRAY_TASK_ID -lt ${nthreads} ]; then
+  sleep \$((\$SLURM_ARRAY_TASK_ID * 2))
+fi
+
 biosample=\$(grep \${sample} ${outdir}/runInfo.csv | cut -d ',' -f 26)
 esearch -db biosample -query \${biosample} | efetch > ${outdir}/\${subdir}/\${sample}/metadata.txt
 esearch -db biosample -query \${biosample} | efetch -format xml > ${outdir}/\${subdir}/\${sample}/metadata.xml
@@ -46,11 +51,10 @@ module load apps/sratoolkit/2.10.7
 
 fasterq-dump -e 1 \${sample} -t ${outdir}/\${subdir}/\${sample} -O ${outdir}/\${subdir}/\${sample}
 
-gzip --best -c ${outdir}/\${subdir}/\${sample}/\${sample}_1.fastq > ${outdir}/\${subdir}/\${sample}/\${sample}_1.fastq.gz &
-gzip --best -c ${outdir}/\${subdir}/\${sample}/\${sample}_2.fastq > ${outdir}/\${subdir}/\${sample}/\${sample}_2.fastq.gz
-
-rm ${outdir}/\${subdir}/\${sample}/\${sample}_1.fastq
-rm ${outdir}/\${subdir}/\${sample}/\${sample}_2.fastq
+for file in ${outdir}/\${subdir}/\${sample}/*.fastq; do
+  gzip --best \${file} &
+done
+wait
 
 EOF
 
