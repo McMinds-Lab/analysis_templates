@@ -1,9 +1,11 @@
 # get local variables
 source local.env
 
-mkdir -p ${outdir}/02_dada2
+indir=$1
+outdir=$2
 
-mkdir -p ${outdir}/02_dada2/data
+mkdir -p ${outdir}/02_dada2/
+cp 02_dada2.r ${outdir}/02_dada2/
 
 cat <<EOF > ${outdir}/02_dada2/02_dada2.sbatch
 #!/bin/bash
@@ -14,12 +16,11 @@ cat <<EOF > ${outdir}/02_dada2/02_dada2.sbatch
 #SBATCH --mail-type=END,FAIL
 #SBATCH --output=${outdir}/02_dada2/02_dada2.log
 #SBATCH --ntasks=${nthreads}
-#SBATCH --mem=20G
+#SBATCH --mem=${maxram}
 #SBATCH --time=01:00:00
 
-module load hub.apps/anaconda3
-source activate dada2
-Rscript 02_dada2.r
+module load apps/R
+Rscript ${outdir}/02_dada2/02_dada2.r ${nthreads} ${indir} ${outdir}/02_dada2/
 
 EOF
 
