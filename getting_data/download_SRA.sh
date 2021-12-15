@@ -38,7 +38,7 @@ source activate entrez-direct
 
 ## make sure the web requests of all array jobs aren't submitted at once
 if [ \$SLURM_ARRAY_TASK_ID -lt ${nthreads} ]; then
-  sleep \$((\$SLURM_ARRAY_TASK_ID * 2))
+  sleep \$((\$SLURM_ARRAY_TASK_ID * 10))
 fi
 
 biosample=\$(grep \${sample} ${outdir}/runInfo.csv | cut -d ',' -f 26)
