@@ -3,6 +3,8 @@ source local.env
 
 mkdir -p ${outdir}/02_dada2
 
+mkdir -p ${outdir}/02_dada2/data
+
 cat <<EOF > ${outdir}/02_dada2/02_dada2.sbatch
 #!/bin/bash
 #SBATCH --job-name=02_dada2
@@ -14,14 +16,15 @@ cat <<EOF > ${outdir}/02_dada2/02_dada2.sbatch
 #SBATCH --ntasks=${nthreads}
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
-#SBATCH --mem=20
+#SBATCH --mem=20G
 #SBATCH --time=01:00:00
 
-module load apps/R
+module load hub.apps/anaconda3
+source activate dada2
 Rscript 02_dada2.r
 
 EOF
 
 if $autorun; then
-    sbatch ${outdir}/01_init_QC/01_init_QC.sbatch
+    sbatch ${outdir}/02_dada2/02_dada2.sbatch
 fi
