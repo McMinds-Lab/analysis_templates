@@ -1,60 +1,52 @@
+
 library(dada2)
+source('local_r.env')
 
-#some people run packageVersion(dada2) after to see current version, however it's not helpful
+merged_reads <- sort(list.files(indir, pattern=".fastq", full.names=T))
+sample.names <- sapply(strsplit(basename(merged_reads), "_"), `[`, 1)
 
-path <- "path1"
+#png(file.path(outdir, "quality_profile.png"), height=600, width=600)
+#plotQualityProfile(merged_reads[1:10])
+#dev.off()
+#save.image(file.path(outdir, 'quality_profile.png')
 
-#need to change "path1" to where the data can be found
+filt_dir <- file.path(indir, "filtered")
+if (!dir.exists(filt_dir)) dir.create(filt_dir)
 
-merge_reads <- sort(list.files(path, pattern="R1.fastq", full.names=T))
+merged_filt <- file.path(filt_dir, "filtered", paste0(sample.names, "_M_filt.fastq"))
 
-reverse_reads <- sort(list.files(path, pattern="R2.fastq", full.names=T))
+names(merged_filt) <- sample.names
 
-#I believe that dada2 might want us to run its own filter and trim function, however we might get away without using it since prevous cutting will be done
+filtered_out <- filterAndTrim(
+fwd = merged_reads,
+filt = merged_filt,
+truncQ = 0,
+rm.phix = T,
+compress = T,
+multithread = T
+)
 
-#The following is to assign the filtered reads a file
-
-#filtered_merged_reads <- file.path(path, "filtered", paste0(sample.names, "_merged_filtered.fastq.gz"))
-
-#filtered_reverse_reads <- file.path(path, "filtered", paste0(sample.names, "_reverse_filtered.fastq.gz"))
-#move line ahead
-out <- filteredAndTrim(forward_reads, filtered_forward_reads, maxN=0, maxEE=2, truncQ=0, compress=T, multithread=T)#provide number for multireads in local.env
+#provide number for multithreads in local.env
 
 #learning errors is a key component, must be done with filtered reads
 
-err_merged_reads <- learnErrors(filtered_merged_reads, multithread=T)
+err_merged_reads <- learnErrors(merged_filt, multithread=T)
 
-#err_reverse_reads <- learnErrors(filtered_reverse_reads, multithread=T)
-
-#There is a bult-in function that allows the user to plot errors, just allows user to visualize the estimated error rates
-#If decided to run this plot-
-
-pdf(path)
+pdf(file.path(outdir, "dada_err.pdf"))
 plotErrors(err_merged_reads, nominalQ=T)
 dev.off()
 
-#plotErrors(err_reverse_reads, nominalQ=T)
-
 #after dada2 has learned errors, user can denoise
-derepFastq #output will be for dada
+derepped <- derepFastq(merged_filt)
 
-dada_merged <- dada(filtered_merged_reads, err=err_merged_reads, multithread=T)
-
-#dada_reverse <- dada(Filtered_reverse_reads, err-err_reverse_reads, multithread=T)
-
-#Inspect the denoising results, if wanted by "dada_forward[[1]]
-
-#After denoising, we can merge the paired reads
-
-#mergers <- mergePairs(dada_forward, filtered_forward_reads, dada_reverse, filtered_reverse_reads, verbose=T)
-
-#Again, if wanted to inspect mergers run head(mergers[[1]])
+dada_merged <- dada(derepped, err=err_merged_reads, multithread=T)
 
 #Construct ASV
 
-seqtab <- makeSequenceTable(mergers)
+seqtab <- makeSequenceTable(dada_merged)
 dim(seqtab)
 
-write.table(seqtab, path, sep='\t')
+write.table(seqtab, file.path(outdir, 'asv.tsv'), sep='\t')
 
-save.image(path)
+save.image(file.path(outdir, 'ASV.png')) #change to above ".RData"
+
