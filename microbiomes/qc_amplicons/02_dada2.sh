@@ -14,8 +14,6 @@ cat <<EOF > ${outdir}/02_dada2/02_dada2.sbatch
 #SBATCH --mail-type=END,FAIL
 #SBATCH --output=${outdir}/02_dada2/02_dada2.log
 #SBATCH --ntasks=${nthreads}
-#SBATCH --nodes=1
-#SBATCH --cpus-per-task=1
 #SBATCH --mem=20G
 #SBATCH --time=01:00:00
 
