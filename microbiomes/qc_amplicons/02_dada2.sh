@@ -19,7 +19,7 @@ cat <<EOF > ${outdir}/02_dada2/02_dada2.sbatch
 #SBATCH --mem=${maxram}
 #SBATCH --time=01:00:00
 
-module load apps/R
+module load hub.apps/R
 Rscript ${outdir}/02_dada2/02_dada2.r ${nthreads} ${indir} ${outdir}/02_dada2/
 
 EOF

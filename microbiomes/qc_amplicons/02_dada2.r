@@ -9,35 +9,19 @@ outdir <- args[[3]]
 merged_reads <- sort(list.files(indir, pattern=".fastq.gz", full.names=TRUE))
 sample.names <- sub('.fastq.gz','',basename(merged_reads))
 
-filt_dir <- file.path(outdir, "filtered")
-dir.create(filt_dir, recursive=TRUE)
-
 png(file.path(outdir, "quality_profile.png"), height=600, width=600)
 plotQualityProfile(merged_reads[1:10])
 dev.off()
 
-merged_filt <- file.path(filt_dir, paste0(sample.names, "_M_filt.fastq.gz"))
-
-names(merged_filt) <- sample.names
-
-filtered_out <- filterAndTrim(
-  fwd = merged_reads,
-  filt = merged_filt,
-  truncQ = 0,
-  rm.phix = TRUE,
-  compress = TRUE,
-  multithread = nthreads
-)
-
-#learning errors is a key component, must be done with filtered reads
-err_merged_reads <- learnErrors(merged_filt, multithread=nthreads)
+#learning errors is a key component, must be done with reads that have no N's
+err_merged_reads <- learnErrors(merged_reads, multithread=nthreads)
 
 pdf(file.path(outdir, "dada_err.pdf"))
 plotErrors(err_merged_reads, nominalQ=TRUE)
 dev.off()
 
 #after dada2 has learned errors, user can denoise
-derepped <- derepFastq(merged_filt)
+derepped <- derepFastq(merged_reads)
 dada_merged <- dada(derepped, err=err_merged_reads, multithread=nthreads)
 
 #Construct ASV
