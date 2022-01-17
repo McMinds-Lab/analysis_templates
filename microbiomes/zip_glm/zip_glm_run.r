@@ -1,6 +1,8 @@
 ## get user-edited environmental variables output_prefix, counts_fp, etc
 model_dir <- getwd()
 source(file.path(model_dir, 'zip_glm.env'))
+K_s <- 5
+K_f <- 5
 ##
 
 ## set up output directory
@@ -81,31 +83,25 @@ idx_f = c(1, rep(2,ncol(X_f)-1-NF), rep(3,NF))
 NFB   = max(idx_f)
 NB_f  = length(idx_f)
 
-###
-X_f_full <- diag(1,NB_f)
-X_f_full[(NB_f-NF+1):NB_f,] <- X_f
-X_f_qr <- qr(t(X_f_full[,1:(NB_f-NF)]))
-X_f_full[1:(NB_f-NF),] <- qr.R(X_f_qr)[,order(X_f_qr$pivot)]
-X_f_full_inv <- solve(X_f_full)
-###
-
 prior_scale_p <- sqrt(exp(mean(log(apply(countsbin,2,var)[apply(countsbin,2,var) > 0]))))
 prior_scale_a <- sqrt(exp(mean(log(apply(counts,2,function(x) var(log(x[x>0])))))))
 
 
-standat <- list(NS       = NS,
-                NB_s     = NB_s,
-                NSB      = NSB,
-                idx_s    = idx_s,
-                X_s_full_inv      = X_s_full_inv,
-                NF       = NF,
-                NB_f     = NB_f,
-                NFB      = NFB,
-                idx_f    = idx_f,
-                X_f_full_inv      = t(X_f_full_inv),
-                count    = counts,
+standat <- list(NS            = NS,
+                NB_s          = NB_s,
+                NSB           = NSB,
+                idx_s         = idx_s,
+                X_s           = X_s,
+                NF            = NF,
+                NB_f          = NB_f,
+                NFB           = NFB,
+                idx_f         = idx_f,
+                X_f           = t(X_f),
+                count         = counts,
                 prior_scale_a = prior_scale_a,
-                prior_scale_p = prior_scale_p)
+                prior_scale_p = prior_scale_p,
+                K_s           = K_s,
+                K_f           = K_f)
 
 abundance_init <- X_s_full %*%  MASS::ginv(X_s_full[(NB_s-NS+1):NB_s,]) %*% logcountsmod %*% t(MASS::ginv(X_f_full[(NB_f-NF+1):NB_f,-1])) %*% t(X_f_full)[-1,-1]
 prevalence_init <- X_s_full %*%  MASS::ginv(X_s_full[(NB_s-NS+1):NB_s,]) %*% countsbin %*% t(MASS::ginv(X_f_full[(NB_f-NF+1):NB_f,])) %*% t(X_f_full)
