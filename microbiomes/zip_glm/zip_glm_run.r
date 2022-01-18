@@ -1,24 +1,52 @@
-## get user-edited environmental variables output_prefix, counts_fp, etc
-model_dir <- getwd()
-source(file.path(model_dir, 'zip_glm.env'))
-K_s <- 5
-K_f <- 5
+## get user-edited environmental variables outdir, counts_fp, etc
+args <- commandArgs(TRUE)
+
+load(args[[1]])
+load(args[[2]])
+samplenames <- read.table(args[[3]],sep='\t',header=T)
+metadat <- read.table(args[[4]],sep='\t',header=T)
+id_conversion <- read.table(args[[5]],sep='\t',header=T)
+
+outdir <- args[[6]]
+K_s <- as.numeric(args[[7]])
+K_f <- as.numeric(args[[8]])
+nchains <- as.numeric(args[[9]])
+nthreads <- as.numeric(args[[10]])
+opencl <- as.logical(args[[11]])
+opencl_device <- as.numeric(args[[12]])
+model_dir <- args[[13]]
+
 ##
+
+rownames(seqtab) <- sapply(rownames(seqtab), function(x) samplenames$Sample[samplenames$Tag == sub('.fastq.gz','',sub('-',':',x))])
+
+seqtab_F <- seqtab[grep('UFL',rownames(seqtab)),]
+
+seqtab_M <- t(sapply(unique(sub('_.*','',rownames(seqtab_F))), function(x) apply(seqtab_F[grep(x,rownames(seqtab_F)),], 2, sum)))
+
+metadat$id_argaly <- id_conversion$id_argaly[match(metadat$ID..Alison, id_conversion$id_alison)]
+
+m2 <- metadat[match(rownames(seqtab_M),metadat$id_argaly),]
+
+dna <- Biostrings::DNAStringSet(dada2::getSequences(seqtab))
+ids <- DECIPHER::IdTaxa(dna, trainingSet, strand="top", processors=NULL, verbose=FALSE) 
+ranks <- c("domain", "phylum", "class", "order", "family", "genus", "species") 
+# Convert the output object of class "Taxa" to a matrix analogous to the output from assignTaxonomy
+taxid <- t(sapply(ids, function(x) {
+  m <- match(ranks, x$rank)
+  taxa <- x$taxon[m]
+  taxa[startsWith(taxa, "unclassified_")] <- NA
+  taxa
+}))
+colnames(taxid) <- ranks; rownames(taxid) <- dada2::getSequences(seqtab)
 
 ## set up output directory
-dir.create(output_prefix)
+dir.create(file.path(outdir, '03_zip'))
 ##
 
-counts_raw <- read.table(counts_fp,header=T,sep='\t',quote="")
-counts_raw[,1] <- gsub('_kaiju.*','',gsub('.*/','',counts_raw[,1]))
-
-counts <- reshape(counts_raw, idvar='taxon_id', timevar='file', v.names='reads', direction='wide', drop=c('percent','taxon_name'))
-rownames(counts) <- paste0('taxon_id_',counts[,1])
-counts <- counts[,-1]
-counts[is.na(counts)] <- 0
-colnames(counts) <- sub('reads.','',colnames(counts))
-
-counts <- counts[order(apply(apply(counts, 2, function(x) x / sum(x)),1,sum),decreasing=T),order(apply(counts,2,sum),decreasing = T)]
+counts <- t(seqtab_M)
+counts <- counts[order(apply(apply(counts, 2, function(x) x / sum(x)),1,sum), decreasing=T), 
+                 order(apply(counts,2,sum), decreasing = T)]
 relabund <- apply(counts, 2, function(x) x / sum(x))
 
 countsbin <- t(as.matrix(counts))
@@ -27,59 +55,40 @@ countsbin[countsbin > 0] <- 1
 countsmod <- t(as.matrix(counts))
 countsmod[countsmod==0] <- 0.5
 logcountsmod <- log(countsmod)
-logcountsmod_a <- t(apply(logcountsmod,1,function(x) x - mean(x)))
 
-
-meta <- read.table(sample_metadata_fp, header=T, sep='\t')
-meta$Gender <- as.factor(meta$Gender)
-# there are three factor levels for 'group', and it makes most biological sense to compare to the baseline of 'Term'
-meta$Group <- relevel(as.factor(meta$Group), 'Term')
-meta$Individual <- as.factor(meta$Individual)
-meta$DeliveryMode <- as.factor(meta$DeliveryMode)
-meta$EnteralFeeds_2mo <- as.factor(meta$EnteralFeeds_2mo)
-# some values of 'Breastmilk' have extra spaces in them for some reason, so we'll clean those up
-levels(meta$EnteralFeeds_2mo)[gsub(' ', '', levels(meta$EnteralFeeds_2mo)) == 'Breastmilk'] <-
-  'Breastmilk'
-
+rownames(m2) <- m2$id_argaly
+m2 <- m2[colnames(counts)[colnames(counts) %in% rownames(m2)],]
+m2$Location <- as.factor(m2$Location)
 
 NS    = ncol(counts)
 NF    = nrow(counts)
 
-X_s <- model.matrix(~ Gender + Group + Individual, meta) ## standardize continuous variables before placing in model
-X_s <- cbind(model.matrix(~ Gender, meta), model.matrix(~ 0 + Group, meta), model.matrix(~ 0 + Individual, meta), diag(1, NS)) ## standardize continuous variables before placing in model
+X_s <- cbind(Intercept=1, model.matrix(~ 0 + Location, m2)) ## standardize continuous variables before placing in model
 X_s[,-1] <- apply(X_s[,-1], 2, function(x) x - mean(x))
-rownames(X_s) <- meta$Sample
+rownames(X_s) <- rownames(m2)
 X_s <- X_s[colnames(counts),]
 
-idx_s <- c(1, 2, rep(3, nlevels(meta$Group)), rep(4, nlevels(meta$Individual)), rep(5,NS))
+idx_s <- c(1, rep(2, nlevels(m2$Location)))
 NSB <- max(idx_s)
 NB_s <- length(idx_s)
 
-###
-X_s_full <- diag(1,NB_s)
-X_s_full[(NB_s-NS+1):NB_s,] <- X_s
-X_s_qr <- qr(t(X_s_full[,1:(NB_s-NS)]))
-X_s_full[1:(NB_s-NS),] <- qr.R(X_s_qr)[,order(X_s_qr$pivot)]
-X_s_full_inv <- solve(X_s_full)
-###
+## work on this section to make sure columns are unique and so that taxa are filtered out if they apply to ALL samples as well as none
+hi <- cbind('Intercept',unique(taxid))
 
-
-taxvec <- sapply(unique(counts_raw$taxon_id), function(x) {
-  counts_raw$taxon_name[counts_raw$taxon_id==x & !is.na(counts_raw$taxon_id)][[1]]
+estimables <- lapply(2:(ncol(hi)-1), function(x) {
+  y <- unique(hi[,1:x])
+  keepers <- apply(y, 1, function(z) sum(apply(y[,1:(x-1),drop=F],1, function(r) identical(z[1:(x-1)],r))) > 1 & !is.na(z[[x]]))
+  return(unname(y[keepers,x]))
 })
-names(taxvec) <- paste0('taxon_id_', unique(counts_raw$taxon_id))
-temp <- strsplit(taxvec, ';')
-most <- max(sapply(temp,length))
-parsedtax <- lapply(temp,function(x) {length(x) <- most; return(x)})
-taxtab <- do.call('rbind',parsedtax)
-hi <- unique(as.vector(taxtab[,1:9]))
-hi <- hi[sapply(hi, function(x) sum(x == taxtab[,1:9],na.rm=T)) > 1]
 
-X_f <- cbind(1, sapply(hi, function(x) apply(taxtab,1,function(y) x %in% y)), diag(1,NF))
+X_f <- cbind(Intercept=1, do.call(cbind, sapply(1:length(estimables), function(x) sapply(estimables[[x]], function(y) as.numeric(taxid[,x] == y)))))
+rownames(X_f) <- rownames(taxid)
+X_f[is.na(X_f)] <- 0
 X_f[,-1] <- apply(X_f[,-1], 2, function(x) x-mean(x))
 X_f <- X_f[rownames(counts),]
+##
 
-idx_f = c(1, rep(2,ncol(X_f)-1-NF), rep(3,NF))
+idx_f = c(1, rep(2, ncol(X_f)-1))
 NFB   = max(idx_f)
 NB_f  = length(idx_f)
 
@@ -103,51 +112,37 @@ standat <- list(NS            = NS,
                 K_s           = K_s,
                 K_f           = K_f)
 
-abundance_init <- X_s_full %*%  MASS::ginv(X_s_full[(NB_s-NS+1):NB_s,]) %*% logcountsmod %*% t(MASS::ginv(X_f_full[(NB_f-NF+1):NB_f,-1])) %*% t(X_f_full)[-1,-1]
-prevalence_init <- X_s_full %*%  MASS::ginv(X_s_full[(NB_s-NS+1):NB_s,]) %*% countsbin %*% t(MASS::ginv(X_f_full[(NB_f-NF+1):NB_f,])) %*% t(X_f_full)
+save.image(file.path(outdir, '03_zip', 'zip_glm_setup.RData'))
 
-inits <- list(prevalence = prevalence_init,
-              abundance = abundance_init,
-              multinomial_nuisance = apply(logcountsmod,1,mean))
-
-save.image(file.path(output_prefix,'zip_glm_setup.RData'))
-
-cmdstanr::write_stan_json(standat[1:13], file.path(output_prefix,'zip_test_data.json'))
-#cmdstanr::write_stan_json(standat[14:7], file.path(output_prefix,'zip_test_data_2.json'))
-#cmdstanr::write_stan_json(standat[18:length(standat)], file.path(output_prefix,'zip_test_data_3.json'))
-
-#system(paste0('sed \'$d\' ', file.path(output_prefix,'zip_test_data_1.json'), ' | sed \'$s/$/,/\' > ', file.path(output_prefix,'zip_test_data.json')))
-#system(paste0('sed \'1d\' ', file.path(output_prefix,'zip_test_data_2.json'), ' | sed \'$d\' | sed \'$s/$/,/\' >> ', file.path(output_prefix,'zip_test_data.json')))
-#system(paste0('sed \'1d\' ', file.path(output_prefix,'zip_test_data_3.json'), ' >> ', file.path(output_prefix,'zip_test_data.json')))
-
-
-cmdstanr::write_stan_json(inits, file.path(output_prefix,'zip_test_inits.json'))
+cmdstanr::write_stan_json(standat, file.path(outdir, '03_zip', 'zip_test_data.json'))
 
 setwd(cmdstanr::cmdstan_path())
 system(paste0(c('make ', 'make STAN_OPENCL=true ')[opencl+1], file.path(model_dir,'zip_glm')))
 
 sampling_commands <- list(hmc = paste('./zip_glm',
-                                      paste0('data file=',file.path(output_prefix,'zip_test_data.json')),
-                                      paste0('init=',file.path(output_prefix,'zip_test_inits.json')),
+                                      paste0('data file=',path.expand(file.path(outdir, '03_zip', 'zip_test_data.json'))),
+                                      'init=0',
                                       'output',
-                                      paste0('file=',file.path(output_prefix,'zip_test_data_samples.csv')),
+                                      paste0('file=',path.expand(file.path(outdir, '03_zip', 'zip_test_data_samples.csv'))),
                                       paste0('refresh=', 1),
-                                      'method=sample algorithm=hmc',
-                                      'stepsize=0.01',
+                                      'method=sample',
+                                      paste0('num_chains=',nchains),
+                                      'algorithm=hmc',
+                                      #'stepsize=0.00000001',
                                       'engine=nuts',
-                                      'max_depth=6',
+                                      'max_depth=10',
                                       'adapt t0=10',
                                       'delta=0.8',
                                       'kappa=0.75',
                                       'num_warmup=200',
                                       'num_samples=200',
-                                      ('opencl platform=0 device=1')[opencl],
+                                      paste0('num_threads=',nthreads),
+                                      (paste0('opencl platform=0 device=', opencl_device))[opencl],
                                       sep=' '),
                           advi = paste('./zip_glm',
-                                       paste0('data file=',file.path(output_prefix,'zip_test_data.json')),
-                                       paste0('init=',file.path(output_prefix,'zip_test_inits.json')),
+                                       paste0('data file=',path.expand(file.path(outdir, '03_zip', 'zip_test_data.json'))),
                                        'output',
-                                       paste0('file=',file.path(output_prefix,'zip_test_data_samples.csv')),
+                                       paste0('file=',path.expand(file.path(outdir, '03_zip', 'zip_test_data_samples.csv'))),
                                        paste0('refresh=', 100),
                                        'method=variational algorithm=meanfield',
                                        #'grad_samples=1',
@@ -166,4 +161,8 @@ print(sampling_commands[[algorithm]])
 print(date())
 system(sampling_commands[[algorithm]])
 
+#stan.fit.var <- cmdstanr::read_cmdstan_csv(Sys.glob(path.expand(file.path(outdir,'03_zip','zip_test_data_samples_*.csv'))),
+                                           format = 'draws_array')
 
+#summary(stan.fit.var$post_warmup_sampler_diagnostics)
+#plot(apply(stan.fit.var$post_warmup_draws[,1,paste0('L_s[',1:NS,',1]')], 3, mean), apply(stan.fit.var$post_warmup_draws[,1,paste0('L_s[',1:NS,',2]')],3,mean), xlab = "PCA1", ylab = "PCA2",axes = TRUE, main = "First samplewise latent variables", col=as.factor(m2$env.features), pch=16)
