@@ -10,7 +10,7 @@ outdir=$6
 K_s=$7
 K_f=$8
 nchains=$9
-opencl=$10
+opencl=${10}
 
 mkdir -p ${outdir}/zip_glm/
 cp zip_glm_run.r ${outdir}/zip_glm/

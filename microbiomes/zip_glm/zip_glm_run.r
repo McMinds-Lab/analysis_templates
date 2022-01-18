@@ -1,20 +1,20 @@
 ## get user-edited environmental variables outdir, counts_fp, etc
-args <- commandArgs(TRUE)
+newargs <- commandArgs(TRUE)
 
-load(args[[1]])
-load(args[[2]])
-samplenames <- read.table(args[[3]],sep='\t',header=T)
-metadat <- read.table(args[[4]],sep='\t',header=T)
-id_conversion <- read.table(args[[5]],sep='\t',header=T)
+load(newargs[[1]])
+load(newargs[[2]])
+samplenames <- read.table(newargs[[3]],sep='\t',header=T)
+metadat <- read.table(newargs[[4]],sep='\t',header=T)
+id_conversion <- read.table(newargs[[5]],sep='\t',header=T)
 
-outdir <- args[[6]]
-K_s <- as.numeric(args[[7]])
-K_f <- as.numeric(args[[8]])
-nchains <- as.numeric(args[[9]])
-nthreads <- as.numeric(args[[10]])
-opencl <- as.logical(args[[11]])
-opencl_device <- as.numeric(args[[12]])
-model_dir <- args[[13]]
+outdir <- newargs[[6]]
+K_s <- as.numeric(newargs[[7]])
+K_f <- as.numeric(newargs[[8]])
+nchains <- as.numeric(newargs[[9]])
+nthreads <- as.numeric(newargs[[10]])
+opencl <- as.logical(newargs[[11]])
+opencl_device <- as.numeric(newargs[[12]])
+model_dir <- newargs[[13]]
 
 ##
 
