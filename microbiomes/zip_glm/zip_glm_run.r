@@ -15,7 +15,7 @@ nthreads <- as.numeric(newargs[[10]])
 opencl <- as.logical(newargs[[11]])
 opencl_device <- as.numeric(newargs[[12]])
 model_dir <- newargs[[13]]
-
+algorithm <- newargs[[14]]
 ##
 
 rownames(seqtab) <- sapply(rownames(seqtab), function(x) samplenames$Sample[samplenames$Tag == sub('.fastq.gz','',sub('-',':',x))])
@@ -41,7 +41,7 @@ taxid <- t(sapply(ids, function(x) {
 colnames(taxid) <- ranks; rownames(taxid) <- dada2::getSequences(seqtab)
 
 ## set up output directory
-dir.create(file.path(outdir, '03_zip'))
+dir.create(file.path(outdir, 'zip_glm'))
 ##
 
 counts <- t(seqtab_M)
@@ -112,18 +112,18 @@ standat <- list(NS            = NS,
                 K_s           = K_s,
                 K_f           = K_f)
 
-save.image(file.path(outdir, '03_zip', 'zip_glm_setup.RData'))
+save.image(file.path(outdir, 'zip_glm', 'zip_glm_setup.RData'))
 
-cmdstanr::write_stan_json(standat, file.path(outdir, '03_zip', 'zip_test_data.json'))
+cmdstanr::write_stan_json(standat, file.path(outdir, 'zip_glm', 'zip_test_data.json'))
 
 setwd(cmdstanr::cmdstan_path())
 system(paste0(c('make ', 'make STAN_OPENCL=true ')[opencl+1], file.path(model_dir,'zip_glm')))
 
 sampling_commands <- list(hmc = paste('./zip_glm',
-                                      paste0('data file=',path.expand(file.path(outdir, '03_zip', 'zip_test_data.json'))),
+                                      paste0('data file=',path.expand(file.path(outdir, 'zip_glm', 'zip_test_data.json'))),
                                       'init=0',
                                       'output',
-                                      paste0('file=',path.expand(file.path(outdir, '03_zip', 'zip_test_data_samples.csv'))),
+                                      paste0('file=',path.expand(file.path(outdir, 'zip_glm', 'zip_test_data_samples.csv'))),
                                       paste0('refresh=', 1),
                                       'method=sample',
                                       paste0('num_chains=',nchains),
@@ -140,9 +140,9 @@ sampling_commands <- list(hmc = paste('./zip_glm',
                                       (paste0('opencl platform=0 device=', opencl_device))[opencl],
                                       sep=' '),
                           advi = paste('./zip_glm',
-                                       paste0('data file=',path.expand(file.path(outdir, '03_zip', 'zip_test_data.json'))),
+                                       paste0('data file=',path.expand(file.path(outdir, 'zip_glm', 'zip_test_data.json'))),
                                        'output',
-                                       paste0('file=',path.expand(file.path(outdir, '03_zip', 'zip_test_data_samples.csv'))),
+                                       paste0('file=',path.expand(file.path(outdir, 'zip_glm', 'zip_test_data_samples.csv'))),
                                        paste0('refresh=', 100),
                                        'method=variational algorithm=meanfield',
                                        #'grad_samples=1',
@@ -161,7 +161,7 @@ print(sampling_commands[[algorithm]])
 print(date())
 system(sampling_commands[[algorithm]])
 
-#stan.fit.var <- cmdstanr::read_cmdstan_csv(Sys.glob(path.expand(file.path(outdir,'03_zip','zip_test_data_samples_*.csv'))),
+#stan.fit.var <- cmdstanr::read_cmdstan_csv(Sys.glob(path.expand(file.path(outdir,'zip_glm','zip_test_data_samples_*.csv'))),
                                            format = 'draws_array')
 
 #summary(stan.fit.var$post_warmup_sampler_diagnostics)
