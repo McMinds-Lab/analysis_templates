@@ -83,14 +83,14 @@ model {
     matrix[NS,NB_s+K_s] XL_s = append_col(X_s,L_s);
     matrix[NB_f+K_f,NF] XL_f = append_row(X_f,L_f');
     matrix[NS,NF] prevalence
-        =   XL_s * (beta_prevalence_i .* sd_prevalence[idxk_s, idxk_f])              * XL_f
-          + XL_s * (beta_prevalence_s .* sd_prevalence[idxk_s, rep_array(NFB+2,NF)])
-          +        (beta_prevalence_f .* sd_prevalence[rep_array(NSB+2,NS), idxk_f]) * XL_f;
+        =    XL_s * (beta_prevalence_s .* sd_prevalence[idxk_s, rep_array(NFB+2,NF)])
+          + (XL_s * (beta_prevalence_i .* sd_prevalence[idxk_s, idxk_f])
+             +      (beta_prevalence_f .* sd_prevalence[rep_array(NSB+2,NS), idxk_f])) * XL_f;
     matrix[NS,NF] abundance
-        =   XL_s * (beta_abundance_i  .* sd_abundance[idxk_s, idxk_f2])              * XL_f[2:,]
-          + XL_s * (beta_abundance_s  .* sd_abundance[idxk_s, rep_array(NFB+1,NF)])
-          +        (beta_abundance_f  .* sd_abundance[rep_array(NSB+2,NS), idxk_f2]) * XL_f[2:,]
-          + residuals                  * sd_abundance[NSB+2, NFB+1]
+        =    XL_s * (beta_abundance_s  .* sd_abundance[idxk_s, rep_array(NFB+1,NF)])
+          + (XL_s * (beta_abundance_i  .* sd_abundance[idxk_s, idxk_f2])
+             +      (beta_abundance_f  .* sd_abundance[rep_array(NSB+2,NS), idxk_f2])) * XL_f[2:,]
+          + residuals                   * sd_abundance[NSB+2, NFB+1]
           + rep_matrix(multinomial_nuisance, NF);
     // priors
     target += std_normal_lpdf(global_scale_prevalence);

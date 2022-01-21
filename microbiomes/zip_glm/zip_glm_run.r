@@ -84,11 +84,13 @@ estimables <- lapply(2:(ncol(hi)-1), function(x) {
 X_f <- cbind(Intercept=1, do.call(cbind, sapply(1:length(estimables), function(x) sapply(estimables[[x]], function(y) as.numeric(taxid[,x] == y)))))
 rownames(X_f) <- rownames(taxid)
 X_f[is.na(X_f)] <- 0
+X_f_nonUnique <- colSums(X_f)>1 & !duplicated(t(X_f))
+X_f <- X_f[,X_f_nonUnique]
 X_f[,-1] <- apply(X_f[,-1], 2, function(x) x-mean(x))
 X_f <- X_f[rownames(counts),]
 ##
 
-idx_f = c(1, rep(2, ncol(X_f)-1))
+idx_f = c(1, 1+unlist(sapply(1:length(estimables), function(x) rep(x,length(estimables[[x]])))))[X_f_nonUnique]
 NFB   = max(idx_f)
 NB_f  = length(idx_f)
 
@@ -112,23 +114,39 @@ standat <- list(NS            = NS,
                 K_s           = K_s,
                 K_f           = K_f)
 
+inits <- list(global_scale_prevalence = 0.1,
+              global_scale_abundance  = 0.1,
+              sd_prevalence_norm      = rep(0.1, (NSB+2)*(NFB+2)-2),
+              sd_abundance_norm       = rep(0.1, (NSB+2)*(NFB+1)-1),
+              beta_prevalence_i       = matrix(0,NB_s+K_s,NB_f+K_f),
+              beta_prevalence_s       = matrix(0,NB_s+K_s,NF),
+              beta_prevalence_f       = matrix(0,NS,NB_f+K_f),
+              beta_abundance_i        = matrix(0,NB_s+K_s,NB_f+K_f-1),
+              beta_abundance_s        = matrix(0,NB_s+K_s,NF),
+              beta_abundance_f        = matrix(0,NS,NB_f+K_f-1),
+              residuals               = matrix(0,NS,NF),
+              multinomial_nuisance    = apply(counts,2,function(x) log(mean(x))),
+              L_s                     = diag(1,NS,K_s),
+              L_f                     = diag(1,NF,K_f))
+
 save.image(file.path(outdir, 'zip_glm', 'zip_glm_setup.RData'))
 
 cmdstanr::write_stan_json(standat, file.path(outdir, 'zip_glm', 'zip_test_data.json'))
+cmdstanr::write_stan_json(inits, file.path(outdir, 'zip_glm', 'zip_test_inits.json'))
 
 setwd(cmdstanr::cmdstan_path())
 system(paste0(c('make ', 'make STAN_OPENCL=true ')[opencl+1], file.path(model_dir,'zip_glm')))
 
 sampling_commands <- list(hmc = paste('./zip_glm',
                                       paste0('data file=',path.expand(file.path(outdir, 'zip_glm', 'zip_test_data.json'))),
-                                      'init=0',
+                                      paste0('init=',path.expand(file.path(outdir, 'zip_glm', 'zip_test_inits.json'))),
                                       'output',
                                       paste0('file=',path.expand(file.path(outdir, 'zip_glm', 'zip_test_data_samples.csv'))),
                                       paste0('refresh=', 1),
                                       'method=sample',
                                       paste0('num_chains=',nchains),
                                       'algorithm=hmc',
-                                      #'stepsize=0.00000001',
+                                      'stepsize=0.1',
                                       'engine=nuts',
                                       'max_depth=10',
                                       'adapt t0=10',
@@ -141,6 +159,7 @@ sampling_commands <- list(hmc = paste('./zip_glm',
                                       sep=' '),
                           advi = paste('./zip_glm',
                                        paste0('data file=',path.expand(file.path(outdir, 'zip_glm', 'zip_test_data.json'))),
+                                       'init=0',
                                        'output',
                                        paste0('file=',path.expand(file.path(outdir, 'zip_glm', 'zip_test_data_samples.csv'))),
                                        paste0('refresh=', 100),
@@ -162,7 +181,7 @@ print(date())
 system(sampling_commands[[algorithm]])
 
 #stan.fit.var <- cmdstanr::read_cmdstan_csv(Sys.glob(path.expand(file.path(outdir,'zip_glm','zip_test_data_samples_*.csv'))),
-                                           format = 'draws_array')
+#                                           format = 'draws_array')
 
 #summary(stan.fit.var$post_warmup_sampler_diagnostics)
 #plot(apply(stan.fit.var$post_warmup_draws[,1,paste0('L_s[',1:NS,',1]')], 3, mean), apply(stan.fit.var$post_warmup_draws[,1,paste0('L_s[',1:NS,',2]')],3,mean), xlab = "PCA1", ylab = "PCA2",axes = TRUE, main = "First samplewise latent variables", col=as.factor(m2$env.features), pch=16)
