@@ -1,0 +1,7 @@
+download_SRA.sh is a script that simplifies the downloading of entire projects from NCBI's SRA using just the project ID. It automatically downloads all the sample (run) IDs, then gathers their metadata and dumps their fastq's, then gzips the data.
+
+use:
+
+configure local.env for the slurm queue, parallelization, etc, then set 'getting_data' as your working directory, and run:
+
+download_SRA.sh SRP324501 destination_directory
