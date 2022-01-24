@@ -12,6 +12,7 @@ K_f=$8
 nchains=$9
 opencl=${10}
 algorithm=${11}
+taxalg=${12}
 
 mkdir -p ${outdir}/zip_glm/
 cp zip_glm_run.r ${outdir}/zip_glm/
@@ -31,7 +32,7 @@ cat <<EOF > ${outdir}/zip_glm/zip_glm.sbatch
 #SBATCH --gres=gpu:1
 
 module load hub.apps/R
-Rscript ${outdir}/zip_glm/zip_glm_run.r ${taxdat} ${asvs} ${tags} ${meta} ${ids} ${outdir} ${K_s} ${K_f} ${nchains} ${nthreads} ${opencl} ${opencl_device} ${outdir}/zip_glm/ ${algorithm}
+Rscript ${outdir}/zip_glm/zip_glm_run.r ${taxdat} ${asvs} ${tags} ${meta} ${ids} ${outdir} ${K_s} ${K_f} ${nchains} ${nthreads} ${opencl} ${opencl_device} ${outdir}/zip_glm/ ${algorithm} ${taxalg}
 
 EOF
 
