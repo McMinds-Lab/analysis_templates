@@ -2,8 +2,10 @@
 newargs <- commandArgs(TRUE)
 
 if(grepl('RData$',newargs[[1]])) {
+  taxalg <- 'decipher'
   load(newargs[[1]])
 } else {
+  taxalg <- 'dada2'
   taxref <- newargs[[1]]
 }
 load(newargs[[2]])
