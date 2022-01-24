@@ -43,8 +43,8 @@ if(taxalg == 'decipher') {
   colnames(taxid) <- ranks; rownames(taxid) <- dada2::getSequences(seqtab)
 } else {
   ## https://zenodo.org/record/1172783#.Ye7xEvXMLxg
-  taxid <- dada2::assignTaxonomy(seqtab, "~/data/ref/silva_nr_v132_train_set.fa.gz", multithread=nthreads)
-  taxid <- dada2::addSpecies(taxid, '~/data/ref/silva_species_assignment_v132.fa.gz', allowMultiple=TRUE)
+  taxid <- dada2::assignTaxonomy(seqtab, "~/data/ref/silva_132.18s.99_rep_set.dada2.fa.gz", multithread=nthreads)
+  #taxid <- dada2::addSpecies(taxid, '~/data/ref/silva_species_assignment_v132.fa.gz', allowMultiple=TRUE)
 }
 
 ## set up output directory
