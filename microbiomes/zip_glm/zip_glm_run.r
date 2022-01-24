@@ -1,7 +1,11 @@
 ## get user-edited environmental variables outdir, counts_fp, etc
 newargs <- commandArgs(TRUE)
 
-load(newargs[[1]])
+if(grepl('RData$',newargs[[1]])) {
+  load(newargs[[1]])
+} else {
+  taxref <- newargs[[1]]
+}
 load(newargs[[2]])
 samplenames <- read.table(newargs[[3]],sep='\t',header=T)
 metadat <- read.table(newargs[[4]],sep='\t',header=T)
@@ -16,7 +20,6 @@ opencl <- as.logical(newargs[[11]])
 opencl_device <- as.numeric(newargs[[12]])
 model_dir <- newargs[[13]]
 algorithm <- newargs[[14]]
-taxalg <- newargs[[15]]
 ##
 
 rownames(seqtab) <- sapply(rownames(seqtab), function(x) samplenames$Sample[samplenames$Tag == sub('.fastq.gz','',sub('-',':',x))])
@@ -42,9 +45,8 @@ if(taxalg == 'decipher') {
   }))
   colnames(taxid) <- ranks; rownames(taxid) <- dada2::getSequences(seqtab)
 } else {
-  ## https://zenodo.org/record/1172783#.Ye7xEvXMLxg
-  taxid <- dada2::assignTaxonomy(seqtab, "~/data/ref/silva_132.18s.99_rep_set.dada2.fa.gz", multithread=nthreads)
-  #taxid <- dada2::addSpecies(taxid, '~/data/ref/silva_species_assignment_v132.fa.gz', allowMultiple=TRUE)
+  ## https://zenodo.org/record/1447330#.Ye8P1vXMLxg
+  taxid <- dada2::assignTaxonomy(seqtab, taxref, multithread=nthreads)
 }
 
 ## set up output directory
