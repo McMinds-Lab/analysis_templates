@@ -1,8 +1,8 @@
 ## this is modified from the function makeTaxonomyFasta_SilvaNR in dada2 v1.20.0
 makeTaxonomyFasta_SilvaNR_18S <- function (fin, ftax, fout, include.species = FALSE, compress = TRUE) {
   ##
-  loadNamespace("Biostrings")
   loadNamespace("dada2")
+  attachNamespace("dada2")
   #
   xset <- DNAStringSet(readRNAStringSet(fin, format = "fasta"))
   taxl <- names(xset)
