@@ -45,7 +45,7 @@ makeTaxonomyFasta_SilvaNR_18S <- function (fin, ftax, fout, include.species = FA
   }
   if (any(taxa.ba.mat.string == "UNDEF")) 
     stop("Taxon string matrix was not fully initialized.")
-  taxa.ba.mat[grep(paste(c("uncultured",'unidentified','artificial','fungal','endophyte','eukaryote','metagenome','environmental','Incertae','-like'),collapse='|'), taxa.ba.mat, ignore.case=TRUE)] <- NA
+  taxa.ba.mat[grep(paste(c("uncultured",'unidentified','artificial','fungal','endophyte','eukaryote','metagenome','environmental','Incertae','-like','_gen.'),collapse='|'), taxa.ba.mat, ignore.case=TRUE)] <- NA
   set.seed(100)
   N_EUK <- 100
   euk.keep <- sample(names(taxl)[kingdom %in% c("Bacteria", "Archaea")], 

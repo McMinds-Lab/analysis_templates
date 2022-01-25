@@ -54,9 +54,10 @@ dir.create(file.path(outdir, 'zip_glm'))
 ##
 
 counts <- t(seqtab_M)
-counts <- counts[order(apply(apply(counts, 2, function(x) x / sum(x)),1,sum), decreasing=T), 
-                 order(apply(counts,2,sum), decreasing = T)]
 relabund <- apply(counts, 2, function(x) x / sum(x))
+counts <- counts[order(apply(relabund,1,sd), decreasing=T), 
+                 order(apply(diag(apply(relabund,1,sd)) %*% relabund,2,mean), decreasing=T)]
+relabund <- relabund[rownames(counts),colnames(counts)]
 
 countsbin <- t(as.matrix(counts))
 countsbin[countsbin > 0] <- 1
@@ -92,11 +93,11 @@ estimables <- lapply(2:(ncol(hi)-1), function(x) {
 
 X_f <- cbind(Intercept=1, do.call(cbind, sapply(1:length(estimables), function(x) sapply(estimables[[x]], function(y) as.numeric(taxid[,x] == y)))))
 rownames(X_f) <- rownames(taxid)
+X_f <- X_f[rownames(counts),]
 X_f[is.na(X_f)] <- 0
 X_f_nonUnique <- colSums(X_f)>1 & !duplicated(t(X_f))
 X_f <- X_f[,X_f_nonUnique]
 X_f[,-1] <- apply(X_f[,-1], 2, function(x) x-mean(x))
-X_f <- X_f[rownames(counts),]
 ##
 
 idx_f = c(1, 1+unlist(sapply(1:length(estimables), function(x) rep(x,length(estimables[[x]])))))[X_f_nonUnique]
@@ -192,3 +193,4 @@ system(sampling_commands[[algorithm]])
 
 #summary(stan.fit.var$post_warmup_sampler_diagnostics)
 #plot(apply(stan.fit.var$post_warmup_draws[,1,paste0('L_s[',1:NS,',1]')], 3, mean), apply(stan.fit.var$post_warmup_draws[,1,paste0('L_s[',1:NS,',2]')],3,mean), xlab = "PCA1", ylab = "PCA2",axes = TRUE, main = "First samplewise latent variables", col=as.factor(m2$env.features), pch=16)
+#taxid[do.call(order, as.data.frame(taxid)),]
