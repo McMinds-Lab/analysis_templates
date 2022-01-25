@@ -75,7 +75,7 @@ model {
     matrix[NS,NB_s+K_s] XL_s = append_col(X_s,L_s);
     matrix[NS,NF] prevalence
         =    XL_s * (beta_prevalence_s .* sd_prevalence[idxk_s, rep_array(NFB+1,NF)])
-          + (XL_s * (beta_prevalence_i .* sd_prevalence[idxk_s, idxk_f])
+          + (XL_s * (beta_prevalence_i .* sd_prevalence[idxk_s, idx_f])
              +      (beta_prevalence_f .* sd_prevalence[rep_array(NSB+2,NS), idx_f])) * X_f;
     matrix[NS,NF] abundance
         =    XL_s * (beta_abundance_s  .* sd_abundance[idxk_s, rep_array(NFB,NF)])
