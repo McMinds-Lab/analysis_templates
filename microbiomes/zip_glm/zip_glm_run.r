@@ -54,10 +54,13 @@ dir.create(file.path(outdir, 'zip_glm'))
 ##
 
 counts <- t(seqtab_M)
+counts <- counts[apply(counts,1,sd) > 0,]
+counts_rlog <- DESeq2::rlog(counts)
+sampleOrder <- order(apply(abs(cov2cor(crossprod(t(apply(counts_rlog,1,function(x) x-mean(x)))))),2,mean), decreasing=TRUE)
+featureOrder <- order(apply(abs(cov2cor(tcrossprod(apply(counts_rlog,2,function(x) x-mean(x))))),2,mean), decreasing=TRUE)
+counts <- counts[featureOrder,sampleOrder]
+
 relabund <- apply(counts, 2, function(x) x / sum(x))
-counts <- counts[order(apply(relabund,1,sd), decreasing=T), 
-                 order(apply(diag(apply(relabund,1,sd)) %*% relabund,2,mean), decreasing=T)]
-relabund <- relabund[rownames(counts),colnames(counts)]
 
 countsbin <- t(as.matrix(counts))
 countsbin[countsbin > 0] <- 1
@@ -100,7 +103,7 @@ X_f <- X_f[,X_f_nonUnique]
 X_f[,-1] <- apply(X_f[,-1], 2, function(x) x-mean(x))
 ##
 
-idx_f = c(1, 1+unlist(sapply(1:length(estimables), function(x) rep(x,length(estimables[[x]])))))[X_f_nonUnique]
+idx_f = c(1, rep(2,ncol(X_f)-1))
 NFB   = max(idx_f)
 NB_f  = length(idx_f)
 
