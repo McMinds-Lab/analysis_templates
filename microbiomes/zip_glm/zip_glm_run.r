@@ -15,13 +15,12 @@ id_conversion <- read.table(newargs[[5]],sep='\t',header=T)
 
 outdir <- newargs[[6]]
 K_s <- as.numeric(newargs[[7]])
-K_f <- as.numeric(newargs[[8]])
-nchains <- as.numeric(newargs[[9]])
-nthreads <- as.numeric(newargs[[10]])
-opencl <- as.logical(newargs[[11]])
-opencl_device <- as.numeric(newargs[[12]])
-model_dir <- newargs[[13]]
-algorithm <- newargs[[14]]
+nchains <- as.numeric(newargs[[8]])
+nthreads <- as.numeric(newargs[[9]])
+opencl <- as.logical(newargs[[10]])
+opencl_device <- as.numeric(newargs[[11]])
+model_dir <- newargs[[12]]
+algorithm <- newargs[[13]]
 ##
 
 rownames(seqtab) <- sapply(rownames(seqtab), function(x) samplenames$Sample[samplenames$Tag == sub('.fastq.gz','',sub('-',':',x))])
@@ -121,23 +120,21 @@ standat <- list(NS            = NS,
                 count         = counts,
                 prior_scale_a = prior_scale_a,
                 prior_scale_p = prior_scale_p,
-                K_s           = K_s,
-                K_f           = K_f)
+                K_s           = K_s)
 
 inits <- list(global_scale_prevalence = 0.1,
               global_scale_abundance  = 0.1,
-              sd_prevalence_norm      = rep(0.1, (NSB+2)*(NFB+2)-2),
-              sd_abundance_norm       = rep(0.1, (NSB+2)*(NFB+1)-1),
-              beta_prevalence_i       = matrix(0,NB_s+K_s,NB_f+K_f),
+              sd_prevalence_norm      = rep(0.1, (NSB+2)*(NFB+1)-2),
+              sd_abundance_norm       = rep(0.1, (NSB+2)*NFB-1),
+              beta_prevalence_i       = matrix(0,NB_s+K_s,NB_f),
               beta_prevalence_s       = matrix(0,NB_s+K_s,NF),
-              beta_prevalence_f       = matrix(0,NS,NB_f+K_f),
-              beta_abundance_i        = matrix(0,NB_s+K_s,NB_f+K_f-1),
+              beta_prevalence_f       = matrix(0,NS,NB_f),
+              beta_abundance_i        = matrix(0,NB_s+K_s,NB_f-1),
               beta_abundance_s        = matrix(0,NB_s+K_s,NF),
-              beta_abundance_f        = matrix(0,NS,NB_f+K_f-1),
+              beta_abundance_f        = matrix(0,NS,NB_f-1),
               residuals               = matrix(0,NS,NF),
               multinomial_nuisance    = apply(counts,2,function(x) log(mean(x))),
-              L_s                     = diag(1,NS,K_s),
-              L_f                     = diag(1,NF,K_f))
+              L_s                     = diag(1,NS,K_s))
 
 save.image(file.path(outdir, 'zip_glm', 'zip_glm_setup.RData'))
 
