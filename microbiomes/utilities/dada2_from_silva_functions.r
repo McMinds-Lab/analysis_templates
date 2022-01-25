@@ -1,12 +1,18 @@
 ## this is modified from the function makeTaxonomyFasta_SilvaNR in dada2 v1.20.0
 makeTaxonomyFasta_SilvaNR_18S <- function (fin, ftax, fout, include.species = FALSE, compress = TRUE) {
   ##
-  loadNamespace("dada2")
-  attachNamespace("dada2")
-  loadNamespace("Biostrings")
-  attachNamespace("Biostrings")
-  loadNamespace("ShortRead")
-  attachNamespace("ShortRead")
+  if(!isNamespaceLoaded('dada2')) {
+    loadNamespace("dada2")
+    attachNamespace("dada2")
+  }
+  if(!isNamespaceLoaded('Biostrings')) {
+    loadNamespace("Biostrings")
+    attachNamespace("Biostrings")
+  }
+  if(!isNamespaceLoaded('ShortRead')) {
+    loadNamespace("ShortRead")
+    attachNamespace("ShortRead")
+  }
   #
   xset <- DNAStringSet(readRNAStringSet(fin, format = "fasta"))
   taxl <- names(xset)
@@ -27,7 +33,13 @@ makeTaxonomyFasta_SilvaNR_18S <- function (fin, ftax, fout, include.species = FA
   for(i in 1:length(taxa.ba)) {
     spl <- strsplit(taxa.ba[[i]][length(taxa.ba[[i]])], ' ')[[1]]
     if(length(spl) > 2) {spl <- spl[1:2]}
-    if(length(spl) == 2) {spl[[2]] <- paste(spl,collapse='_')}
+    if(length(spl) == 2) {
+      if(spl[[2]] %in% c('sp.','sp','cf.','cf')) {
+        spl <- spl[-2]
+      } else {
+        spl[[2]] <- paste(spl,collapse='_')
+      }
+    }
     taxa.ba[[i]] <- c(taxa.ba[[i]][-length(taxa.ba[[i]])], spl)
   }
   taxa.ba.mat <- unname(t(do.call(cbind, lapply(taxa.ba, ts))))
@@ -42,7 +54,7 @@ makeTaxonomyFasta_SilvaNR_18S <- function (fin, ftax, fout, include.species = FA
   }
   if (any(taxa.ba.mat.string == "UNDEF")) 
     stop("Taxon string matrix was not fully initialized.")
-  taxa.ba.mat[taxa.ba.mat %in% c("Uncultured", "uncultured")] <- NA
+  taxa.ba.mat[grep(paste(c("Uncultured", "uncultured",'unidentified','artificial','fungal','endophyte','eukaryote'),collapse='|'), taxa.ba.mat)] <- NA
   set.seed(100)
   N_EUK <- 100
   euk.keep <- sample(names(taxl)[kingdom %in% c("Bacteria", "Archaea")], 

@@ -18,8 +18,9 @@ download.file(file.path(base_url, 'taxonomy', tax), file.path(ref_dir, tax))
 
 source('dada2_from_silva_functions.r')
 
+makeTaxonomyFasta_SilvaNR_18S(file.path(ref_dir, ref99), file.path(ref_dir, tax), file.path(ref_dir, paste0(sub('.fasta.gz','',ref99),'_dada2.fasta.gz')))
 makeTaxonomyFasta_SilvaNR_18S(file.path(ref_dir, refFull), file.path(ref_dir, tax), file.path(ref_dir, paste0(sub('.fasta.gz','',refFull),'_dada2.fasta.gz')))
 
 
 
-taxid <- dada2::assignTaxonomy(seqtab, file.path(ref_dir, refFull), multithread=20)
+taxid <- dada2::assignTaxonomy(seqtab, file.path(ref_dir, paste0(sub('.fasta.gz','',refFull),'_dada2.fasta.gz')), multithread=20)
