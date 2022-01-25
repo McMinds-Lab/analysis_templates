@@ -3,6 +3,10 @@ makeTaxonomyFasta_SilvaNR_18S <- function (fin, ftax, fout, include.species = FA
   ##
   loadNamespace("dada2")
   attachNamespace("dada2")
+  loadNamespace("Biostrings")
+  attachNamespace("Biostrings")
+  loadNamespace("ShortRead")
+  attachNamespace("ShortRead")
   #
   xset <- DNAStringSet(readRNAStringSet(fin, format = "fasta"))
   taxl <- names(xset)
@@ -20,52 +24,24 @@ makeTaxonomyFasta_SilvaNR_18S <- function (fin, ftax, fout, include.species = FA
   kingdom <- sapply(strsplit(taxl, ";"), `[`, 1)
   taxl.ba <- taxl[kingdom %in% 'Eukaryota']
   taxa.ba <- taxa[names(taxl.ba)]
-  taxa.ba.mat <- matrix(sapply(taxa.ba, function(flds) {
-    c(flds[1], flds[2], flds[3], flds[4], flds[5], flds[6])
-  }), ncol = 6, byrow = TRUE)
+  for(i in 1:length(taxa.ba)) {
+    spl <- strsplit(taxa.ba[[i]][length(taxa.ba[[i]])], ' ')[[1]]
+    if(length(spl) > 2) {spl <- spl[1:2]}
+    taxa.ba[[i]] <- c(taxa.ba[[i]][-length(taxa.ba[[i]])], spl)
+  }
+  taxa.ba.mat <- unname(t(do.call(cbind, lapply(taxa.ba, ts))))
   rownames(taxa.ba.mat) <- names(taxl.ba)
   taxa.ba.mat.string <- matrix("UNDEF", nrow = nrow(taxa.ba.mat), 
                                ncol = ncol(taxa.ba.mat))
   rownames(taxa.ba.mat.string) <- names(taxl.ba)
   taxa.ba.mat.string[, 1] <- paste0(taxa.ba.mat[, 1], ";")
-  for (col in seq(2, 6)) {
+  for (col in seq(2, ncol(taxa.ba.mat))) {
     taxa.ba.mat.string[, col] <- paste0(taxa.ba.mat.string[, 
                                                            col - 1], taxa.ba.mat[, col], ";")
   }
   if (any(taxa.ba.mat.string == "UNDEF")) 
     stop("Taxon string matrix was not fully initialized.")
-  taxa.ba.mat.is_valid <- matrix(taxa.ba.mat.string %in% silva.taxa$Taxon, 
-                                 ncol = 6)
-  taxa.ba.mat[!taxa.ba.mat.is_valid] <- NA
   taxa.ba.mat[taxa.ba.mat %in% c("Uncultured", "uncultured")] <- NA
-  if (include.species) {
-    taxa.ba.mat <- cbind(taxa.ba.mat, matrix(sapply(taxa.ba, 
-                                                    `[`, 7), ncol = 1, byrow = TRUE))
-    genus <- taxa.ba.mat[, 6]
-    genus <- gsub("Candidatus ", "", genus)
-    genus <- gsub("\\[", "", genus)
-    genus <- gsub("\\]", "", genus)
-    binom <- taxa.ba.mat[, 7]
-    binom <- gsub("Candidatus ", "", binom)
-    binom <- gsub("\\[", "", binom)
-    binom <- gsub("\\]", "", binom)
-    binom <- cbind(sapply(strsplit(binom, "\\s"), `[`, 1), 
-                   sapply(strsplit(binom, "\\s"), `[`, 2))
-    gen.match <- mapply(dada2:::matchGenera, genus, binom[, 
-                                                          1], split.glyph = "-")
-    is.NA <- apply(binom, 1, function(x) any(is.na(x)))
-    is.sp <- grepl("sp\\.", binom[, 2])
-    is.endo <- binom[, 1] %in% "endosymbiont" | binom[, 2] %in% 
-      "endosymbiont"
-    is.uncult <- grepl("[Uu]ncultured", binom[, 1]) | grepl("[Uu]ncultured", 
-                                                            binom[, 2])
-    is.unident <- grepl("[Uu]nidentified", binom[, 1]) | 
-      grepl("[Uu]nidentified", binom[, 2])
-    valid.spec <- gen.match & !is.NA & !is.sp & !is.endo & 
-      !is.uncult & !is.unident
-    binom[!valid.spec, 2] <- NA
-    taxa.ba.mat[, 7] <- binom[, 2]
-  }
   set.seed(100)
   N_EUK <- 100
   euk.keep <- sample(names(taxl)[kingdom %in% c("Bacteria", "Archaea")], 
@@ -88,8 +64,6 @@ makeTaxonomyFasta_SilvaNR_18S <- function (fin, ftax, fout, include.species = FA
   xset.out <- xset[names(taxa.string.final)]
   cat(length(xset.out), "reference sequences were output.\n")
   print(table(taxa.mat.final[, 1], useNA = "ifany"))
-  if (include.species) 
-    cat(sum(!is.na(taxa.mat.final[, 7])), "entries include species names.\n")
   writeFasta(ShortRead(unname(xset.out), BStringSet(taxa.string.final)), 
              fout, width = 20000L, compress = compress)
 }
