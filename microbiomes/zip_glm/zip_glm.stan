@@ -32,6 +32,8 @@ data {
     int K_f;
 }
 transformed data {
+    int KSP = K_s > 0 ? 1 : 0;
+    int KFP = K_f > 0 ? 1 : 0;
     array[NB_f-1] int idx_f2;
     array[NB_s+K_s] int idxk_s;
     array[NB_f+K_f] int idxk_f;
@@ -60,37 +62,37 @@ transformed data {
     }
 }
 parameters {
-    real<lower=0>                      global_scale_prevalence;
-    real<lower=0>                      global_scale_abundance;
-    vector<lower=0>[(NSB+2)*(NFB+2)-2] sd_prevalence_norm;
-    vector<lower=0>[(NSB+2)*(NFB+1)-1] sd_abundance_norm;
-    matrix[NB_s+K_s,NB_f+K_f]          beta_prevalence_i;
-    matrix[NB_s+K_s,NF]                beta_prevalence_s;
-    matrix[NS,NB_f+K_f]                beta_prevalence_f;
-    matrix[NB_s+K_s,NB_f+K_f-1]        beta_abundance_i;
-    matrix[NB_s+K_s,NF]                beta_abundance_s;
-    matrix[NS,NB_f+K_f-1]              beta_abundance_f;
-    matrix[NS,NF]                      residuals;
-    vector[NS]                         multinomial_nuisance;
-    cholesky_factor_cov[NS,K_s]        L_s;
-    cholesky_factor_cov[NF,K_f]        L_f;
+    real<lower=0>                              global_scale_prevalence;
+    real<lower=0>                              global_scale_abundance;
+    vector<lower=0>[(NSB+KSP+1)*(NFB+KFP+1)-2] sd_prevalence_norm;
+    vector<lower=0>[(NSB+KSP+1)*(NFB+KFP)-1]   sd_abundance_norm;
+    matrix[NB_s+K_s,NB_f+K_f]                  beta_prevalence_i;
+    matrix[NB_s+K_s,NF]                        beta_prevalence_s;
+    matrix[NS,NB_f+K_f]                        beta_prevalence_f;
+    matrix[NB_s+K_s,NB_f+K_f-1]                beta_abundance_i;
+    matrix[NB_s+K_s,NF]                        beta_abundance_s;
+    matrix[NS,NB_f+K_f-1]                      beta_abundance_f;
+    matrix[NS,NF]                              residuals;
+    vector[NS]                                 multinomial_nuisance;
+    cholesky_factor_cov[NS,K_s]                L_s;
+    cholesky_factor_cov[NF,K_f]                L_f;
 }
 transformed parameters {
-    matrix<lower=0>[NSB+2,NFB+2] sd_prevalence = to_matrix(append_row(100, append_row(sd_prevalence_norm, 1.0)), NSB+2, NFB+2) * (prior_scale_p * global_scale_prevalence);
-    matrix<lower=0>[NSB+2,NFB+1] sd_abundance  = to_matrix(append_row(sd_abundance_norm, 1.0),                   NSB+2, NFB+1) * (prior_scale_a * global_scale_abundance);
+    matrix<lower=0>[NSB+KSP+1,NFB+KFP+1] sd_prevalence = to_matrix(append_row(100, append_row(sd_prevalence_norm, 1.0)), NSB+KSP+1, NFB+KFP+1) * (prior_scale_p * global_scale_prevalence);
+    matrix<lower=0>[NSB+KSP+1,NFB+KFP]   sd_abundance  = to_matrix(append_row(sd_abundance_norm, 1.0),                   NSB+KSP+1, NFB+KFP)   * (prior_scale_a * global_scale_abundance);
 }
 model {
     matrix[NS,NB_s+K_s] XL_s = append_col(X_s,L_s);
     matrix[NB_f+K_f,NF] XL_f = append_row(X_f,L_f');
     matrix[NS,NF] prevalence
-        =    XL_s * (beta_prevalence_s .* sd_prevalence[idxk_s, rep_array(NFB+2,NF)])
+        =    XL_s * (beta_prevalence_s .* sd_prevalence[idxk_s, rep_array(NFB+KFP+1,NF)])
           + (XL_s * (beta_prevalence_i .* sd_prevalence[idxk_s, idxk_f])
-             +      (beta_prevalence_f .* sd_prevalence[rep_array(NSB+2,NS), idxk_f])) * XL_f;
+             +      (beta_prevalence_f .* sd_prevalence[rep_array(NSB+KSP+1,NS), idxk_f])) * XL_f;
     matrix[NS,NF] abundance
-        =    XL_s * (beta_abundance_s  .* sd_abundance[idxk_s, rep_array(NFB+1,NF)])
+        =    XL_s * (beta_abundance_s  .* sd_abundance[idxk_s, rep_array(NFB+KFP,NF)])
           + (XL_s * (beta_abundance_i  .* sd_abundance[idxk_s, idxk_f2])
-             +      (beta_abundance_f  .* sd_abundance[rep_array(NSB+2,NS), idxk_f2])) * XL_f[2:,]
-          + residuals                   * sd_abundance[NSB+2, NFB+1]
+             +      (beta_abundance_f  .* sd_abundance[rep_array(NSB+KSP+1,NS), idxk_f2])) * XL_f[2:,]
+          + residuals                   * sd_abundance[NSB+KSP+1, NFB+KFP]
           + rep_matrix(multinomial_nuisance, NF);
     // priors
     target += std_normal_lpdf(global_scale_prevalence);

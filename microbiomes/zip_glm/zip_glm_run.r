@@ -47,7 +47,6 @@ if(taxalg == 'decipher') {
   }))
   colnames(taxid) <- ranks; rownames(taxid) <- dada2::getSequences(seqtab)
 } else {
-  ## https://zenodo.org/record/1447330#.Ye8P1vXMLxg for 18S edna
   taxid <- dada2::assignTaxonomy(seqtab, taxref, multithread=nthreads)
 }
 
