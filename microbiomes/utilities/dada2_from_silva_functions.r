@@ -27,6 +27,7 @@ makeTaxonomyFasta_SilvaNR_18S <- function (fin, ftax, fout, include.species = FA
   for(i in 1:length(taxa.ba)) {
     spl <- strsplit(taxa.ba[[i]][length(taxa.ba[[i]])], ' ')[[1]]
     if(length(spl) > 2) {spl <- spl[1:2]}
+    if(length(spl) == 2) {spl[[2]] <- paste(spl,collapse='_')}
     taxa.ba[[i]] <- c(taxa.ba[[i]][-length(taxa.ba[[i]])], spl)
   }
   taxa.ba.mat <- unname(t(do.call(cbind, lapply(taxa.ba, ts))))
