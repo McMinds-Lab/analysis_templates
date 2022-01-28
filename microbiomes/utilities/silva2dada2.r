@@ -9,9 +9,13 @@ tax[,2] <- sapply(strsplit(tax[,2],';'), function(x) {
       break
     } 
   }
-  if(length(x) == 0 | x == 'NA') {
+  if(length(x) == 0) {
     x <- 'Unknown'
-  } else if(length(x) > 1) {
+  } else if(length(x) == 1) {
+    if(x == 'NA') {
+      x <- 'Unknown'
+    }
+  } else {
     for(z in 2:length(x)) {
       if(x[[z]] == 'NA') {
         x[[z]] <- paste0(x[[z-1]],abbr[[z]])

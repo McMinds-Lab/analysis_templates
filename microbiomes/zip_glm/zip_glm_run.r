@@ -1,13 +1,7 @@
 ## get user-edited environmental variables outdir, counts_fp, etc
 newargs <- commandArgs(TRUE)
 
-if(grepl('RData$',newargs[[1]])) {
-  taxalg <- 'decipher'
-  load(newargs[[1]])
-} else {
-  taxalg <- 'dada2'
-  taxref <- newargs[[1]]
-}
+taxref <- newargs[[1]]
 load(newargs[[2]])
 samplenames <- read.table(newargs[[3]],sep='\t',header=T)
 metadat <- read.table(newargs[[4]],sep='\t',header=T)
@@ -33,21 +27,7 @@ metadat$id_argaly <- id_conversion$id_argaly[match(metadat$ID..Alison, id_conver
 
 m2 <- metadat[match(rownames(seqtab_M),metadat$id_argaly),]
 
-if(taxalg == 'decipher') {
-  dna <- Biostrings::DNAStringSet(dada2::getSequences(seqtab))
-  ids <- DECIPHER::IdTaxa(dna, trainingSet, strand="top", processors=NULL, verbose=FALSE) 
-  ranks <- c("domain", "phylum", "class", "order", "family", "genus", "species") 
-  # Convert the output object of class "Taxa" to a matrix analogous to the output from assignTaxonomy
-  taxid <- t(sapply(ids, function(x) {
-    m <- match(ranks, x$rank)
-    taxa <- x$taxon[m]
-    taxa[startsWith(taxa, "unclassified_")] <- NA
-    taxa
-  }))
-  colnames(taxid) <- ranks; rownames(taxid) <- dada2::getSequences(seqtab)
-} else {
-  taxid <- dada2::assignTaxonomy(seqtab, taxref, multithread=nthreads)
-}
+taxid <- dada2::assignTaxonomy(seqtab, taxref, multithread=nthreads, taxLevels = c('Superkingdom','Kingdom','Subkingdom','Superphylum','Phylum','Subphylum','Superclass','Class','Subclass','Infraclass','Superorder','Order','Suborder','Superfamily','Family','Subfamily','Tribe','Subtribe','Genus','Subgenus','Species','Subspecies'))
 
 ## set up output directory
 dir.create(file.path(outdir, 'zip_glm'))
