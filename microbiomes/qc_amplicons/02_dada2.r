@@ -29,9 +29,11 @@ dada_merged <- dada2::dada(derepped, err=err_merged_reads, pool='pseudo', multit
 #Construct ASV
 seqtab <- dada2::makeSequenceTable(dada_merged)
 
+write.table(seqtab, file.path(outdir, 'asv.tsv'), sep='\t')
+
 taxid <- dada2::assignTaxonomy(seqtab, taxref, multithread=nthreads, taxLevels = c('Superkingdom','Kingdom','Subkingdom','Superphylum','Phylum','Subphylum','Superclass','Class','Subclass','Infraclass','Superorder','Order','Suborder','Superfamily','Family','Subfamily','Tribe','Subtribe','Genus','Subgenus','Species','Subspecies'))
 
-write.table(seqtab, file.path(outdir, 'asv.tsv'), sep='\t')
+write.table(taxid, file.path(outdir, 'taxid.tsv'), sep='\t')
 
 save.image(file.path(outdir, 'ASVs.RData'))
 
