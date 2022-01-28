@@ -25,4 +25,4 @@ tax[,2] <- sapply(strsplit(tax[,2],';'), function(x) {
   paste0(paste(x,collapse=';'),';')
 })
 names(dna) <- tax[match(names(dna),tax[,1]),2]
-Biostrings::writeXStringSet(dna,'~/data/ref/silva/silva2dada2/SILVA_138.1_SSURef_tax_silva_clean_dada2.fasta.gz',compress=TRUE)
+Biostrings::writeXStringSet(dna,'~/data/ref/silva/silva2dada2/SILVA_138.1_SSURef_tax_silva_clean_dada2.fasta.gz',compress=TRUE,format='fasta',width=10000)
