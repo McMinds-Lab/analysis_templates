@@ -1,20 +1,24 @@
+print(sessionInfo())
+cat(paste('DESeq2 version:', packageVersion('DESeq2'), '\n'))
+cat(paste('cmdstanr version:', packageVersion('cmdstanr'), '\n'))
+cat(paste('cmdstan version:', cmdstanr::cmdstan_version(), '\n'))
+
 ## get user-edited environmental variables outdir, counts_fp, etc
 newargs <- commandArgs(TRUE)
 
-taxref <- newargs[[1]]
-load(newargs[[2]])
-samplenames <- read.table(newargs[[3]],sep='\t',header=T)
-metadat <- read.table(newargs[[4]],sep='\t',header=T)
-id_conversion <- read.table(newargs[[5]],sep='\t',header=T)
+load(newargs[[1]])
+samplenames <- read.table(newargs[[2]],sep='\t',header=T)
+metadat <- read.table(newargs[[3]],sep='\t',header=T)
+id_conversion <- read.table(newargs[[4]],sep='\t',header=T)
 
-outdir <- newargs[[6]]
-K_s <- as.numeric(newargs[[7]])
-nchains <- as.numeric(newargs[[8]])
-nthreads <- as.numeric(newargs[[9]])
-opencl <- as.logical(newargs[[10]])
-opencl_device <- as.numeric(newargs[[11]])
-model_dir <- newargs[[12]]
-algorithm <- newargs[[13]]
+outdir <- newargs[[5]]
+K_s <- as.numeric(newargs[[6]])
+nchains <- as.numeric(newargs[[7]])
+nthreads <- as.numeric(newargs[[8]])
+opencl <- as.logical(newargs[[9]])
+opencl_device <- as.numeric(newargs[[12]])
+model_dir <- newargs[[13]]
+algorithm <- newargs[[14]]
 ##
 
 rownames(seqtab) <- sapply(rownames(seqtab), function(x) samplenames$Sample[samplenames$Tag == sub('.fastq.gz','',sub('-',':',x))])
@@ -26,8 +30,6 @@ seqtab_M <- t(sapply(unique(sub('_.*','',rownames(seqtab_F))), function(x) apply
 metadat$id_argaly <- id_conversion$id_argaly[match(metadat$ID..Alison, id_conversion$id_alison)]
 
 m2 <- metadat[match(rownames(seqtab_M),metadat$id_argaly),]
-
-taxid <- dada2::assignTaxonomy(seqtab, taxref, multithread=nthreads, taxLevels = c('Superkingdom','Kingdom','Subkingdom','Superphylum','Phylum','Subphylum','Superclass','Class','Subclass','Infraclass','Superorder','Order','Suborder','Superfamily','Family','Subfamily','Tribe','Subtribe','Genus','Subgenus','Species','Subspecies'))
 
 ## set up output directory
 dir.create(file.path(outdir, 'zip_glm'))

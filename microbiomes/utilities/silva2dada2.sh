@@ -24,6 +24,7 @@ Rscript ~/scripts/analysis_templates/microbiomes/utilities/silva2dada2.r
 
 gzip --best ~/data/ref/silva/silva2dada2/SILVA_138.1_SSURef_tax_silva_clean.fasta
 
-
+cd ~/data/ref/
+tar cvzf ncbi_taxonomy.tar.gz ncbi_taxonomy
 
 
