@@ -22,7 +22,7 @@ dev.off()
 
 #after dada2 has learned errors, user can denoise
 derepped <- derepFastq(merged_reads)
-dada_merged <- dada(derepped, err=err_merged_reads, multithread=nthreads)
+dada_merged <- dada(derepped, err=err_merged_reads, pool='pseudo', multithread=nthreads)
 
 #Construct ASV
 seqtab <- makeSequenceTable(dada_merged)
