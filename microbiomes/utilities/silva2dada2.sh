@@ -20,11 +20,11 @@ python2 ~/scripts/my_entrez_qiime.py \
   -a ~/data/ref/ncbi_taxonomy/nucl_gb.accession2taxid \
   -r superkingdom,kingdom,subkingdom,superphylum,phylum,subphylum,superclass,class,subclass,infraclass,superorder,order,suborder,superfamily,family,subfamily,tribe,subtribe,genus,subgenus,species,subspecies
 
-Rscript ~/scripts/analysis_templates/microbiomes/utilities/silva2dada2.r
+cd ~/data/ref/
+tar cvzf ncbi_taxonomy.tar.gz ncbi_taxonomy
 
 gzip --best ~/data/ref/silva/silva2dada2/SILVA_138.1_SSURef_tax_silva_clean.fasta
 
-cd ~/data/ref/
-tar cvzf ncbi_taxonomy.tar.gz ncbi_taxonomy
+Rscript ~/scripts/analysis_templates/microbiomes/utilities/silva2dada2.r
 
 
