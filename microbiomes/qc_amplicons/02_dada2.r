@@ -6,7 +6,6 @@ args <- commandArgs(TRUE)
 nthreads <- as.numeric(args[[1]])
 indir <- args[[2]]
 outdir <- args[[3]]
-taxref <- args[[4]]
 
 merged_reads <- sort(list.files(indir, pattern=".fastq.gz", full.names=TRUE))
 sample.names <- sub('.fastq.gz','',basename(merged_reads))
@@ -31,9 +30,10 @@ seqtab <- dada2::makeSequenceTable(dada_merged)
 
 write.table(seqtab, file.path(outdir, 'asv.tsv'), sep='\t')
 
-taxid <- dada2::assignTaxonomy(seqtab, taxref, multithread=nthreads, taxLevels = c('Superkingdom','Kingdom','Subkingdom','Superphylum','Phylum','Subphylum','Superclass','Class','Subclass','Infraclass','Superorder','Order','Suborder','Superfamily','Family','Subfamily','Tribe','Subtribe','Genus','Subgenus','Species','Subspecies'))
+dna <-Biostrings::DNAStringSet(dada2::getSequences(seqtab))
+names(dna) <- sprintf(paste0('ASV%0',floor(log10(length(dna))) + 1,'d'),1:length(dna))
 
-write.table(taxid, file.path(outdir, 'taxid.tsv'), sep='\t')
+Biostrings::writeXStringSet(dna, file.path(outdir, 'ASVs.fasta.gz'), compress=TRUE, format='fasta', width=10000)
 
 save.image(file.path(outdir, 'ASVs.RData'))
 

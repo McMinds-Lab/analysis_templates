@@ -7,18 +7,19 @@ cat(paste('cmdstan version:', cmdstanr::cmdstan_version(), '\n'))
 newargs <- commandArgs(TRUE)
 
 load(newargs[[1]])
-samplenames <- read.table(newargs[[2]],sep='\t',header=T)
-metadat <- read.table(newargs[[3]],sep='\t',header=T)
-id_conversion <- read.table(newargs[[4]],sep='\t',header=T)
+taxid_fp <- newargs[[2]]
+samplenames <- read.table(newargs[[3]],sep='\t',header=T)
+metadat <- read.table(newargs[[4]],sep='\t',header=T)
+id_conversion <- read.table(newargs[[5]],sep='\t',header=T)
 
-outdir <- newargs[[5]]
-K_s <- as.numeric(newargs[[6]])
-nchains <- as.numeric(newargs[[7]])
-nthreads <- as.numeric(newargs[[8]])
-opencl <- as.logical(newargs[[9]])
-opencl_device <- as.numeric(newargs[[12]])
-model_dir <- newargs[[13]]
-algorithm <- newargs[[14]]
+outdir <- newargs[[6]]
+K_s <- as.numeric(newargs[[7]])
+nchains <- as.numeric(newargs[[8]])
+nthreads <- as.numeric(newargs[[9]])
+opencl <- as.logical(newargs[[10]])
+opencl_device <- as.numeric(newargs[[11]])
+model_dir <- newargs[[12]]
+algorithm <- newargs[[13]]
 ##
 
 rownames(seqtab) <- sapply(rownames(seqtab), function(x) samplenames$Sample[samplenames$Tag == sub('.fastq.gz','',sub('-',':',x))])
@@ -30,6 +31,8 @@ seqtab_M <- t(sapply(unique(sub('_.*','',rownames(seqtab_F))), function(x) apply
 metadat$id_argaly <- id_conversion$id_argaly[match(metadat$ID..Alison, id_conversion$id_alison)]
 
 m2 <- metadat[match(rownames(seqtab_M),metadat$id_argaly),]
+
+taxid <- read.table(taxid_fp,sep='\t',row.names = 1, header=TRUE)
 
 ## set up output directory
 dir.create(file.path(outdir, 'zip_glm'))
@@ -80,6 +83,7 @@ X_f <- cbind(Intercept=1, do.call(cbind, sapply(1:length(estimables), function(x
 rownames(X_f) <- rownames(taxid)
 X_f <- X_f[rownames(counts),]
 X_f[is.na(X_f)] <- 0
+mode(X_f) <- 'numeric'
 X_f_nonUnique <- colSums(X_f)>1 & !duplicated(t(X_f))
 X_f <- X_f[,X_f_nonUnique]
 X_f[,-1] <- apply(X_f[,-1], 2, function(x) x-mean(x))

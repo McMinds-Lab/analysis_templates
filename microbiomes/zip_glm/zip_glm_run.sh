@@ -2,14 +2,15 @@
 source local.env
 
 asvs=$1
-tags=$2
-meta=$3
-ids=$4
-outdir=$5
-K_s=$6
-nchains=$7
-opencl=$8
-algorithm=$9
+taxid_fp=$2
+tags=$3
+meta=$4
+ids=$5
+outdir=$6
+K_s=$7
+nchains=$8
+opencl=$9
+algorithm=${10}
 
 mkdir -p ${outdir}/zip_glm/
 cp zip_glm_run.r ${outdir}/zip_glm/
@@ -29,7 +30,7 @@ cat <<EOF > ${outdir}/zip_glm/zip_glm.sbatch
 #SBATCH --gres=gpu:1
 
 module load hub.apps/R
-Rscript ${outdir}/zip_glm/zip_glm_run.r ${taxdat} ${asvs} ${tags} ${meta} ${ids} ${outdir} ${K_s} ${nchains} ${nthreads} ${opencl} ${opencl_device} ${outdir}/zip_glm/ ${algorithm}
+Rscript ${outdir}/zip_glm/zip_glm_run.r ${asvs} ${taxid_fp} ${tags} ${meta} ${ids} ${outdir} ${K_s} ${nchains} ${nthreads} ${opencl} ${opencl_device} ${outdir}/zip_glm/ ${algorithm}
 
 EOF
 
