@@ -1,6 +1,7 @@
 args <- commandArgs(TRUE)
 
 taxid_in <- args[[1]]
+dna <- Biostrings::readDNAStringSet(args[[2]])
 
 ranks <- c('Superkingdom','Kingdom','Subkingdom','Superphylum','Phylum','Subphylum','Superclass','Class','Subclass','Infraclass','Superorder','Order','Suborder','Superfamily','Family','Subfamily','Tribe','Subtribe','Genus','Subgenus','Species','Subspecies')
 taxid_raw <- read.table(taxid_in, sep='\t')

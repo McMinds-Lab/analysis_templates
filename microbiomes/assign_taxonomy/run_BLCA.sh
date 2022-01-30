@@ -30,11 +30,11 @@ gunzip -c ${seqpath} > ${outdir}/BLCA/seqs.fasta
 #2.blca_main.py is modififed with custom levels variable
 2.blca_main.py -i ${outdir}/BLCA/seqs.fasta -r ${taxpath} -q ${dbpath} -o ${outdir}/BLCA/blca_taxa.txt -p ${nthreads}
 
-rm ${outdir}/BLCA/seqs.fasta
-
 module purge
 module load hub.apps/R
-Rscript ${outdir}/BLCA/clean_BLCA.r ${outdir}/BLCA/blca_taxa.txt
+Rscript ${outdir}/BLCA/clean_BLCA.r ${outdir}/BLCA/blca_taxa.txt ${outdir}/BLCA/seqs.fasta
+
+rm ${outdir}/BLCA/seqs.fasta
 
 EOF
 
