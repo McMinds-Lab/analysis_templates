@@ -1,12 +1,15 @@
+print(sessionInfo())
+cat(paste('Biostrings version:', packageVersion('Biostrings'), '\n'))
+
 args <- commandArgs(TRUE)
 
 taxid_in <- args[[1]]
 dna <- Biostrings::readDNAStringSet(args[[2]])
 
-ranks <- c('Superkingdom','Kingdom','Subkingdom','Superphylum','Phylum','Subphylum','Superclass','Class','Subclass','Infraclass','Superorder','Order','Suborder','Superfamily','Family','Subfamily','Tribe','Subtribe','Genus','Subgenus','Species','Subspecies')
+ranks <- c('Superkingdom','Kingdom','Subkingdom','Superphylum','Phylum','Subphylum','Superclass','Class','Subclass','Infraclass','Superorder','Order','Suborder','Infraorder','Parvorder','Superfamily','Family','Subfamily','Tribe','Subtribe','Genus','Subgenus','Species','Subspecies')
 taxid_raw <- read.table(taxid_in, sep='\t')
 taxid_raw[,1] <- as.character(dna)[taxid_raw[,1]]
-taxid_raw <- cbind(taxid_raw[,1],t(simplify2array(sapply(strsplit(taxid_raw[,2],';'), function(x) if(length(x)==1) c(x,rep(NA,43)) else x))))
+taxid_raw <- cbind(taxid_raw[,1],t(simplify2array(sapply(strsplit(taxid_raw[,2],';'), function(x) if(length(x)==1) c(x,rep(NA,2*length(ranks)-1)) else x))))
 taxid <- matrix(NA,nrow=nrow(taxid_raw),ncol=length(ranks),dimnames=list(taxid_raw[,1],ranks))
 for(i in 1:nrow(taxid)) {
   for(j in ranks) {

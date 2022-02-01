@@ -27,8 +27,8 @@ source activate BLCA
 
 gunzip -c ${seqpath} > ${outdir}/BLCA/seqs.fasta
 
-#2.blca_main.py is modififed with custom levels variable
-2.blca_main.py -i ${outdir}/BLCA/seqs.fasta -r ${taxpath} -q ${dbpath} -o ${outdir}/BLCA/blca_taxa.txt -p ${nthreads}
+#2.blca_main.py from rmcminds' fork
+2.blca_main.py -i ${outdir}/BLCA/seqs.fasta -r ${taxpath} -q ${dbpath} -o ${outdir}/BLCA/blca_taxa.txt -p ${nthreads} -k Superkingdom,Kingdom,Subkingdom,Superphylum,Phylum,Subphylum,Superclass,Class,Subclass,Infraclass,Superorder,Order,Suborder,Infraorder,Parvorder,Superfamily,Family,Subfamily,Tribe,Subtribe,Genus,Subgenus,Species,Subspecies
 
 module purge
 module load hub.apps/R

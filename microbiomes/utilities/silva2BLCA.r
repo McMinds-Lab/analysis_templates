@@ -1,5 +1,8 @@
-ranks <- c('Superkingdom','Kingdom','Subkingdom','Superphylum','Phylum','Subphylum','Superclass','Class','Subclass','Infraclass','Superorder','Order','Suborder','Superfamily','Family','Subfamily','Tribe','Subtribe','Genus','Subgenus','Species','Subspecies')
-abbr <- c('_spk','_k','_sbk','_spp','_p','_sbp','_spc','_c','_sbc','_ic','_spo','_o','_sbo','_spf','_f','_sbf','_t','_sbt','_g','_sbg','_s','_sbs')
+print(sessionInfo())
+cat(paste('Biostrings version:', packageVersion('Biostrings'), '\n'))
+
+ranks <- c('Superkingdom','Kingdom','Subkingdom','Superphylum','Phylum','Subphylum','Superclass','Class','Subclass','Infraclass','Superorder','Order','Suborder','Infraorder','Parvorder','Superfamily','Family','Subfamily','Tribe','Subtribe','Genus','Subgenus','Species','Subspecies')
+abbr <- c('_spk','_k','_sbk','_spp','_p','_sbp','_spc','_c','_sbc','_ic','_spo','_o','_sbo','_io','_po','_spf','_f','_sbf','_t','_sbt','_g','_sbg','_s','_sbs')
 
 tax <- read.table('~/data/ref/silva/silva2dada2/SILVA_138.1_SSURef_tax_silva_clean_accession_taxonomy.txt.txt', sep='\t',quote='')
 tax <- tax[c(grep('Eukaryota',tax[,2]),sample(grep('Bacteria',tax[,2]),100),sample(grep('Archaea',tax[,2]),100)),]

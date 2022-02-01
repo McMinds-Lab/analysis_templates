@@ -1,4 +1,4 @@
-abbr <- c('_spk','_k','_sbk','_spp','_p','_sbp','_spc','_c','_sbc','_ic','_spo','_o','_sbo','_spf','_f','_sbf','_t','_sbt','_g','_sbg','_s','_sbs')
+abbr <- c('_spk','_k','_sbk','_spp','_p','_sbp','_spc','_c','_sbc','_ic','_spo','_o','_sbo','_io','_po','_spf','_f','_sbf','_t','_sbt','_g','_sbg','_s','_sbs')
 dna <- Biostrings::DNAStringSet(gsub('U','T',Biostrings::readBStringSet('~/data/ref/silva/silva2dada2/SILVA_138.1_SSURef_tax_silva_clean.fasta.gz')))
 tax <- read.table('~/data/ref/silva/silva2dada2/SILVA_138.1_SSURef_tax_silva_clean_accession_taxonomy.txt.txt', sep='\t',quote='')
 tax[,2] <- sapply(strsplit(tax[,2],';'), function(x) {
