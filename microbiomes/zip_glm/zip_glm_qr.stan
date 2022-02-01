@@ -1,11 +1,11 @@
 functions {
-    int num_zeros(int[] y) {
+    int num_zeros(array[] int y) {
       int nz = 0;
       for (n in 1:size(y))
           nz += (y[n] == 0);
       return nz;
     }
-    real zip_lpmf(int[] c, vector p, vector a, int[] i0, int[] in0) {
+    real zip_lpmf(array[] int c, vector p, vector a, array[] int i0, array[] int in0) {
         vector[size(p)] lilp = log_inv_logit(p);
         real lp = sum(lilp[in0]) + poisson_log_lpmf(c[in0] | a[in0]);
         for(i in i0) {
