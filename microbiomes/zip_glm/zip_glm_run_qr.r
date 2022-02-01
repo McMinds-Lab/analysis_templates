@@ -146,6 +146,13 @@ standat <- list(NS            = NS,
                 prior_scale_p = prior_scale_p,
                 K_s           = K_s)
 
+multinomial_nuisance_init <- apply(counts,2,function(x) log(mean(x)))
+abundance_init <- log(counts)
+for(col in 1:ncol(abundance_init)) {
+  abundance_init[is.na(abundance_init[,col]),col] <- min(abundance_init[,col],na.rm=TRUE)
+  abundance_init[,col] <- abundance_init[,col] - multinomial_nuisance_init[col]
+}
+
 inits <- list(global_scale_prevalence = 0.1,
               sd_prevalence_norm      = rep(0.1, (NSB+2)*(NFB+1)-2),
               sd_abundance            = matrix(prior_scale_a,NSB+2,NFB),
@@ -155,8 +162,8 @@ inits <- list(global_scale_prevalence = 0.1,
               beta_abundance_i_tilde  = matrix(0,NB_s+K_s,NB_f-1),
               beta_abundance_s_tilde  = matrix(0,NB_s+K_s,NF),
               beta_abundance_f_tilde  = matrix(0,NS,NB_f-1),
-              abundance               = matrix(0,NS,NF),
-              multinomial_nuisance    = apply(counts,2,function(x) log(mean(x))),
+              abundance               = abundance_init,
+              multinomial_nuisance    = multinomial_nuisance_init,
               L_s                     = diag(1,NS,K_s))
 
 save.image(file.path(outdir, 'zip_glm', 'zip_glm_setup.RData'))
