@@ -1,4 +1,5 @@
 print(sessionInfo())
+cat(paste('MASS version:', packageVersion('MASS'), '\n'))
 cat(paste('DESeq2 version:', packageVersion('DESeq2'), '\n'))
 cat(paste('cmdstanr version:', packageVersion('cmdstanr'), '\n'))
 cat(paste('cmdstan version:', cmdstanr::cmdstan_version(), '\n'))
@@ -96,7 +97,7 @@ NB_f  = length(idx_f)
 prior_scale_p <- sqrt(exp(mean(log(apply(countsbin,2,var)[apply(countsbin,2,var) > 0]))))
 prior_scale_a <- sqrt(exp(mean(log(apply(counts,2,function(x) var(log(x[x>0])))))))
 
-qr.xs <- qr(X_s[,2:])
+qr.xs <- qr(X_s[,-1])
 rank_X_s <- qr.xs$rank
 R_s <- qr.R(qr.xs)
 R_inv_s <- MASS::ginv(R_s)[,1:rank_X_s]
@@ -109,7 +110,7 @@ Q_I_s <- qr.Q(qr.is)[,top_rows]
 X_sR_inv <- cbind(R_inv_s,Q_I_s)
 
 
-qr.xf <- qr(X_f[,2:])
+qr.xf <- qr(X_f[,-1])
 rank_X_f <- qr.xf$rank
 R_f <- qr.R(qr.xf)
 R_inv_f <- MASS::ginv(R_f)[,1:rank_X_f]
