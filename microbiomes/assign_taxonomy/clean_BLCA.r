@@ -24,7 +24,7 @@ for(i in 1:nrow(taxid)) {
     }
   }
   taxid[i,taxid[i,]=='NA'] <- NA
-  for(j in 22:2) {
+  for(j in length(ranks):2) {
     if(!is.na(taxid[i,j])) {
       if(grepl(paste0(taxid[i,j-1],'_'),taxid[i,j])) {
         taxid[i,j] <- NA
