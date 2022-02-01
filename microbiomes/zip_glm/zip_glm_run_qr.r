@@ -122,7 +122,7 @@ if(rank_X_f < ncol(X_f[,-1])) {
   I_diff_AA_reduced_f <- diag(1,nrow(R_inv_f)) - R_inv_f %*% R_f[1:rank_X_f,]
   qr.if <- qr(I_diff_AA_reduced_f)
   top_rows <- sort(order(abs(diag(qr.R(qr.if))),decreasing=T)[1:(NB_f-rank_X_f)])
-  Q_I_s <- qr.Q(qr.if)[,top_rows]
+  Q_I_f <- qr.Q(qr.if)[,top_rows]
   
   X_fR_inv <- cbind(R_inv_f,Q_I_f)
 } else {
