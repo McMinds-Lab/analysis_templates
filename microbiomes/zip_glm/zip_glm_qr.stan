@@ -93,7 +93,7 @@ transformed parameters {
     beta_abundance_s[1,]          = beta_abundance_s_tilde[1,];
     beta_abundance_s[(NB_s+1):,]  = beta_abundance_s_tilde[(NB_s+1):,];
     beta_abundance_s[2:NB_s,]     = X_sR_inv * beta_abundance_s_tilde[2:NB_s,];
-    beta_abundance_f[,2:]         = beta_abundance_f_tilde * X_fR_inv;
+    beta_abundance_f              = beta_abundance_f_tilde * X_fR_inv;
 }
 model {
     matrix[NS,NB_s+K_s] XL_s = append_col(X_s,L_s);
