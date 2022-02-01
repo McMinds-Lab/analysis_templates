@@ -102,26 +102,32 @@ rank_X_s <- qr.xs$rank
 R_s <- qr.R(qr.xs)
 R_inv_s <- MASS::ginv(R_s)[,1:rank_X_s]
 
-I_diff_AA_reduced_s <- diag(1,nrow(R_inv_s)) - R_inv_s %*% R_s[1:rank_X_s,]
-qr.is <- qr(I_diff_AA_reduced_s)
-top_rows <- sort(order(abs(diag(qr.R(qr.is))),decreasing=T)[1:(NB_s-rank_X_s)])
-Q_I_s <- qr.Q(qr.is)[,top_rows]
-
-X_sR_inv <- cbind(R_inv_s,Q_I_s)
-
+if(rank_X_s < ncol(X_s[,-1])) {
+  I_diff_AA_reduced_s <- diag(1,nrow(R_inv_s)) - R_inv_s %*% R_s[1:rank_X_s,]
+  qr.is <- qr(I_diff_AA_reduced_s)
+  top_rows <- sort(order(abs(diag(qr.R(qr.is))),decreasing=T)[1:(NB_s-rank_X_s)])
+  Q_I_s <- qr.Q(qr.is)[, ]
+  
+  X_sR_inv <- cbind(R_inv_s,Q_I_s)
+} else {
+  X_sR_inv <- R_inv_s
+}
 
 qr.xf <- qr(X_f[,-1])
 rank_X_f <- qr.xf$rank
 R_f <- qr.R(qr.xf)
 R_inv_f <- MASS::ginv(R_f)[,1:rank_X_f]
 
-I_diff_AA_reduced_f <- diag(1,nrow(R_inv_f)) - R_inv_f %*% R_f[1:rank_X_f,]
-qr.if <- qr(I_diff_AA_reduced_f)
-top_rows <- sort(order(abs(diag(qr.R(qr.if))),decreasing=T)[1:(NB_f-rank_X_f)])
-Q_I_s <- qr.Q(qr.is)[,top_rows]
-
-X_sR_inv <- cbind(R_inv_f,Q_I_f)
-
+if(rank_X_f < ncol(X_f[,-1])) {
+  I_diff_AA_reduced_f <- diag(1,nrow(R_inv_f)) - R_inv_f %*% R_f[1:rank_X_f,]
+  qr.if <- qr(I_diff_AA_reduced_f)
+  top_rows <- sort(order(abs(diag(qr.R(qr.if))),decreasing=T)[1:(NB_f-rank_X_f)])
+  Q_I_s <- qr.Q(qr.is)[,top_rows]
+  
+  X_fR_inv <- cbind(R_inv_f,Q_I_f)
+} else {
+  X_fR_inv <- R_inv_f 
+}
 
 standat <- list(NS            = NS,
                 NB_s          = NB_s,
