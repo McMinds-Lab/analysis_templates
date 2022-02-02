@@ -23,13 +23,10 @@ algorithm <- newargs[[13]]
 ##
 
 rownames(seqtab) <- sapply(rownames(seqtab), function(x) samplenames$Sample[samplenames$Tag == sub('.fastq.gz','',sub('-',':',x))])
-
 seqtab_F <- seqtab[grep('UFL',rownames(seqtab)),]
-
 seqtab_M <- t(sapply(unique(sub('_.*','',rownames(seqtab_F))), function(x) apply(seqtab_F[grep(x,rownames(seqtab_F)),], 2, sum)))
 
 metadat$id_argaly <- id_conversion$id_argaly[match(metadat$ID..Alison, id_conversion$id_alison)]
-
 m2 <- metadat[match(rownames(seqtab_M),metadat$id_argaly),]
 
 taxid <- read.table(taxid_fp,sep='\t',row.names = 1, header=TRUE)
@@ -40,26 +37,13 @@ dir.create(file.path(outdir, 'zip_glm'))
 
 counts <- t(seqtab_M)
 counts <- counts[apply(counts,1,sd) > 0,]
-counts_rlog <- DESeq2::rlog(counts)
-sampleOrder <- order(apply(abs(cov2cor(crossprod(t(apply(counts_rlog,1,function(x) x-mean(x)))))),2,mean), decreasing=TRUE)
-featureOrder <- order(apply(abs(cov2cor(tcrossprod(apply(counts_rlog,2,function(x) x-mean(x))))),2,mean), decreasing=TRUE)
-counts <- counts[featureOrder,sampleOrder]
-
-relabund <- apply(counts, 2, function(x) x / sum(x))
-
-countsbin <- t(as.matrix(counts))
-countsbin[countsbin > 0] <- 1
-
-countsmod <- t(as.matrix(counts))
-countsmod[countsmod==0] <- 0.5
-logcountsmod <- log(countsmod)
 
 rownames(m2) <- m2$id_argaly
 m2 <- m2[colnames(counts)[colnames(counts) %in% rownames(m2)],]
 m2$Location <- as.factor(m2$Location)
 
-NS    = ncol(counts)
-NF    = nrow(counts)
+NS <- ncol(counts)
+NF <- nrow(counts)
 
 X_s <- cbind(Intercept=1, model.matrix(~ 0 + Location, m2)) ## standardize continuous variables before placing in model
 X_s[,-1] <- apply(X_s[,-1], 2, function(x) x - mean(x))
@@ -71,10 +55,9 @@ NSB <- max(idx_s)
 NB_s <- length(idx_s)
 
 ## work on this section to make sure columns are unique and so that taxa are filtered out if they apply to ALL samples as well as none
-hi <- cbind('Intercept',unique(taxid))
-
-estimables <- lapply(2:(ncol(hi)-1), function(x) {
-  y <- unique(hi[,1:x])
+int_taxid <- cbind('Intercept',unique(taxid))
+estimables <- lapply(2:(ncol(int_taxid)-1), function(x) {
+  y <- unique(int_taxid[,1:x])
   keepers <- apply(y, 1, function(z) sum(apply(y[,1:(x-1),drop=F],1, function(r) identical(z[1:(x-1)],r))) > 1 & !is.na(z[[x]]))
   return(unname(y[keepers,x]))
 })
@@ -89,9 +72,26 @@ X_f <- X_f[,X_f_nonUnique]
 X_f[,-1] <- apply(X_f[,-1], 2, function(x) x-mean(x))
 ##
 
+## order the samples and features such that those with the most highly correlated residuals are first,
+## thus they are more likely to be constrained in the cholesky factor
+counts_rlog <- DESeq2::rlog(counts)
+counts_rlog_centered <- t(apply(apply(counts_rlog,2,function(x) x-mean(x)),1,function(x) x-mean(x)))
+counts_rlog_residuals <- counts_rlog_centered - X_f %*% MASS::ginv(X_f) %*% counts_rlog_centered %*% t(X_s %*% MASS::ginv(X_s))
+sampleCov <- crossprod(counts_rlog_residuals)
+featureCov <- tcrossprod(counts_rlog_residuals)
+sampleOrder <- order(apply((sampleCov-diag(sampleCov))^2,2,sum), decreasing=TRUE)
+featureOrder <- order(apply((featureCov-diag(featureCov))^2,2,sum), decreasing=TRUE)
+counts <- counts[featureOrder,sampleOrder]
+X_s <- X_s[colnames(counts),]
+X_f <- X_f[rownames(counts),]
+##
+
 idx_f = c(1, rep(2,ncol(X_f)-1))
 NFB   = max(idx_f)
 NB_f  = length(idx_f)
+
+countsbin <- t(as.matrix(counts))
+countsbin[countsbin > 0] <- 1
 
 prior_scale_p <- sqrt(exp(mean(log(apply(countsbin,2,var)[apply(countsbin,2,var) > 0]))))
 prior_scale_a <- sqrt(exp(mean(log(apply(counts,2,function(x) var(log(x[x>0])))))))
@@ -125,6 +125,8 @@ inits <- list(global_scale_prevalence = 0.1,
               residuals               = matrix(0,NS,NF),
               multinomial_nuisance    = apply(counts,2,function(x) log(mean(x))),
               L_s                     = diag(1,NS,K_s))
+
+relabund <- apply(counts, 2, function(x) x / sum(x))
 
 save.image(file.path(outdir, 'zip_glm', 'zip_glm_setup.RData'))
 
