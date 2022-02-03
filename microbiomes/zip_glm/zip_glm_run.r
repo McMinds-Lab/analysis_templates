@@ -75,7 +75,7 @@ X_f[,-1] <- apply(X_f[,-1], 2, function(x) x-mean(x))
 ## order the samples and features such that the ones that seem to define latent dims are first to be constrained in the cholesky factor
 counts_rlog <- DESeq2::rlog(counts)
 counts_rlog_centered <- t(apply(apply(counts_rlog,2,function(x) x-mean(x)),1,function(x) x-mean(x)))
-counts_rlog_standard <- t(apply(apply(counts_rlog_centered,1,function(x) x/sd(x)),2,function(x) x/sd(x)))
+counts_rlog_standard <- t(apply((apply(apply(counts_rlog_centered,1,function(x) x/sd(x)),1,function(x) x/sd(x))),1,function(x) x/sd(x)))
 counts_rlog_residuals <- counts_rlog_standard - X_f %*% MASS::ginv(X_f) %*% counts_rlog_standard %*% t(X_s %*% MASS::ginv(X_s))
 pr <- prcomp(counts_rlog_residuals)$rotation
 sampleOrder <- vector('numeric')
@@ -98,8 +98,9 @@ countsbin <- t(as.matrix(counts))
 countsbin[countsbin > 0] <- 1
 
 prior_scale_p <- sqrt(exp(mean(log(apply(countsbin,2,var)[apply(countsbin,2,var) > 0]))))
-prior_scale_a <- sqrt(exp(mean(log(apply(counts,2,function(x) var(log(x[x>0])))))))
-
+counts_clr <- apply(log(counts), 2, function(x) x-mean(x[!is.infinite(x)]))
+logfscales <- log(apply(counts_clr,1,function(x) var(x[!is.infinite(x)])))
+prior_scale_a <- sqrt(exp(mean(logfscales[!is.na(logfscales)])))
 
 standat <- list(NS            = NS,
                 NB_s          = NB_s,
@@ -129,7 +130,7 @@ inits <- list(global_scale_prevalence = 0.1,
               beta_abundance_s        = matrix(0,NB_s+K_s,NF),
               beta_abundance_f        = matrix(0,NS,NB_f-1),
               residuals               = matrix(0,NS,NF),
-              multinomial_nuisance    = apply(counts,2,function(x) log(mean(x))),
+              multinomial_nuisance    = apply(counts,2,function(x) weighted.mean(c(log(mean(x)), mean(log(x[x>0]))),c(sum(x==0),sum(x>0)))),
               L_s                     = diag(1,NS,K_s))
 
 relabund <- apply(counts, 2, function(x) x / sum(x))
