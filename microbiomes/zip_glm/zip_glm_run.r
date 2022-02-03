@@ -72,18 +72,21 @@ X_f <- X_f[,X_f_nonUnique]
 X_f[,-1] <- apply(X_f[,-1], 2, function(x) x-mean(x))
 ##
 
-## order the samples and features such that those with the most highly correlated residuals are first,
-## thus they are more likely to be constrained in the cholesky factor
+## order the samples and features such that the ones that seem to define latent dims are first to be constrained in the cholesky factor
 counts_rlog <- DESeq2::rlog(counts)
 counts_rlog_centered <- t(apply(apply(counts_rlog,2,function(x) x-mean(x)),1,function(x) x-mean(x)))
 counts_rlog_residuals <- counts_rlog_centered - X_f %*% MASS::ginv(X_f) %*% counts_rlog_centered %*% t(X_s %*% MASS::ginv(X_s))
-sampleCov <- crossprod(counts_rlog_residuals)
-featureCov <- tcrossprod(counts_rlog_residuals)
-sampleOrder <- order(apply((sampleCov-diag(sampleCov))^2,2,sum), decreasing=TRUE)
-featureOrder <- order(apply((featureCov-diag(featureCov))^2,2,sum), decreasing=TRUE)
-counts <- counts[featureOrder,sampleOrder]
+pr <- prcomp(counts_rlog_residuals)$rotation
+sampleOrder <- vector('numeric')
+sampsLeft <- rownames(pr)
+for(i in 1:(ncol(pr)-1)) {
+  winner <- which.max(apply(pr[sampsLeft,],1,function(x) abs(x[i]) / sqrt(sum(x[-1]^2))))
+  sampleOrder <- c(sampleOrder, sampsLeft[winner])
+  sampsLeft <- sampsLeft[-winner]
+}
+sampleOrder <- c(sampleOrder, sampsLeft)
+counts <- counts[,sampleOrder]
 X_s <- X_s[colnames(counts),]
-X_f <- X_f[rownames(counts),]
 ##
 
 idx_f = c(1, rep(2,ncol(X_f)-1))
