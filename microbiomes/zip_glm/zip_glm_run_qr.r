@@ -77,7 +77,8 @@ X_f[,-1] <- apply(X_f[,-1], 2, function(x) x-mean(x))
 ## order the samples and features such that the ones that seem to define latent dims are first to be constrained in the cholesky factor
 counts_rlog <- DESeq2::rlog(counts)
 counts_rlog_centered <- t(apply(apply(counts_rlog,2,function(x) x-mean(x)),1,function(x) x-mean(x)))
-counts_rlog_residuals <- counts_rlog_centered - X_f %*% MASS::ginv(X_f) %*% counts_rlog_centered %*% t(X_s %*% MASS::ginv(X_s))
+counts_rlog_standard <- t(apply(apply(counts_rlog_centered,1,function(x) x/sd(x)),2,function(x) x/sd(x)))
+counts_rlog_residuals <- counts_rlog_standard - X_f %*% MASS::ginv(X_f) %*% counts_rlog_standard %*% t(X_s %*% MASS::ginv(X_s))
 pr <- prcomp(counts_rlog_residuals)$rotation
 sampleOrder <- vector('numeric')
 sampsLeft <- rownames(pr)
@@ -153,6 +154,8 @@ standat <- list(NS            = NS,
 inits <- list(global_scale_prevalence = 0.1,
               sd_prevalence_norm      = rep(0.1, (NSB+2)*(NFB+1)-2),
               sd_abundance            = matrix(prior_scale_a,NSB+2,NFB),
+              sd_resid_s              = rep(1,NS),
+              sd_resid_f              = rep(1,NF),
               beta_prevalence_i       = matrix(0,NB_s+K_s,NB_f),
               beta_prevalence_s       = matrix(0,NB_s+K_s,NF),
               beta_prevalence_f       = matrix(0,NS,NB_f),

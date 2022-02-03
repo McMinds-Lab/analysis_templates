@@ -59,6 +59,8 @@ parameters {
     real<lower=0>                      global_scale_abundance;
     vector<lower=0>[(NSB+2)*(NFB+1)-2] sd_prevalence_norm;
     matrix<lower=0>[(NSB+2),NFB]       sd_abundance;
+    vector<lower=0>[NS]                sd_resid_s;
+    vector<lower=0>[NF]                sd_resid_f;
     matrix[NB_s+K_s,NF]                beta_prevalence_s;
     matrix[NB_s+K_s,NB_f]              beta_prevalence_i;
     matrix[NS,NB_f]                    beta_prevalence_f;
@@ -93,9 +95,12 @@ model {
           + (XL_s * beta_abundance_i
              +      beta_abundance_f) * X_f[2:,]
           + rep_matrix(multinomial_nuisance, NF);
+    abundance = diag_pre_multiply(sd_resid_s, diag_post_multiply(abundance, sd_resid_f));
     // priors
     target += std_normal_lpdf(global_scale_prevalence);
     target += std_normal_lpdf(sd_prevalence_norm);
+    target += std_normal_lpdf(sd_resid_s);
+    target += std_normal_lpdf(sd_resid_f);
     target += std_normal_lpdf(to_vector(beta_prevalence_s));
     target += std_normal_lpdf(to_vector(beta_prevalence_i));
     target += std_normal_lpdf(to_vector(beta_prevalence_f));
