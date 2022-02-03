@@ -95,7 +95,6 @@ model {
           + (XL_s * beta_abundance_i
              +      beta_abundance_f) * X_f[2:,]
           + rep_matrix(multinomial_nuisance, NF);
-    abundance_predicted = diag_pre_multiply(sd_resid_s, diag_post_multiply(abundance_predicted, sd_resid_f));
     // priors
     target += std_normal_lpdf(global_scale_prevalence);
     target += std_normal_lpdf(sd_prevalence_norm);
