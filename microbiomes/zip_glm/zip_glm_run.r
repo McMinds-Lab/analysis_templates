@@ -81,7 +81,7 @@ pr <- prcomp(counts_rlog_residuals)$rotation
 sampleOrder <- vector('numeric')
 sampsLeft <- rownames(pr)
 for(i in 1:(ncol(pr)-1)) {
-  winner <- which.max(apply(pr[sampsLeft,],1,function(x) abs(x[i]) / sqrt(sum(x[-1]^2))))
+  winner <- which.max(apply(pr[sampsLeft,i:ncol(pr)],1,function(x) abs(x[1]) / sqrt(sum(x^2))))
   sampleOrder <- c(sampleOrder, sampsLeft[winner])
   sampsLeft <- sampsLeft[-winner]
 }
