@@ -60,7 +60,7 @@ parameters {
     vector<lower=0>[(NSB+2)*(NFB+1)-2] sd_prevalence_norm;
     matrix<lower=0>[(NSB+2),NFB]       sd_abundance;
     vector<lower=0>[NS]                sd_resid_s;
-    vector<lower=0>[NF]                sd_resid_f;
+    row_vector<lower=0>[NF]            sd_resid_f;
     matrix[NB_s+K_s,NF]                beta_prevalence_s;
     matrix[NB_s+K_s,NB_f]              beta_prevalence_i;
     matrix[NS,NB_f]                    beta_prevalence_f;
@@ -95,7 +95,7 @@ model {
           + (XL_s * beta_abundance_i
              +      beta_abundance_f) * X_f[2:,]
           + rep_matrix(multinomial_nuisance, NF);
-    abundance_predicted = diag_pre_multiply(sd_resid_s, diag_post_multiply(abundance, sd_resid_f));
+    abundance_predicted = diag_pre_multiply(sd_resid_s, diag_post_multiply(abundance_predicted, sd_resid_f));
     // priors
     target += std_normal_lpdf(global_scale_prevalence);
     target += std_normal_lpdf(sd_prevalence_norm);
@@ -109,7 +109,7 @@ model {
     target += normal_lpdf(to_vector(beta_abundance_s) | 0, to_vector(sd_abundance[idxk_s, rep_array(NFB,NF)]));
     target += normal_lpdf(to_vector(beta_abundance_i) | 0, to_vector(sd_abundance[idxk_s, idx_f2]));
     target += normal_lpdf(to_vector(beta_abundance_f) | 0, to_vector(sd_abundance[rep_array(NSB+2,NS), idx_f2]));
-    target += normal_lpdf(to_vector(abundance) | to_vector(abundance_predicted), sd_abundance[NSB+2, NFB]);
+    target += normal_lpdf(to_vector(abundance) | to_vector(abundance_predicted), sd_abundance[NSB+2, NFB] * to_vector(sd_resid_s * sd_resid_f));
     for(k in 1:K_s) target += std_normal_lpdf(L_s[k:,k]);
     // likelihood
     target += zip_lpmf(count_1d | to_vector(prevalence), to_vector(abundance), i0, in0);

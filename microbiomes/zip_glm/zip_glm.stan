@@ -83,9 +83,10 @@ model {
         =    XL_s * (beta_abundance_s  .* sd_abundance[idxk_s, rep_array(NFB,NF)])
           + (XL_s * (beta_abundance_i  .* sd_abundance[idxk_s, idx_f2])
              +      (beta_abundance_f  .* sd_abundance[rep_array(NSB+2,NS), idx_f2])) * X_f[2:,]
-          + residuals                   * sd_abundance[NSB+2, NFB]
-          + rep_matrix(multinomial_nuisance, NF);
-    abundance = diag_pre_multiply(sd_resid_s, diag_post_multiply(abundance, sd_resid_f));
+          + residuals                   * sd_abundance[NSB+2, NFB];
+    abundance 
+      = diag_pre_multiply(sd_resid_s, diag_post_multiply(abundance, sd_resid_f))
+        + rep_matrix(multinomial_nuisance, NF);
     // priors
     target += std_normal_lpdf(global_scale_prevalence);
     target += std_normal_lpdf(global_scale_abundance);
