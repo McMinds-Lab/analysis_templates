@@ -55,8 +55,18 @@ for(level in (ncol(taxid2)-1):1) {
     asvs <- asvs[asvs %in% rownames(newcounts[[level+1]])]
     if(length(asvs) > 1) {
       doMerge <- apply(newcounts[[level+1]][asvs,] > 0, 1, sum) <= 1
+      for(i in which(doMerge)) {
+        uTax <- taxid2[asvs[doMerge],level+1,drop=F]
+        if(sum(uTax[,1] == uTax[asvs[i],]) > 1) {
+          doMerge[i] <- FALSE
+        }
+      }
       if(sum(doMerge) == 1) {
-        doMerge[doMerge] <- FALSE
+        if(length(asvs) == 2) {
+          doMerge[!doMerge] <- TRUE
+        } else {
+          doMerge[doMerge] <- FALSE
+        }
       }
       if(any(!doMerge)) {
         newtax[[level]][asvs[!doMerge]] <- newtax[[level+1]][asvs[!doMerge]]
