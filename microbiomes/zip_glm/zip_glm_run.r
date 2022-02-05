@@ -38,6 +38,46 @@ dir.create(file.path(outdir, 'zip_glm'))
 counts <- t(seqtab_M)
 counts <- counts[apply(counts,1,sd) > 0,]
 
+## merge all taxa with a single occurrence under a given taxonomic level
+taxid2 <- taxid[rownames(counts),]
+taxid2[is.na(taxid2)] <- 'NA'
+taxid2 <- cbind(taxid2, ASV=rownames(taxid2))
+for(col in 2:ncol(taxid2)) {taxid2[,col] <- apply(taxid2[,(col-1):col],1,paste,collapse=';')}
+newtax <- list()
+newtax[[ncol(taxid2)]] <- as.list(setNames(rownames(taxid2),rownames(taxid2)))
+newcounts <- list()
+newcounts[[ncol(taxid2)]] <- counts
+for(level in (ncol(taxid2)-1):1) {
+  newtax[[level]] <- list()
+  newcounts[[level]] <- matrix(NA,0,ncol(counts))
+  for(tax in unique(taxid2[,level])) {
+    asvs <- rownames(taxid2)[taxid2[,level] == tax]
+    asvs <- asvs[asvs %in% rownames(newcounts[[level+1]])]
+    if(length(asvs) > 1) {
+      doMerge <- apply(newcounts[[level+1]][asvs,] > 0, 1, sum) <= 1
+      if(sum(doMerge) == 1) {
+        doMerge[doMerge] <- FALSE
+      }
+      if(any(!doMerge)) {
+        newtax[[level]][asvs[!doMerge]] <- newtax[[level+1]][asvs[!doMerge]]
+        newcounts[[level]] <- rbind(newcounts[[level]], newcounts[[level+1]][asvs[!doMerge],])
+        rownames(newcounts[[level]])[(nrow(newcounts[[level]])-sum(!doMerge)+1):nrow(newcounts[[level]])] <- asvs[!doMerge]
+      }
+      if(sum(doMerge) > 1) {
+        newname <- sample(asvs[doMerge],1)
+        newtax[[level]][[newname]] <- unlist(newtax[[level+1]][asvs[doMerge]])
+        newcounts[[level]] <- rbind(newcounts[[level]], apply(newcounts[[level+1]][asvs[doMerge],], 2, sum))
+        rownames(newcounts[[level]])[nrow(newcounts[[level]])] <- newname
+      }
+    } else if(length(asvs) == 1) {
+      newtax[[level]][[asvs]] <- newtax[[level+1]][[asvs]]
+      newcounts[[level]] <- rbind(newcounts[[level]], newcounts[[level+1]][asvs,])
+      rownames(newcounts[[level]])[nrow(newcounts[[level]])] <- asvs
+    }
+  }
+}
+counts <- newcounts[[1]]
+
 rownames(m2) <- m2$id_argaly
 m2 <- m2[colnames(counts)[colnames(counts) %in% rownames(m2)],]
 m2$Location <- as.factor(m2$Location)
