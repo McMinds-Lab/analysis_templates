@@ -1,4 +1,5 @@
-# analysis_templates
+Analysis templates
+===
 A collection of scripts for basic data processing, analysis and visualization, to be modified as necessary for different projects
 
 
@@ -8,11 +9,11 @@ Coding
 ===
 In R
 ___
-https://nyu-cdsc.github.io/learningr/assets/simulation.pdf
-https://intro2r.com/
-https://www.codecademy.com/learn/learn-r
+https://nyu-cdsc.github.io/learningr/assets/simulation.pdf  
+https://intro2r.com/  
+https://www.codecademy.com/learn/learn-r  
 
 In Markdown
 ___
-https://www.markdownguide.org/basic-syntax/
+https://www.markdownguide.org/basic-syntax/  
 
