@@ -13,6 +13,10 @@ https://nyu-cdsc.github.io/learningr/assets/simulation.pdf
 https://intro2r.com/  
 https://www.codecademy.com/learn/learn-r  
 
+In Stan
+___
+https://betanalpha.github.io/  
+
 In Markdown
 ___
 https://www.markdownguide.org/basic-syntax/  
