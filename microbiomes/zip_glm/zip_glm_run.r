@@ -242,3 +242,8 @@ system(sampling_commands[[algorithm]])
 #summary(stan.fit.var$post_warmup_sampler_diagnostics)
 #plot(apply(stan.fit.var$post_warmup_draws[,1,paste0('L_s[',1:NS,',1]')], 3, mean), apply(stan.fit.var$post_warmup_draws[,1,paste0('L_s[',1:NS,',2]')],3,mean), xlab = "PCA1", ylab = "PCA2",axes = TRUE, main = "First samplewise latent variables", col=as.factor(m2$env.features), pch=16)
 #taxid[do.call(order, as.data.frame(taxid)),]
+#  sdnames_prev <- paste0(as.vector(outer(c('Overall_prevalence','Location','Latent','Samples'),c('Richness','Taxonomy','ASVs'),paste,sep='.'))[-c(1,4*3)],'.p')
+#  sdnames_abund <- paste0(as.vector(outer(c('Overall_abundance','Location','Latent','Samples'),c('Taxonomy','ASVs'),paste,sep='.'))[-(4*2)],'.a')
+#  hi <- stan.fit.var$post_warmup_draws[,1,grep('sd.*_norm',dimnames(stan.fit.var$post_warmup_draws)[[3]]), drop=TRUE]
+#  colnames(hi) <- c(sdnames_prev,sdnames_abund)
+#  par(mar=c(10, 4, 4, 2) + 0.1); boxplot(hi,las=2)                  
