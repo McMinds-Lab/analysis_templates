@@ -246,4 +246,4 @@ system(sampling_commands[[algorithm]])
 #  sdnames_abund <- paste0(as.vector(outer(c('Overall_abundance','Location','Latent','Samples'),c('Taxonomy','ASVs'),paste,sep='.'))[-(4*2)],'.a')
 #  hi <- stan.fit.var$post_warmup_draws[,1,grep('sd.*_norm',dimnames(stan.fit.var$post_warmup_draws)[[3]]), drop=TRUE]
 #  colnames(hi) <- c(sdnames_prev,sdnames_abund)
-#  par(mar=c(10, 4, 4, 2) + 0.1); boxplot(hi,las=2)                  
+#  par(mar=c(10, 4, 4, 2) + 0.1); boxplot(hi,las=2)
