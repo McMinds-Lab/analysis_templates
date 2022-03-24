@@ -15,7 +15,7 @@ data {
   vector[NS] phenotype; // assuming continuous and unbounded for now
 }
 transformed data {
-  matrix[NS,NV] predictor_matrix_norm = diag_post_multiply(predictor_matrix, inv_sqrt(columns_dot_self(predictor_matrix)));
+  matrix[NS,NV] predictor_matrix_norm = diag_post_multiply(predictor_matrix, inv_sqrt(columns_dot_self(predictor_matrix))); // this normalization is probably notright if multi-categorical factors exist (because they should only have a single variance component estimated, and the normalization should be on the sum of all columns belonging to the factor)
   matrix[NU1,NU1] cor_1 = tcrossprod(snp_matrix_1);
   matrix[NU2,NU2] cor_2 = tcrossprod(snp_matrix_2);
   matrix[NU1,NU1] cor_1e;

@@ -171,8 +171,6 @@ inits <- list(global_scale_prevalence = 0.1,
               global_scale_abundance  = 0.1,
               sd_prevalence_norm      = rep(0.1, (NSB+2)*(NFB+1)-2),
               sd_abundance_norm       = rep(0.1, (NSB+2)*NFB-1),
-              sd_resid_s              = rep(1,NS),
-              sd_resid_f              = rep(1,NF),
               beta_prevalence_i       = matrix(0,NB_s+K_s,NB_f),
               beta_prevalence_s       = matrix(0,NB_s+K_s,NF),
               beta_prevalence_f       = matrix(0,NS,NB_f),
@@ -236,11 +234,22 @@ print(sampling_commands[[algorithm]])
 print(date())
 system(sampling_commands[[algorithm]])
 
-#stan.fit.var <- cmdstanr::read_cmdstan_csv(Sys.glob(path.expand(file.path(outdir,'zip_glm','zip_test_data_samples_*.csv'))),
-#                                           format = 'draws_array')
+#stan.fit.var <- cmdstanr::read_cmdstan_csv(Sys.glob(path.expand(file.path(outdir,'zip_glm','zip_test_data_samples_*.csv'))), format = 'draws_array', variables=c('global_scale_prevalence','global_scale_abundance','sd_prevalence_norm','sd_abundance_norm','sd_resid_s','sd_resid_f','L_s'))
 
 #summary(stan.fit.var$post_warmup_sampler_diagnostics)
-#plot(apply(stan.fit.var$post_warmup_draws[,1,paste0('L_s[',1:NS,',1]')], 3, mean), apply(stan.fit.var$post_warmup_draws[,1,paste0('L_s[',1:NS,',2]')],3,mean), xlab = "PCA1", ylab = "PCA2",axes = TRUE, main = "First samplewise latent variables", col=as.factor(m2$env.features), pch=16)
+#summary(stan.fit.var$post_warmup_draws[,,grep('L_s',dimnames(stan.fit.var$post_warmup_draws)[[3]])])
+
+#sd_prevalence_norm <- matrix(c(100,as.data.frame(summary(stan.fit.var$post_warmup_draws[,,grep('sd_pre',dimnames(stan.fit.var$post_warmup_draws)[[3]])]))$mean,1),ncol=NFB+1)
+#sd_prevalence_norm^2 / (sum(sd_prevalence_norm^2) - sd_prevalence_norm[1,1]^2)
+#sd_abundance_norm <- matrix(c(as.data.frame(summary(stan.fit.var$post_warmup_draws[,,grep('sd_abu',dimnames(stan.fit.var$post_warmup_draws)[[3]])]))$mean,1),ncol=NFB)
+#sd_abundance_norm^2 / sum(sd_abundance_norm^2)
+
+L_s <- cbind(apply(stan.fit.var$post_warmup_draws[,1,paste0('L_s[',1:NS,',1]')], 3, mean), apply(stan.fit.var$post_warmup_draws[,1,paste0('L_s[',1:NS,',2]')],3,mean))
+pcs <- princomp(L_s)
+#plot(pcs$scores, xlab = "PCA1", ylab = "PCA2",axes = TRUE, main = "First samplewise latent variables", col=as.factor(m2$env.features), pch=16)
+#points(pcs$scores[1,1],pcs$scores[1,2],pch=24)
+#points(pcs$scores[2,1],pcs$scores[2,2],pch=25)
+
 #taxid[do.call(order, as.data.frame(taxid)),]
 #  sdnames_prev <- paste0(as.vector(outer(c('Overall_prevalence','Location','Latent','Samples'),c('Richness','Taxonomy','ASVs'),paste,sep='.'))[-c(1,4*3)],'.p')
 #  sdnames_abund <- paste0(as.vector(outer(c('Overall_abundance','Location','Latent','Samples'),c('Taxonomy','ASVs'),paste,sep='.'))[-(4*2)],'.a')
