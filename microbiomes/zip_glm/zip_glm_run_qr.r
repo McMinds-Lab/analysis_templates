@@ -1,4 +1,5 @@
 print(sessionInfo())
+cat(paste('MASS version:', packageVersion('MASS'), '\n'))
 cat(paste('DESeq2 version:', packageVersion('DESeq2'), '\n'))
 cat(paste('cmdstanr version:', packageVersion('cmdstanr'), '\n'))
 cat(paste('cmdstan version:', cmdstanr::cmdstan_version(), '\n'))
@@ -38,56 +39,6 @@ dir.create(file.path(outdir, 'zip_glm'))
 counts <- t(seqtab_M)
 counts <- counts[apply(counts,1,sd) > 0,]
 
-## merge all taxa with a single occurrence under a given taxonomic level
-taxid2 <- taxid[rownames(counts),]
-taxid2[is.na(taxid2)] <- 'NA'
-taxid2 <- cbind(taxid2, ASV=rownames(taxid2))
-for(col in 2:ncol(taxid2)) {taxid2[,col] <- apply(taxid2[,(col-1):col],1,paste,collapse=';')}
-newtax <- list()
-newtax[[ncol(taxid2)]] <- as.list(setNames(rownames(taxid2),rownames(taxid2)))
-newcounts <- list()
-newcounts[[ncol(taxid2)]] <- counts
-for(level in (ncol(taxid2)-1):1) {
-  newtax[[level]] <- list()
-  newcounts[[level]] <- matrix(NA,0,ncol(counts))
-  for(tax in unique(taxid2[,level])) {
-    asvs <- rownames(taxid2)[taxid2[,level] == tax]
-    asvs <- asvs[asvs %in% rownames(newcounts[[level+1]])]
-    if(length(asvs) > 1) {
-      doMerge <- apply(newcounts[[level+1]][asvs,] > 0, 1, sum) <= 1
-      for(i in which(doMerge)) {
-        uTax <- taxid2[asvs[doMerge],level+1,drop=F]
-        if(sum(uTax[,1] == uTax[asvs[i],]) > 1) {
-          doMerge[i] <- FALSE
-        }
-      }
-      if(sum(doMerge) == 1) {
-        if(length(asvs) == 2) {
-          doMerge[!doMerge] <- TRUE
-        } else {
-          doMerge[doMerge] <- FALSE
-        }
-      }
-      if(any(!doMerge)) {
-        newtax[[level]][asvs[!doMerge]] <- newtax[[level+1]][asvs[!doMerge]]
-        newcounts[[level]] <- rbind(newcounts[[level]], newcounts[[level+1]][asvs[!doMerge],])
-        rownames(newcounts[[level]])[(nrow(newcounts[[level]])-sum(!doMerge)+1):nrow(newcounts[[level]])] <- asvs[!doMerge]
-      }
-      if(sum(doMerge) > 1) {
-        newname <- sample(asvs[doMerge],1)
-        newtax[[level]][[newname]] <- unlist(newtax[[level+1]][asvs[doMerge]])
-        newcounts[[level]] <- rbind(newcounts[[level]], apply(newcounts[[level+1]][asvs[doMerge],], 2, sum))
-        rownames(newcounts[[level]])[nrow(newcounts[[level]])] <- newname
-      }
-    } else if(length(asvs) == 1) {
-      newtax[[level]][[asvs]] <- newtax[[level+1]][[asvs]]
-      newcounts[[level]] <- rbind(newcounts[[level]], newcounts[[level+1]][asvs,])
-      rownames(newcounts[[level]])[nrow(newcounts[[level]])] <- asvs
-    }
-  }
-}
-counts <- newcounts[[1]]
-
 rownames(m2) <- m2$id_argaly
 m2 <- m2[colnames(counts)[colnames(counts) %in% rownames(m2)],]
 m2$Location <- as.factor(m2$Location)
@@ -106,6 +57,7 @@ NB_s <- length(idx_s)
 
 ## work on this section to make sure columns are unique and so that taxa are filtered out if they apply to ALL samples as well as none
 int_taxid <- cbind('Intercept',unique(taxid))
+
 estimables <- lapply(2:(ncol(int_taxid)-1), function(x) {
   y <- unique(int_taxid[,1:x])
   keepers <- apply(y, 1, function(z) sum(apply(y[,1:(x-1),drop=F],1, function(r) identical(z[1:(x-1)],r))) > 1 & !is.na(z[[x]]))
@@ -152,32 +104,67 @@ counts_clr <- apply(log(counts), 2, function(x) x-mean(x[!is.infinite(x)]))
 logfscales <- log(apply(counts_clr,1,function(x) var(x[!is.infinite(x)])))
 prior_scale_a <- sqrt(exp(mean(logfscales[!is.na(logfscales)])))
 
+qr.xs <- qr(X_s[,-1])
+rank_X_s <- qr.xs$rank
+R_s <- qr.R(qr.xs)
+R_inv_s <- MASS::ginv(R_s)[,1:rank_X_s]
+
+if(rank_X_s < ncol(X_s[,-1])) {
+  I_diff_AA_reduced_s <- diag(1,nrow(R_inv_s)) - R_inv_s %*% R_s[1:rank_X_s,]
+  qr.is <- qr(I_diff_AA_reduced_s)
+  top_rows <- sort(order(abs(diag(qr.R(qr.is))),decreasing=T)[1:(NB_s-rank_X_s-1)])
+  Q_I_s <- qr.Q(qr.is)[,top_rows]
+  
+  X_sR_inv <- cbind(R_inv_s,Q_I_s)
+} else {
+  X_sR_inv <- R_inv_s
+}
+
+qr.xf <- qr(X_f[,-1])
+rank_X_f <- qr.xf$rank
+R_f <- qr.R(qr.xf)
+R_inv_f <- MASS::ginv(R_f)[,1:rank_X_f]
+
+if(rank_X_f < ncol(X_f[,-1])) {
+  I_diff_AA_reduced_f <- diag(1,nrow(R_inv_f)) - R_inv_f %*% R_f[1:rank_X_f,]
+  qr.if <- qr(I_diff_AA_reduced_f)
+  top_rows <- sort(order(abs(diag(qr.R(qr.if))),decreasing=T)[1:(NB_f-rank_X_f-1)])
+  Q_I_f <- qr.Q(qr.if)[,top_rows]
+  
+  X_fR_inv <- cbind(R_inv_f,Q_I_f)
+} else {
+  X_fR_inv <- R_inv_f 
+}
+
 standat <- list(NS            = NS,
                 NB_s          = NB_s,
                 NSB           = NSB,
                 idx_s         = idx_s,
                 X_s           = X_s,
+                X_sR_inv      = X_sR_inv,
                 NF            = NF,
                 NB_f          = NB_f,
                 NFB           = NFB,
                 idx_f         = idx_f,
                 X_f           = t(X_f),
+                X_fR_inv      = t(X_fR_inv),
                 count         = counts,
                 prior_scale_a = prior_scale_a,
                 prior_scale_p = prior_scale_p,
                 K_s           = K_s)
 
 inits <- list(global_scale_prevalence = 0.1,
-              global_scale_abundance  = 0.1,
               sd_prevalence_norm      = rep(0.1, (NSB+2)*(NFB+1)-2),
-              sd_abundance_norm       = rep(0.1, (NSB+2)*NFB-1),
+              sd_abundance            = matrix(prior_scale_a,NSB+2,NFB),
+              sd_resid_s              = rep(1,NS),
+              sd_resid_f              = rep(1,NF),
               beta_prevalence_i       = matrix(0,NB_s+K_s,NB_f),
               beta_prevalence_s       = matrix(0,NB_s+K_s,NF),
               beta_prevalence_f       = matrix(0,NS,NB_f),
-              beta_abundance_i        = matrix(0,NB_s+K_s,NB_f-1),
-              beta_abundance_s        = matrix(0,NB_s+K_s,NF),
-              beta_abundance_f        = matrix(0,NS,NB_f-1),
-              residuals               = matrix(0,NS,NF),
+              beta_abundance_i_tilde  = matrix(0,NB_s+K_s,NB_f-1),
+              beta_abundance_s_tilde  = matrix(0,NB_s+K_s,NF),
+              beta_abundance_f_tilde  = matrix(0,NS,NB_f-1),
+              abundance               = matrix(0,NS,NF),
               multinomial_nuisance    = apply(counts,2,function(x) weighted.mean(c(log(mean(x)), mean(log(x[x>0]))),c(sum(x==0),sum(x>0)))),
               L_s                     = diag(1,NS,K_s))
 
@@ -189,9 +176,9 @@ cmdstanr::write_stan_json(standat, file.path(outdir, 'zip_glm', 'zip_test_data.j
 cmdstanr::write_stan_json(inits, file.path(outdir, 'zip_glm', 'zip_test_inits.json'))
 
 setwd(cmdstanr::cmdstan_path())
-system(paste0(c('make ', 'make STAN_OPENCL=true ')[opencl+1], file.path(model_dir,'zip_glm')))
+system(paste0(c('make ', 'make STAN_OPENCL=true ')[opencl+1], file.path(model_dir,'zip_glm_qr')))
 
-sampling_commands <- list(hmc = paste('./zip_glm',
+sampling_commands <- list(hmc = paste('./zip_glm_qr',
                                       paste0('data file=',path.expand(file.path(outdir, 'zip_glm', 'zip_test_data.json'))),
                                       paste0('init=',path.expand(file.path(outdir, 'zip_glm', 'zip_test_inits.json'))),
                                       'output',
@@ -234,25 +221,9 @@ print(sampling_commands[[algorithm]])
 print(date())
 system(sampling_commands[[algorithm]])
 
-#stan.fit.var <- cmdstanr::read_cmdstan_csv(Sys.glob(path.expand(file.path(outdir,'zip_glm','zip_test_data_samples_*.csv'))), format = 'draws_array', variables=c('global_scale_prevalence','global_scale_abundance','sd_prevalence_norm','sd_abundance_norm','sd_resid_s','sd_resid_f','L_s'))
+#stan.fit.var <- cmdstanr::read_cmdstan_csv(Sys.glob(path.expand(file.path(outdir,'zip_glm','zip_test_data_samples_*.csv'))),
+#                                           format = 'draws_array')
 
 #summary(stan.fit.var$post_warmup_sampler_diagnostics)
-#summary(stan.fit.var$post_warmup_draws[,,grep('L_s',dimnames(stan.fit.var$post_warmup_draws)[[3]])])
-
-#sd_prevalence_norm <- matrix(c(100,as.data.frame(summary(stan.fit.var$post_warmup_draws[,,grep('sd_pre',dimnames(stan.fit.var$post_warmup_draws)[[3]])]))$mean,1),ncol=NFB+1)
-#sd_prevalence_norm^2 / (sum(sd_prevalence_norm^2) - sd_prevalence_norm[1,1]^2)
-#sd_abundance_norm <- matrix(c(as.data.frame(summary(stan.fit.var$post_warmup_draws[,,grep('sd_abu',dimnames(stan.fit.var$post_warmup_draws)[[3]])]))$mean,1),ncol=NFB)
-#sd_abundance_norm^2 / sum(sd_abundance_norm^2)
-
-L_s <- cbind(apply(stan.fit.var$post_warmup_draws[,1,paste0('L_s[',1:NS,',1]')], 3, mean), apply(stan.fit.var$post_warmup_draws[,1,paste0('L_s[',1:NS,',2]')],3,mean))
-pcs <- princomp(L_s)
-#plot(pcs$scores, xlab = "PCA1", ylab = "PCA2",axes = TRUE, main = "First samplewise latent variables", col=as.factor(m2$env.features), pch=16)
-#points(pcs$scores[1,1],pcs$scores[1,2],pch=24)
-#points(pcs$scores[2,1],pcs$scores[2,2],pch=25)
-
+#plot(apply(stan.fit.var$post_warmup_draws[,1,paste0('L_s[',1:NS,',1]')], 3, mean), apply(stan.fit.var$post_warmup_draws[,1,paste0('L_s[',1:NS,',2]')],3,mean), xlab = "PCA1", ylab = "PCA2",axes = TRUE, main = "First samplewise latent variables", col=as.factor(m2$env.features), pch=16)
 #taxid[do.call(order, as.data.frame(taxid)),]
-#  sdnames_prev <- paste0(as.vector(outer(c('Overall_prevalence','Location','Latent','Samples'),c('Richness','Taxonomy','ASVs'),paste,sep='.'))[-c(1,4*3)],'.p')
-#  sdnames_abund <- paste0(as.vector(outer(c('Overall_abundance','Location','Latent','Samples'),c('Taxonomy','ASVs'),paste,sep='.'))[-(4*2)],'.a')
-#  hi <- stan.fit.var$post_warmup_draws[,1,grep('sd.*_norm',dimnames(stan.fit.var$post_warmup_draws)[[3]]), drop=TRUE]
-#  colnames(hi) <- c(sdnames_prev,sdnames_abund)
-#  par(mar=c(10, 4, 4, 2) + 0.1); boxplot(hi,las=2)

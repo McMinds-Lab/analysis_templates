@@ -11,6 +11,7 @@ barcodes_rev=$6
 outdir=$7
 
 mkdir -p ${outdir}/01_init_QC
+echo "bash $0 $@" > ${outdir}/01_init_QC/this_command.sh
 
 cat <<EOF > ${outdir}/01_init_QC/01_init_QC.sbatch
 #!/bin/bash
