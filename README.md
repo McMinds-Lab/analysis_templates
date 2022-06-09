@@ -17,10 +17,19 @@ Primary principles:
     - Order scripts by starting their filenames with a 2-digit number (e.g. 01_sequencing_qc.sh)
     - Have each script place all its outputs (including log files) in a folder with the same name as the script, within the overall output directory specified by the user
 
-
 Resources
 ===
 Here's a list of resources my students and I have found useful for learning the science and code:
+
+Stats
+===
+General principles and great examples
+___
+https://betanalpha.github.io/
+
+Linear models / GLMMs
+___
+https://trialsjournal.biomedcentral.com/articles/10.1186/s13063-022-06097-z
 
 Coding
 ===
