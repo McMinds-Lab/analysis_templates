@@ -26,7 +26,7 @@ taxa2a <- taxa2[c('class',
 
 
 
-
+# Summary stats for taxonomy
 s <- summary(comparedf(x = taxa1a, y = taxa2a, 
                   control = comparedf.control(tol.vars = "case")))
 
