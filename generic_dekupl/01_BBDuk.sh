@@ -30,7 +30,8 @@ conda deactivate
 source activate bbtools
 
 in1=\${samples[\$SLURM_ARRAY_TASK_ID]} ## each array job has a different sample
-out1=\${${outdir}/01_BBDuk/trimmed/\$(basename \${in1})/.fastq.gz/.fastq}  ## bash string substitution creates output filepath from input filepath
+out1=${outdir}/01_BBDuk/trimmed/\$(basename \${in1})
+out1=\${out1/.fastq.gz/.fastq}  ## bash string substitution creates output filepath from input filepath
 
 bbduk.sh \
   in1=\${in1} \
