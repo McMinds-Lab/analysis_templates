@@ -5,7 +5,7 @@ this workflow requires a version of DE-kupl that has been modified. We accomplis
 3) replacing the standard snakefile in the conda env with https://github.com/rmcminds/dekupl-run/blob/master/Snakefile
 4) installing the package 'pscl' in the R installation included in the conda env. (e.g. conda activate dekupl; start an interactive R session; run install.packages('pscl'))
 5) installing the packages 'Rmpi' and 'doMPI' (our cluster requires gcc and mpi modules to first be loaded, a variable set, and the installation to occur where mpi can be loaded eg. using srun rather than directly on the head node): module load compilers/gcc/4.8.1; module load mpi/openmpi/1.6.1; export OMPI_MCA_mtl=^psm; srun --pty R --interactive; install.packages(c('Rmpi','doMPI'), configure.args=list(Rmpi=c("--with-mpi=/apps/openmpi/1.6.1/","--with-Rmpi-include=/apps/openmpi/1.6.1/include","--with-Rmpi-libpath=/apps/openmpi/1.6.1/lib","--with-Rmpi-type=OPENMPI")), INSTALL_opts="--no-test-load", dependencies=TRUE, repos = "http://cran.us.r-project.org")
-6) The mpi modules must also be loaded when running DE-kupl
+6) The mpi modules must also be loaded when running DE-kupl. Note that each chunk seems to use about 4 cores (maybe pscl::zeroinfl() itself is threaded?) so when deciding on the number of nodes and the number of jobs per node with e.g. slurm, you don't want to overcrowd individual nodes.)
 
 These changes allow the use of a zero inflated negative binomial test, or a binary presence/absence test, by using the key diff_method: zeroinfl or diff_method: binomial
 
