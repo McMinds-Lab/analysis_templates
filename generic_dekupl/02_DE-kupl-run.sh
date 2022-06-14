@@ -13,7 +13,7 @@ cat <<EOF > ${outdir}/02_DE-kupl-run/02_DE-kupl-run.sbatch
 #SBATCH --mem=187G
 #SBATCH --job-name=02_DE-kupl-run
 #SBATCH --output=${outdir}/02_DE-kupl-run/logs/02_DE-kupl-run_%a.log
-#SBATCH --ntasks=48
+#SBATCH --ntasks=96
 #SBATCH --cpus-per-task=1 
 
 module purge
