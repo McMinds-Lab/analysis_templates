@@ -1,7 +1,6 @@
-## three positional arguments specifying 1) the directory containing fastqs, 2) the output analysis directory, and 3) the file path of the config file
-indir=$1
+## two positional arguments specifying 1) the file path of the config file, 2) the output analysis directory
+config=$1
 outdir=$2
-config=$3
 
 mkdir -p ${outdir}/02_DE-kupl-run/logs
 cp ${config} ${outdir}/02_DE-kupl-run/config.json
