@@ -1,7 +1,6 @@
-## three positional arguments specifying 1) the directory containing fastqs, 2) the output analysis directory, and 3) the file path of the config file
-indir=$1
+## two positional arguments specifying 1) the file path of the config file, 2) the output analysis directory
+config=$1
 outdir=$2
-config=$3
 
 mkdir -p ${outdir}/02_DE-kupl-run/logs
 cp ${config} ${outdir}/02_DE-kupl-run/config.json
@@ -14,13 +13,14 @@ cat <<EOF > ${outdir}/02_DE-kupl-run/02_DE-kupl-run.sbatch
 #SBATCH --mem=187G
 #SBATCH --job-name=02_DE-kupl-run
 #SBATCH --output=${outdir}/02_DE-kupl-run/logs/02_DE-kupl-run_%a.log
-#SBATCH --cpus-per-task=24
+#SBATCH --ntasks=96
+#SBATCH --cpus-per-task=1 
 
 module purge
 module load hub.apps/anaconda3
 source activate dekupl
 
-dekupl-run --configfile ${outdir}/02_DE-kupl-run/config.json -j\${SLURM_CPUS_PER_TASK} --resources ram=\${SLURM_MEM_PER_NODE} -p
+dekupl-run --configfile ${outdir}/02_DE-kupl-run/config.json -j\${SLURM_NTASKS} --resources ram=\${SLURM_MEM_PER_NODE} -p
 
 EOF
 

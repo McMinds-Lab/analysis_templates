@@ -36,19 +36,24 @@ in2=(${indir}/*/\${sample}/\${sample}_2.fastq.gz)
 out1=${outdir}/01_BBDuk/trimmed/\${sample}_1.fastq
 out2=${outdir}/01_BBDuk/trimmed/\${sample}_2.fastq
 
+## trim the 3' ends of reads based on quality scores
+## use 23-mers to identify adapters and artifacts
+## trim both 5' and 3' ends of reads based on matches to sequencing adapters and artifacts
+## default length of a single kmer downstream; if a read is trimmed shorter than this just discard it
+## trim reads once they reach quality scores of 20 (for de-kupl I think it may pay to be stringent here; maybe even more than 20)
 bbduk.sh \
   in1=\${in1} \
   in2=\${in2} \
-  out1=\${out1} \ 
+  out1=\${out1} \
   out2=\${out2} \
   ref=adapters,artifacts \
-  qtrim=r \ ## trim the 3' ends of reads based on quality scores
-  ktrim=rl \ ## trim both 5' and 3' ends of reads based on matches to sequencing adapters and artifacts
-  k=23 \ ## use 23-mers to identify adapters and artifacts
+  qtrim=r \
+  ktrim=rl \
+  k=23 \
   mink=11 \
   hdist=2 \
-  minlength=31 \ ## default length of a single kmer downstream; if a read is trimmed shorter than this just discard it
-  trimq=20 ## trim reads once they reach quality scores of 20 (for de-kupl I think it may pay to be stringent here; maybe even more than 20)
+  minlength=31 \
+  trimq=20 
 
 gzip --best -c \${out1} > \${out1/.fastq/.fastq.gz}
 gzip --best -c \${out2} > \${out2/.fastq/.fastq.gz}
