@@ -13,13 +13,14 @@ cat <<EOF > ${outdir}/02_DE-kupl-run/02_DE-kupl-run.sbatch
 #SBATCH --mem=187G
 #SBATCH --job-name=02_DE-kupl-run
 #SBATCH --output=${outdir}/02_DE-kupl-run/logs/02_DE-kupl-run_%a.log
-#SBATCH --cpus-per-task=24
+#SBATCH --ntasks=48
+#SBATCH --cpus-per-task=1 
 
 module purge
 module load hub.apps/anaconda3
 source activate dekupl
 
-dekupl-run --configfile ${outdir}/02_DE-kupl-run/config.json -j\${SLURM_CPUS_PER_TASK} --resources ram=\${SLURM_MEM_PER_NODE} -p
+dekupl-run --configfile ${outdir}/02_DE-kupl-run/config.json -j\${SLURM_NTASKS} --resources ram=\${SLURM_MEM_PER_NODE} -p
 
 EOF
 
