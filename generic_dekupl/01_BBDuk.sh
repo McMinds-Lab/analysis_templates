@@ -8,7 +8,7 @@ outdir=$2
 mkdir -p ${outdir}/01_BBDuk/logs
 mkdir ${outdir}/01_BBDuk/trimmed
 
-samples=($(grep SRR ${indir}/runInfo.csv | grep 'WGA\|WGS' | cut -d ',' -f 1))
+samples=($(grep SRR ${indir}/runInfo.csv | grep 'WGA\|WGS\|RNA-Seq' | cut -d ',' -f 1))
 
 cat <<EOF > ${outdir}/01_BBDuk/01_BBDuk.sbatch
 #!/bin/bash
