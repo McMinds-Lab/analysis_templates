@@ -1,26 +1,22 @@
 {
     "fastq_dir": "file.path",
-    
-   "lib_type": "rf",
-    
+    "lib_type": "unstranded",
     "data_type": "WGS",
-    
     "output_dir": "file.path",
     
-     "dekupl_counter": {
-      "min_recurrence": 2,
-      "min_recurrence_abundance": 5
-        },
-    ##diff_method needed for tests other than default DE-Seq2
-        "diff_method": "zeroinfl",
-        "diff_analysis": {
-          "condition" : {
+    "dekupl_counter": {
+        "min_recurrence": 2,
+        "min_recurrence_abundance": 5
+    },
+    "diff_method": "zeroinfl",
+    "diff_analysis": {
+        "condition" : {
             "A": "control",
             "B": "diseased"
-          },
-          "pvalue_threshold": 0.05,
-          "log2fc_threshold": 0
         },
-      
-        "samples_tsv": "file.path/samples.tsv"
-          }
+    "pvalue_threshold": 0.05,
+    "log2fc_threshold": 0
+    },
+    
+    "samples_tsv": "file.path/samples.tsv"
+}
