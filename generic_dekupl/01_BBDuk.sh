@@ -49,7 +49,7 @@ bbduk.sh \
   mink=11 \
   hdist=2 \
   minlength=31 \ ## default length of a single kmer downstream; if a read is trimmed shorter than this just discard it
-  trimq=20 \ ## trim reads once they reach quality scores of 20 (for de-kupl I think it may pay to be stringent here; maybe even more than 20)
+  trimq=20 ## trim reads once they reach quality scores of 20 (for de-kupl I think it may pay to be stringent here; maybe even more than 20)
   
 EOF
 
