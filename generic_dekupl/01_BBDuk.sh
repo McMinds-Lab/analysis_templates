@@ -38,7 +38,7 @@ out2=${outdir}/01_BBDuk/trimmed/\${sample}_2.fastq
 
 ## trim the 3' ends of reads based on quality scores
 ## use 23-mers to identify adapters and artifacts
-## trim both 5' and 3' ends of reads based on matches to sequencing adapters and artifacts
+## trim both 3' ends of reads based on matches to sequencing adapters and artifacts
 ## default length of a single kmer downstream; if a read is trimmed shorter than this just discard it
 ## trim reads once they reach quality scores of 20 (for de-kupl I think it may pay to be stringent here; maybe even more than 20)
 bbduk.sh \
@@ -48,7 +48,7 @@ bbduk.sh \
   out2=\${out2} \
   ref=adapters,artifacts \
   qtrim=r \
-  ktrim=rl \
+  ktrim=r \
   k=23 \
   mink=11 \
   hdist=2 \
