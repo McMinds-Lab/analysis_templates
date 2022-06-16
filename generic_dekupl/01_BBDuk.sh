@@ -60,6 +60,7 @@ bbduk.sh \
   minlength=31 \
   trimq=20 \
   ftl=10 \
+  tbo
 
 gzip -c \${out1} > \${out1/.fastq/.fastq.gz} &
 gzip -c \${out2} > \${out2/.fastq/.fastq.gz}
