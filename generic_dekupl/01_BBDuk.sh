@@ -59,11 +59,7 @@ bbduk.sh \
   hdist=2 \
   minlength=31 \
   trimq=20 \
-<<<<<<< HEAD
-  
-=======
-  tbo
->>>>>>> 094c7450d1f9489b87ab93b6deef0f632ece2bdb
+  ftl=10 \
 
 gzip -c \${out1} > \${out1/.fastq/.fastq.gz} &
 gzip -c \${out2} > \${out2/.fastq/.fastq.gz}
