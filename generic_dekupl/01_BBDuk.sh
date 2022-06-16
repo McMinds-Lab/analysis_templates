@@ -48,12 +48,13 @@ bbduk.sh \
   out2=\${out2} \
   ref=adapters,artifacts \
   qtrim=r \
-  ktrim=rl \
+  ktrim=r \
   k=23 \
   mink=11 \
   hdist=2 \
   minlength=31 \
-  trimq=20 
+  trimq=20 \
+  ftl=10 \
 
 gzip --best -c \${out1} > \${out1/.fastq/.fastq.gz}
 gzip --best -c \${out2} > \${out2/.fastq/.fastq.gz}

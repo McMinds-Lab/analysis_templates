@@ -2,8 +2,8 @@
 source local.env
 
 ## two positional arguments specifying 1) an SRA project ID starting with SRP and 2) the output directory
-srp=$1
-outdir=$2
+srp=SRP350783
+outdir="/shares/pi_mcmindsr/2022_coral_reef/viral_data/virus"
 
 mkdir -p ${outdir}/logs
 
@@ -49,6 +49,7 @@ conda deactivate
 module purge
 module load apps/sratoolkit/2.10.7
 
+prefetch \${sample}
 fasterq-dump -e 1 \${sample} -t ${outdir}/\${subdir}/\${sample} -O ${outdir}/\${subdir}/\${sample}
 
 for file in ${outdir}/\${subdir}/\${sample}/*.fastq; do
