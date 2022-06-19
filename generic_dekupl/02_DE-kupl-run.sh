@@ -19,6 +19,8 @@ cat <<EOF > ${outdir}/02_DE-kupl-run/02_DE-kupl-run.sbatch
 module purge
 module load hub.apps/anaconda3
 source activate dekupl
+module load compilers/gcc/4.8.1
+module load mpi/openmpi/1.6.1
 
 dekupl-run --configfile ${outdir}/02_DE-kupl-run/config.json -j\${SLURM_NTASKS} --resources ram=\${SLURM_MEM_PER_NODE} -p
 
