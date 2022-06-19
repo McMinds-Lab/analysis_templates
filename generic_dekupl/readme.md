@@ -9,6 +9,6 @@ this workflow requires a version of DE-kupl that has been modified. We accomplis
 
 These changes allow the use of a zero inflated negative binomial test, or a binary presence/absence test, by using the key diff_method: zeroinfl or diff_method: binomial
 
-For 'zeroinfl', a gene is considered 'significant' if it's either differentially prevalent OR differentially abundant when present. the 'log2fc' value is not actually a log2-fold-change when the gene is differentially prevalent, so units are mixed up among genes and as a whole are essentially meaningless. Therefore it probably only makes sense to remove an effect size cutoff with the key log2fc_threshold:0 in the config.json.  
+For 'zeroinfl', a gene is considered 'significant' if it's either differentially prevalent OR differentially abundant when present. the 'log2fc' value is not actually a log2-fold-change when the gene is differentially prevalent, so units are mixed up among genes and as a whole are essentially meaningless. Therefore it probably only makes sense to remove an effect size cutoff with the key log2fc_threshold:0 in the config.json. To use the method zeroinfl, the argument zi_cores is required in the config.json to pass the level of parallelization to the method.
 
 These scripts appear to be MUCH slower than the DESeq2 option, and this is why I made the modifications to use MPI - this is the most convenient way to parallelize across more than one machine. 
