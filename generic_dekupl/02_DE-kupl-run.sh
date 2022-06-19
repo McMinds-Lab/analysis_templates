@@ -2,7 +2,7 @@
 config=$1
 outdir=$2
 
-mkdir -p ${outdir}/02_DE-kupl-run/logs
+mkdir -p ${outdir}/02_DE-kupl-run/
 cp ${config} ${outdir}/02_DE-kupl-run/config.json
 
 cat <<EOF > ${outdir}/02_DE-kupl-run/02_DE-kupl-run.sbatch
@@ -12,7 +12,7 @@ cat <<EOF > ${outdir}/02_DE-kupl-run/02_DE-kupl-run.sbatch
 #SBATCH --time=7-00:00:00
 #SBATCH --mem=187G
 #SBATCH --job-name=02_DE-kupl-run
-#SBATCH --output=${outdir}/02_DE-kupl-run/logs/02_DE-kupl-run.log
+#SBATCH --output=${outdir}/02_DE-kupl-run/02_DE-kupl-run.log
 #SBATCH --ntasks=96
 #SBATCH --cpus-per-task=1 
 
