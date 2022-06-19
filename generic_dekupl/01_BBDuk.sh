@@ -46,7 +46,6 @@ out2=${outdir}/01_BBDuk/trimmed/\${sample}_2.fastq
 ## trimq = trim reads once they reach quality scores of 20 (for de-kupl I think it may pay to be stringent here; maybe even more than 20)
 ## tbo = trim read overhangs if they completely overlap
 bbduk.sh \
-  -Xmx5g \
   in1=\${in1} \
   in2=\${in2} \
   out1=\${out1} \
@@ -60,7 +59,9 @@ bbduk.sh \
   minlength=31 \
   trimq=20 \
   ftl=10 \
-  tbo
+  tbo \
+  tpe \
+  ecco
 
 gzip -c \${out1} > \${out1/.fastq/.fastq.gz} &
 gzip -c \${out2} > \${out2/.fastq/.fastq.gz}
