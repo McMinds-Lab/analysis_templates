@@ -16,5 +16,8 @@
         "pvalue_threshold": 0.05,
         "log2fc_threshold": 0
     },
-    "samples_tsv": "file.path/samples.tsv"
+    "samples_tsv": "file.path/samples.tsv",
+    "zi_cores": slurm_ntasks,
+    "chunk_size": 100000,
+    "tmp_dir": "output_dir_filepath"
 }
