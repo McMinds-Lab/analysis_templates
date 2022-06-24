@@ -36,7 +36,6 @@ in2=(${indir}/*/\${sample}/\${sample}_2.fastq.gz)
 out1=${outdir}/01_BBDuk/trimmed/\${sample}_1.fastq
 out2=${outdir}/01_BBDuk/trimmed/\${sample}_2.fastq
 
-## -Xmx5g = do not use more than 5 gigabytes of ram
 ## qtrim = trim the 3' ends of reads based on quality scores
 ## ktrim = trim both 3' ends of reads based on matches to sequencing adapters and artifacts
 ## k = use 23-mers to identify adapters and artifacts
@@ -45,8 +44,9 @@ out2=${outdir}/01_BBDuk/trimmed/\${sample}_2.fastq
 ## minlength = default length of a single kmer downstream in dekupl; if a read is trimmed shorter than this just discard it
 ## trimq = trim reads once they reach quality scores of 20 (for de-kupl I think it may pay to be stringent here; maybe even more than 20)
 ## tbo = trim read overhangs if they completely overlap
+## tpe = if kmer trimming happens, trim paired reads to same length
+## ecco = perform error-correction using pair overlap
 bbduk.sh \
-  -Xmx5g \
   in1=\${in1} \
   in2=\${in2} \
   out1=\${out1} \
@@ -60,7 +60,9 @@ bbduk.sh \
   minlength=31 \
   trimq=20 \
   ftl=10 \
-  tbo
+  tbo \
+  tpe \
+  ecco
 
 gzip -c \${out1} > \${out1/.fastq/.fastq.gz} &
 gzip -c \${out2} > \${out2/.fastq/.fastq.gz}
