@@ -3,7 +3,7 @@ config=$1
 outdir=$2
 ntasks=$3
 
-mkdir -p ${outdir}/02_DE-kupl-run/
+mkdir -p ${outdir}/02_DE-kupl-run/dekupl_tmp
 cp ${config} ${outdir}/02_DE-kupl-run/config.json
 
 cat <<EOF > ${outdir}/02_DE-kupl-run/02_DE-kupl-run.sbatch
