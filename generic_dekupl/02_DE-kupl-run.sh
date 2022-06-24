@@ -1,6 +1,7 @@
 ## two positional arguments specifying 1) the file path of the config file, 2) the output analysis directory
 config=$1
 outdir=$2
+ntasks=$3
 
 mkdir -p ${outdir}/02_DE-kupl-run/logs
 cp ${config} ${outdir}/02_DE-kupl-run/config.json
@@ -12,8 +13,8 @@ cat <<EOF > ${outdir}/02_DE-kupl-run/02_DE-kupl-run.sbatch
 #SBATCH --time=7-00:00:00
 #SBATCH --mem=187G
 #SBATCH --job-name=02_DE-kupl-run
-#SBATCH --output=${outdir}/02_DE-kupl-run/logs/02_DE-kupl-run_%a.log
-#SBATCH --ntasks=96
+#SBATCH --output=${outdir}/02_DE-kupl-run/logs/02_DE-kupl-run.log
+#SBATCH --ntasks=${ntasks}
 #SBATCH --cpus-per-task=1 
 
 module purge
