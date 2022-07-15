@@ -1,6 +1,7 @@
 ## inspired in part by https://github.com/Transipedia/dekupl-joinCounts/tree/146604e1debee6759b3f7eeb604d031c5d4113b3
 
 ## two positional arguments specifying 1) the directory containing fastqs in samplewise subfolders a la download_SRA.sh, and 2) the output analysis directory
+# may be good idea to add input of sample sheet which could be used to select the specific files from the input? also add QC prior to kmer counting?
 indir=$1
 outdir=$2
 n_processes=$3
@@ -33,10 +34,10 @@ module purge
 module load apps/jellyfish/2.2.6
 
 #paired-end, unstranded data
-jellyfish count -t ${n_threads} -m 31 -s 10000 -o ${out/.tsv/.jf} -C <(zcat ${in1}) <(zcat ${in2})
-jellyfish dump -c ${out/.tsv/.jf} | sort --parallel ${n_threads} -k 1 > ${out}
+jellyfish count -t ${n_threads} -m 31 -s 10000 -o \${out/.tsv/.jf} -C <(zcat \${in1}) <(zcat \${in2})
+jellyfish dump -c \${out/.tsv/.jf} | sort --parallel ${n_threads} -k 1 > \${out}
 
-rm ${out/.tsv/.jf}
+rm \${out/.tsv/.jf}
 
 EOF
 
@@ -49,17 +50,17 @@ cat <<EOF > ${outdir}/01_jellyfish/01b_merge.sbatch
 #SBATCH --job-name=01b_merge
 #SBATCH --output=${outdir}/01_jellyfish/logs/01b_merge.log
 
-files=$(${outdir}/01_jellyfish/counts/*.tsv)
+files=\$(${outdir}/01_jellyfish/counts/*.tsv)
 
-join --header -a 1 -a 2 -e 0 ${files[1]} ${files[2]} > ${outdir}/01_jellyfish/counts_matrix.tsv
+join --header -a 1 -a 2 -e 0 \${files[1]} \${files[2]} > ${outdir}/01_jellyfish/counts_matrix.tsv
 
-for i in $(seq 3 ${#files[@]}); do
+for i in \$(seq 3 \${#files[@]}); do
 
-join --header -a 1 -a 2 -e 0 ${outdir}/01_jellyfish/counts_matrix.tsv ${files[$i]} > ${outdir}/01_jellyfish/counts_matrix.tsv
+join --header -a 1 -a 2 -e 0 ${outdir}/01_jellyfish/counts_matrix.tsv \${files[\$i]} > ${outdir}/01_jellyfish/counts_matrix.tsv
 
 done
 
 EOF
 
-arrayID=$(sbatch ${outdir}/01_jellyfish/01a_jellyfish.sbatch)
+arrayID=$(sbatch ${outdir}/01_jellyfish/01a_jellyfish.sbatch | cut -f 4)
 sbatch --dependency=afterany:$arrayID ${outdir}/01_jellyfish/01b_merge.sbatch
