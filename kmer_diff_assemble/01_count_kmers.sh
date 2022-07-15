@@ -62,5 +62,5 @@ done
 
 EOF
 
-arrayID=$(sbatch ${outdir}/01_jellyfish/01a_jellyfish.sbatch | cut -f 4)
+arrayID=$(sbatch ${outdir}/01_jellyfish/01a_jellyfish.sbatch | cut -d' ' -f 4)
 sbatch --dependency=afterany:$arrayID ${outdir}/01_jellyfish/01b_merge.sbatch
