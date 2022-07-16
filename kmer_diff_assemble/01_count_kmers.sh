@@ -50,11 +50,11 @@ cat <<EOF > ${outdir}/01_jellyfish/01b_merge.sbatch
 #SBATCH --job-name=01b_merge
 #SBATCH --output=${outdir}/01_jellyfish/logs/01b_merge.log
 
-files=\$(${outdir}/01_jellyfish/counts/*.tsv)
+files=(${outdir}/01_jellyfish/counts/*.tsv)
 
 join --header -a 1 -a 2 -e 0 \${files[1]} \${files[2]} > ${outdir}/01_jellyfish/counts_matrix.tsv
 
-for i in \$(seq 3 \${#files[@]}); do
+for i in \$(seq 3 ((\${#files[@]}-1))); do
 
 join --header -a 1 -a 2 -e 0 ${outdir}/01_jellyfish/counts_matrix.tsv \${files[\$i]} > ${outdir}/01_jellyfish/counts_matrix.tsv
 
