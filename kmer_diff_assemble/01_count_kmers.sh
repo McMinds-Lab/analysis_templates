@@ -50,15 +50,17 @@ cat <<EOF > ${outdir}/01_jellyfish/01b_merge.sbatch
 #SBATCH --job-name=01b_merge
 #SBATCH --output=${outdir}/01_jellyfish/logs/01b_merge.log
 
-files=(${outdir}/01_jellyfish/counts/*.tsv)
+samples=(${samples[@]})
 
-join --header -a 1 -a 2 -e 0 \${files[1]} \${files[2]} > ${outdir}/01_jellyfish/counts_matrix.tsv
+join -o auto -a 1 -a 2 -e '0' ${outdir}/01_jellyfish/counts/${samples[0]} ${outdir}/01_jellyfish/counts/${samples[1]} > ${outdir}/01_jellyfish/counts_matrix.tsv
 
-for i in \$(seq 3 ((\${#files[@]}-1))); do
+for i in \$(seq 2 \$((\${#samples[@]}-1))); do
 
-join --header -a 1 -a 2 -e 0 ${outdir}/01_jellyfish/counts_matrix.tsv \${files[\$i]} > ${outdir}/01_jellyfish/counts_matrix.tsv
+join -o auto -a 1 -a 2 -e '0' ${outdir}/01_jellyfish/counts_matrix.tsv ${outdir}/01_jellyfish/counts/\${samples[\$i]} > ${outdir}/01_jellyfish/counts_matrix.tsv
 
 done
+
+cat <(printf "$(printf '%s\t' 'kmer' "${samples[@]}")\n" ${outdir}/01_jellyfish/counts_matrix.tsv > ${outdir}/01_jellyfish/counts_matrix.tsv
 
 EOF
 
