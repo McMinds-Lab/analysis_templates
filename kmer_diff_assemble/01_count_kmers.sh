@@ -56,7 +56,7 @@ join -o auto -a 1 -a 2 -e '0' ${outdir}/01_jellyfish/counts/\${samples[0]}.tsv $
 
 for i in \$(seq 2 \$((\${#samples[@]}-1))); do
 
-join -o auto -a 1 -a 2 -e '0' ${outdir}/01_jellyfish/temp_\$(($i-1)).tsv ${outdir}/01_jellyfish/counts/\${samples[\$i]}.tsv > ${outdir}/01_jellyfish/temp_\$i.tsv
+join -o auto -a 1 -a 2 -e '0' ${outdir}/01_jellyfish/temp_\$((\$i-1)).tsv ${outdir}/01_jellyfish/counts/\${samples[\$i]}.tsv > ${outdir}/01_jellyfish/temp_\$i.tsv
 rm ${outdir}/01_jellyfish/temp_\$((\$i-1)).tsv
 
 done
