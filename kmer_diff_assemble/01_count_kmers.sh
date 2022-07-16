@@ -52,15 +52,17 @@ cat <<EOF > ${outdir}/01_jellyfish/01b_merge.sbatch
 
 samples=(${samples[@]})
 
-join -o auto -a 1 -a 2 -e '0' ${outdir}/01_jellyfish/counts/${samples[0]} ${outdir}/01_jellyfish/counts/${samples[1]} > ${outdir}/01_jellyfish/counts_matrix.tsv
+join -o auto -a 1 -a 2 -e '0' ${outdir}/01_jellyfish/counts/\${samples[0]}.tsv ${outdir}/01_jellyfish/counts/\${samples[1]}.tsv > ${outdir}/01_jellyfish/temp_1.tsv
 
 for i in \$(seq 2 \$((\${#samples[@]}-1))); do
 
-join -o auto -a 1 -a 2 -e '0' ${outdir}/01_jellyfish/counts_matrix.tsv ${outdir}/01_jellyfish/counts/\${samples[\$i]} > ${outdir}/01_jellyfish/counts_matrix.tsv
+join -o auto -a 1 -a 2 -e '0' ${outdir}/01_jellyfish/temp_\$(($i-1)).tsv ${outdir}/01_jellyfish/counts/\${samples[\$i]}.tsv > ${outdir}/01_jellyfish/temp_\${i}.tsv
+rm ${outdir}/01_jellyfish/temp_\$(($i-1)).tsv
 
 done
 
-cat <(printf "$(printf '%s\t' 'kmer' "${samples[@]}")\n" ${outdir}/01_jellyfish/counts_matrix.tsv > ${outdir}/01_jellyfish/counts_matrix.tsv
+cat <(printf "\$(printf '%s\t' 'kmer' "\${samples[@]}")\n" ${outdir}/01_jellyfish/temp_\$((\${#samples[@]}-1)).tsv > ${outdir}/01_jellyfish/counts_matrix.tsv
+rm ${outdir}/01_jellyfish/temp_\$((\${#samples[@]}-1)).tsv
 
 EOF
 
