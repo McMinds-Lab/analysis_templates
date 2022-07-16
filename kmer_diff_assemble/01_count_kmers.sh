@@ -28,16 +28,16 @@ sample=\${samples[\$SLURM_ARRAY_TASK_ID]} ## each array job has a different samp
 in1=(${indir}/*/\${sample}/\${sample}_1.fastq.gz)
 in2=(${indir}/*/\${sample}/\${sample}_2.fastq.gz)
 
-out=${outdir}/01_jellyfish/counts/\${sample}.tsv
+out=${outdir}/01_jellyfish/counts/\${sample}
 
 module purge
 module load apps/jellyfish/2.2.6
 
 #paired-end, unstranded data
-jellyfish count -t ${n_threads} -m 31 -s 10000 -o \${out/.tsv/.jf} -C <(zcat \${in1}) <(zcat \${in2})
-jellyfish dump -c \${out/.tsv/.jf} | sort --parallel ${n_threads} -k 1 > \${out}
+jellyfish count -t ${n_threads} -m 31 -s 10000 -o \${out}.jf -C <(zcat \${in1}) <(zcat \${in2})
+jellyfish dump -c \${out}.jf | sort --parallel ${n_threads} -k 1 | gzip > \${out}.tsv.gz
 
-rm \${out/.tsv/.jf}
+rm \${out}.jf
 
 EOF
 
@@ -52,16 +52,16 @@ cat <<EOF > ${outdir}/01_jellyfish/01b_merge.sbatch
 
 samples=(${samples[@]})
 
-join -o auto -a 1 -a 2 -e '0' ${outdir}/01_jellyfish/counts/\${samples[0]}.tsv ${outdir}/01_jellyfish/counts/\${samples[1]}.tsv > ${outdir}/01_jellyfish/temp_1.tsv
+join -t \$'\t' -o auto -a 1 -a 2 -e '0' <(zcat ${outdir}/01_jellyfish/counts/\${samples[0]}.tsv.gz) <(zcat ${outdir}/01_jellyfish/counts/\${samples[1]}.tsv.gz) > ${outdir}/01_jellyfish/temp_1.tsv
 
 for i in \$(seq 2 \$((\${#samples[@]}-1))); do
 
-join -o auto -a 1 -a 2 -e '0' ${outdir}/01_jellyfish/temp_\$((\$i-1)).tsv ${outdir}/01_jellyfish/counts/\${samples[\$i]}.tsv > ${outdir}/01_jellyfish/temp_\$i.tsv
+join -t \$'\t' -o auto -a 1 -a 2 -e '0' ${outdir}/01_jellyfish/temp_\$((\$i-1)).tsv <(zcat ${outdir}/01_jellyfish/counts/\${samples[\$i]}.tsv.gz) > ${outdir}/01_jellyfish/temp_\$i.tsv
 rm ${outdir}/01_jellyfish/temp_\$((\$i-1)).tsv
 
 done
 
-cat <(printf "\$(printf '%s\t' 'kmer' "\${samples[@]}")\n" ${outdir}/01_jellyfish/temp_\$((\${#samples[@]}-1)).tsv > ${outdir}/01_jellyfish/counts_matrix.tsv
+cat <(printf "\$(printf '%s\t' 'kmer' "\${samples[@]}")\n") ${outdir}/01_jellyfish/temp_\$((\${#samples[@]}-1)).tsv > ${outdir}/01_jellyfish/counts_matrix.tsv
 rm ${outdir}/01_jellyfish/temp_\$((\${#samples[@]}-1)).tsv
 
 EOF
