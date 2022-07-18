@@ -51,9 +51,9 @@ cat <<EOF > ${outdir}/01_jellyfish/01b_merge.sbatch
 #SBATCH --output=${outdir}/01_jellyfish/logs/01b_merge.log
 
 samples=(${samples[@]})
-
 prefix=${outdir}/01_jellyfish/counts/
-files=(\${samples[@]/#/${prefix}})
+
+files=(\${samples[@]/#/\${prefix}})
 files=(\${files[@]/%/'.tsv.gz'})
 
 join_rec() {
