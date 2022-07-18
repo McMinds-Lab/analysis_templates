@@ -19,7 +19,6 @@ cat <<EOF > ${outdir}/01_jellyfish/01a_jellyfish.sbatch
 #SBATCH --partition=rra
 #SBATCH --time=6-00:00:00
 #SBATCH --mem=160G
-#SBATCH --threads=${n_threads}
 #SBATCH --job-name=01a_jellyfish
 #SBATCH --output=${outdir}/01_jellyfish/logs/01_jellyfish_%a.log
 #SBATCH --array=0-$((${#samples[@]}-1))%${n_processes}
