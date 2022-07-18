@@ -74,8 +74,8 @@ bbduk.sh \
   tpe \
   ecco &
 
-tee <\$pipe1_1 \$pipe1_2 | gzip -c > ${outdir}/01_jellyfish/trimmed/\${sample}_1.fastq.gz &
-tee <\$pipe2_1 \$pipe2_2 | gzip -c > ${outdir}/01_jellyfish/trimmed/\${sample}_2.fastq.gz &
+cat \$pipe1_1 | tee \$pipe1_2 | gzip -c > ${outdir}/01_jellyfish/trimmed/\${sample}_1.fastq.gz &
+cat \$pipe2_1 | tee \$pipe2_2 | gzip -c > ${outdir}/01_jellyfish/trimmed/\${sample}_2.fastq.gz &
 
 module purge
 module load apps/jellyfish/2.2.6
