@@ -29,7 +29,14 @@ sample=\${samples[\$SLURM_ARRAY_TASK_ID]} ## each array job has a different samp
 in1=(${indir}/*/\${sample}/\${sample}_1.fastq.gz)
 in2=(${indir}/*/\${sample}/\${sample}_2.fastq.gz)
 
-mkfifo pipe1_1 pipe1_2 pipe2_1 pipe2_2 pipe3
+mkdir ${outdir}/01_jellyfish/temp
+pipe1_1=${outdir}/01_jellyfish/temp/\${sample}_p1gz
+pipe1_2=${outdir}/01_jellyfish/temp/\${sample}_p1jf
+pipe2_1=${outdir}/01_jellyfish/temp/\${sample}_p2gz
+pipe2_2=${outdir}/01_jellyfish/temp/\${sample}_p2jf
+pipe3=${outdir}/01_jellyfish/temp/\${sample}_p3
+
+mkfifo \$pipe1_1 \$pipe1_2 \$pipe2_1 \$pipe2_2 \$pipe3
 
 module purge
 module load hub.apps/anaconda3
@@ -51,8 +58,8 @@ source activate bbtools
 bbduk.sh \
   in1=\${in1} \
   in2=\${in2} \
-  out1=>(tee pipe1_1 pipe1_2) \
-  out2=>(tee pipe2_1 pipe2_2) \
+  out1=>(tee \$pipe1_1 \$pipe1_2) \
+  out2=>(tee \$pipe2_1 \$pipe2_2) \
   ref=adapters,artifacts \
   qtrim=r \
   ktrim=r \
@@ -66,17 +73,17 @@ bbduk.sh \
   tpe \
   ecco
 
-gzip -c pipe1_1 > ${outdir}/01_jellyfish/trimmed/\${sample}_1.fastq.gz &
-gzip -c pipe2_1 > ${outdir}/01_jellyfish/trimmed/\${sample}_2.fastq.gz &
+gzip -c \$pipe1_1 > ${outdir}/01_jellyfish/trimmed/\${sample}_1.fastq.gz &
+gzip -c \$pipe2_1 > ${outdir}/01_jellyfish/trimmed/\${sample}_2.fastq.gz &
 
 module purge
 module load apps/jellyfish/2.2.6
 
 #paired-end, unstranded data. theoretically I think I would like to first merge reads, then quality-control them (incl. adapter and quality trimming), then feed three files to jellyfish for each sample (merged, unmerged R1, unmerged R2). Downstream would need to be able to handle that new format
-jellyfish count -t ${n_threads} -m 31 -s 10000 -o pipe3 -C pipe1_2 pipe2_2
-jellyfish dump -c pipe3 | sort --parallel ${n_threads} -k 1 | gzip > ${outdir}/01_jellyfish/counts/\${sample}.tsv.gz
+jellyfish count -t ${n_threads} -m 31 -s 10000 -o \$pipe3 -C \$pipe1_2 \$pipe2_2
+jellyfish dump -c \$pipe3 | sort --parallel ${n_threads} -k 1 | gzip > ${outdir}/01_jellyfish/counts/\${sample}.tsv.gz
 
-rm pipe1_1 pipe1_2 pipe2_1 pipe2_2 pipe3
+rm -rf ${outdir}/01_jellyfish/temp
 
 EOF
 
