@@ -56,6 +56,7 @@ source activate bbtools
 ## tpe = if kmer trimming happens, trim paired reads to same length
 ## ecco = perform error-correction using pair overlap
 bbduk.sh \
+  overwrite=true \
   in1=\${in1} \
   in2=\${in2} \
   out1=\$pipe1_1 \
