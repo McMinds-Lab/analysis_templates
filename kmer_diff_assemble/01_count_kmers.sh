@@ -52,17 +52,31 @@ cat <<EOF > ${outdir}/01_jellyfish/01b_merge.sbatch
 
 samples=(${samples[@]})
 
-join -o auto -a 1 -a 2 -e '0' <(zcat ${outdir}/01_jellyfish/counts/\${samples[0]}.tsv.gz) <(zcat ${outdir}/01_jellyfish/counts/\${samples[1]}.tsv.gz) > ${outdir}/01_jellyfish/temp_1.tsv
+files=(${samples[@]/#/\'${outdir}/01_jellyfish/counts/\'})
+files=(${files[@]/%/'.tsv.gz'})
 
-for i in \$(seq 2 \$((\${#samples[@]}-1))); do
+join_rec() {
 
-join -o auto -a 1 -a 2 -e '0' ${outdir}/01_jellyfish/temp_\$((\$i-1)).tsv <(zcat ${outdir}/01_jellyfish/counts/\${samples[\$i]}.tsv.gz) > ${outdir}/01_jellyfish/temp_\$i.tsv
-rm ${outdir}/01_jellyfish/temp_\$((\$i-1)).tsv
+  # first arg should be one when function is initially called; internally it is set to zero
+  # unzip first arg if it's not being piped
+  if [ \$1 -eq 1 ]; then
+    f1=<(zcat \$2)
+  else
+    f1=\$2
+  fi
+  f2=\$3
+  shift 3
 
-done
+  # if the number of remaining files is greater than two, continue the recursion; else join these two and end
+  if [ \$# -gt 0 ]; then
+    join -o auto -a 1 -a 2 -e 0 "\$f1" <(zcat "\$f2") | join_rec 0 - "\$@"
+  else
+    join -o auto -a 1 -a 2 -e 0 "\$f1" <(zcat "\$f2")
+  fi
 
-cat <(printf "\$(printf '%s\t' 'kmer' "\${samples[@]}")\n") <(cat ${outdir}/01_jellyfish/temp_\$((\${#samples[@]}-1)).tsv | tr ' ' '\t') > ${outdir}/01_jellyfish/counts_matrix.tsv
-rm ${outdir}/01_jellyfish/temp_\$((\${#samples[@]}-1)).tsv
+} #https://stackoverflow.com/questions/10726471/join-multiple-files
+
+cat <(printf "\$(printf '%s\t' 'kmer' "\${samples[@]}")\n") <(join_rec 1 \${files[@]}) | tr ' ' '\t') | gzip > ${outdir}/01_jellyfish/counts_matrix.tsv.gz
 
 EOF
 
