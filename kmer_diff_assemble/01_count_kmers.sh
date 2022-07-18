@@ -9,6 +9,7 @@ n_threads=$4
 
 mkdir -p ${outdir}/01_jellyfish/logs
 mkdir ${outdir}/01_jellyfish/counts
+mkdir ${outdir}/01_jellyfish/trimmed
 
 samples=($(grep SRR ${indir}/runInfo.csv | grep 'WGA\|WGS\|RNA-Seq' | cut -d ',' -f 1))
 
@@ -18,6 +19,7 @@ cat <<EOF > ${outdir}/01_jellyfish/01a_jellyfish.sbatch
 #SBATCH --partition=rra
 #SBATCH --time=6-00:00:00
 #SBATCH --mem=160G
+#SBATCH --threads=${n_threads}
 #SBATCH --job-name=01a_jellyfish
 #SBATCH --output=${outdir}/01_jellyfish/logs/01_jellyfish_%a.log
 #SBATCH --array=0-$((${#samples[@]}-1))%${n_processes}
@@ -28,16 +30,54 @@ sample=\${samples[\$SLURM_ARRAY_TASK_ID]} ## each array job has a different samp
 in1=(${indir}/*/\${sample}/\${sample}_1.fastq.gz)
 in2=(${indir}/*/\${sample}/\${sample}_2.fastq.gz)
 
-out=${outdir}/01_jellyfish/counts/\${sample}
+mkfifo pipe1_1 pipe1_2 pipe2_1 pipe2_2 pipe3
+
+module purge
+module load hub.apps/anaconda3
+source /shares/omicshub/apps/anaconda3/etc/profile.d/conda.sh
+conda deactivate
+conda deactivate
+source activate bbtools
+
+## qtrim = trim the 3' ends of reads based on quality scores
+## ktrim = trim both 3' ends of reads based on matches to sequencing adapters and artifacts
+## k = use 23-mers to identify adapters and artifacts
+## mink = don't look for adapter matches below this size
+## hdist = allow two mismatches for adapter detection
+## minlength = default length of a single kmer downstream in dekupl; if a read is trimmed shorter than this just discard it
+## trimq = trim reads once they reach quality scores of 20 (for de-kupl I think it may pay to be stringent here; maybe even more than 20)
+## tbo = trim read overhangs if they completely overlap
+## tpe = if kmer trimming happens, trim paired reads to same length
+## ecco = perform error-correction using pair overlap
+bbduk.sh \
+  in1=\${in1} \
+  in2=\${in2} \
+  out1=>(tee pipe1_1 pipe1_2) \
+  out2=>(tee pipe2_1 pipe2_2) \
+  ref=adapters,artifacts \
+  qtrim=r \
+  ktrim=r \
+  k=23 \
+  mink=11 \
+  hdist=2 \
+  minlength=31 \
+  trimq=20 \
+  ftl=10 \
+  tbo \
+  tpe \
+  ecco
+
+gzip -c pipe1_1 > ${outdir}/01_jellyfish/trimmed/\${sample}_1.fastq.gz &
+gzip -c pipe2_1 > ${outdir}/01_jellyfish/trimmed/\${sample}_2.fastq.gz &
 
 module purge
 module load apps/jellyfish/2.2.6
 
-#paired-end, unstranded data
-jellyfish count -t ${n_threads} -m 31 -s 10000 -o \${out}.jf -C <(zcat \${in1}) <(zcat \${in2})
-jellyfish dump -c \${out}.jf | sort --parallel ${n_threads} -k 1 | gzip > \${out}.tsv.gz
+#paired-end, unstranded data. theoretically I think I would like to first merge reads, then quality-control them (incl. adapter and quality trimming), then feed three files to jellyfish for each sample (merged, unmerged R1, unmerged R2). Downstream would need to be able to handle that new format
+jellyfish count -t ${n_threads} -m 31 -s 10000 -o pipe3 -C pipe1_2 pipe2_2
+jellyfish dump -c pipe3 | sort --parallel ${n_threads} -k 1 | gzip > ${outdir}/01_jellyfish/counts/\${sample}.tsv.gz
 
-rm \${out}.jf
+rm pipe1_1 pipe1_2 pipe2_1 pipe2_2 pipe3
 
 EOF
 
