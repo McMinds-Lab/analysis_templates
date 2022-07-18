@@ -58,8 +58,8 @@ source activate bbtools
 bbduk.sh \
   in1=\${in1} \
   in2=\${in2} \
-  out1=>(tee \$pipe1_1 \$pipe1_2) \
-  out2=>(tee \$pipe2_1 \$pipe2_2) \
+  out1=\$pipe1_1 \
+  out2=\$pipe2_1 \
   ref=adapters,artifacts \
   qtrim=r \
   ktrim=r \
@@ -71,10 +71,10 @@ bbduk.sh \
   ftl=10 \
   tbo \
   tpe \
-  ecco
+  ecco &
 
-gzip -c \$pipe1_1 > ${outdir}/01_jellyfish/trimmed/\${sample}_1.fastq.gz &
-gzip -c \$pipe2_1 > ${outdir}/01_jellyfish/trimmed/\${sample}_2.fastq.gz &
+tee <\$pipe1_1 \$pipe1_2 | gzip -c > ${outdir}/01_jellyfish/trimmed/\${sample}_1.fastq.gz &
+tee <\$pipe2_1 \$pipe2_2 | gzip -c > ${outdir}/01_jellyfish/trimmed/\${sample}_2.fastq.gz &
 
 module purge
 module load apps/jellyfish/2.2.6
