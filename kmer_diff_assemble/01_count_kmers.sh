@@ -81,7 +81,7 @@ module purge
 module load apps/jellyfish/2.2.6
 
 #paired-end, unstranded data. theoretically I think I would like to first merge reads, then quality-control them (incl. adapter and quality trimming), then feed three files to jellyfish for each sample (merged, unmerged R1, unmerged R2). Downstream would need to be able to handle that new format
-jellyfish count -t ${n_threads} -m 31 -s 10000 -o \$pipe3 -C \$pipe1_2 \$pipe2_2
+jellyfish count -t ${n_threads} -m 31 -s 10000 -o \$pipe3 -C \$pipe1_2 \$pipe2_2 &
 jellyfish dump -c \$pipe3 | sort --parallel ${n_threads} -k 1 | gzip > ${outdir}/01_jellyfish/counts/\${sample}.tsv.gz
 
 rm -rf ${outdir}/01_jellyfish/temp
