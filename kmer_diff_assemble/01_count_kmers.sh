@@ -34,10 +34,12 @@ pipe1_1=${outdir}/01_jellyfish/temp/\${sample}_p1gz
 pipe1_2=${outdir}/01_jellyfish/temp/\${sample}_p1jf
 pipe2_1=${outdir}/01_jellyfish/temp/\${sample}_p2gz
 pipe2_2=${outdir}/01_jellyfish/temp/\${sample}_p2jf
+pipe3=${outdir}/01_jellyfish/temp/\${sample}_p3
 
-mkfifo \$pipe1_1 \$pipe1_2 \$pipe2_1 \$pipe2_2
+mkfifo \$pipe1_1 \$pipe1_2 \$pipe2_1 \$pipe2_2 \$pipe3
 
 module purge
+module load apps/jellyfish/2.2.6
 module load hub.apps/anaconda3
 source /shares/omicshub/apps/anaconda3/etc/profile.d/conda.sh
 conda deactivate
@@ -76,12 +78,9 @@ bbduk.sh \
 cat \$pipe1_1 | tee \$pipe1_2 | gzip > ${outdir}/01_jellyfish/trimmed/\${sample}_1.fastq.gz &
 cat \$pipe2_1 | tee \$pipe2_2 | gzip > ${outdir}/01_jellyfish/trimmed/\${sample}_2.fastq.gz &
 
-module purge
-module load apps/jellyfish/2.2.6
-
 #paired-end, unstranded data. theoretically I think I would like to first merge reads, then quality-control them (incl. adapter and quality trimming), then feed three files to jellyfish for each sample (merged, unmerged R1, unmerged R2). Downstream would need to be able to handle that new format
-jellyfish count -t ${n_threads} -m 31 -s 10000 -o ${outdir}/01_jellyfish/temp/\${sample}_p3 -C \$pipe1_2 \$pipe2_2
-jellyfish dump -c ${outdir}/01_jellyfish/temp/\${sample}_p3 | sort --parallel ${n_threads} -k 1 | gzip > ${outdir}/01_jellyfish/counts/\${sample}.tsv.gz
+jellyfish count -t ${n_threads} -m 31 -s 10000 -o \$pipe3 -C \$pipe1_2 \$pipe2_2 &
+jellyfish dump -c \$pipe3 | sort --parallel ${n_threads} -k 1 | gzip > ${outdir}/01_jellyfish/counts/\${sample}.tsv.gz
 
 rm -rf ${outdir}/01_jellyfish/temp
 
