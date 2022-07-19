@@ -92,10 +92,11 @@ jellyfish count \
   -C \
   <(zcat ${subdir}/trimmed/\${sample}_1.fastq.gz) \
   <(zcat ${subdir}/trimmed/\${sample}_2.fastq.gz) &
-  
+
+## sort doesn't actually parallelize for pipes unless you make the buffer big (S5G)
 jellyfish dump \
   -c \${pipe3} |
-  sort --parallel ${n_threads} -k 1 |
+  sort -S5G --parallel ${n_threads} -k 1 |
   pigz > ${subdir}/counts/\${sample}.tsv.gz
 
 rm -f \${pipe1} \${pipe2} \${pipe3}
