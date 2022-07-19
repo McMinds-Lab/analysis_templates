@@ -19,6 +19,7 @@ cat <<EOF > ${outdir}/01_jellyfish/01a_jellyfish.sbatch
 #SBATCH --partition=rra
 #SBATCH --time=6-00:00:00
 #SBATCH --mem=160G
+#SBATCH --ntasks=${n_threads}
 #SBATCH --job-name=01a_jellyfish
 #SBATCH --output=${outdir}/01_jellyfish/logs/01_jellyfish_%a.log
 #SBATCH --array=0-$((${#samples[@]}-1))%${n_processes}
@@ -29,14 +30,12 @@ sample=\${samples[\$SLURM_ARRAY_TASK_ID]} ## each array job has a different samp
 in1=(${indir}/*/\${sample}/\${sample}_1.fastq.gz)
 in2=(${indir}/*/\${sample}/\${sample}_2.fastq.gz)
 
-mkdir ${outdir}/01_jellyfish/temp
-pipe1_1=${outdir}/01_jellyfish/temp/\${sample}_p1gz
-pipe1_2=${outdir}/01_jellyfish/temp/\${sample}_p1jf
-pipe2_1=${outdir}/01_jellyfish/temp/\${sample}_p2gz
-pipe2_2=${outdir}/01_jellyfish/temp/\${sample}_p2jf
+mkdir -p ${outdir}/01_jellyfish/temp
+pipe1=${outdir}/01_jellyfish/temp/\${sample}_p1
+pipe2=${outdir}/01_jellyfish/temp/\${sample}_p2
 pipe3=${outdir}/01_jellyfish/temp/\${sample}_p3
 
-mkfifo \$pipe1_1 \$pipe1_2 \$pipe2_1 \$pipe2_2 \$pipe3
+mkfifo \$pipe1 \$pipe2 \$pipe3
 
 module purge
 module load apps/jellyfish/2.2.6
@@ -60,8 +59,8 @@ bbduk.sh \
   overwrite=true \
   in1=\${in1} \
   in2=\${in2} \
-  out1=\$pipe1_1 \
-  out2=\$pipe2_1 \
+  out1=\$pipe1 \
+  out2=\$pipe2 \
   ref=adapters,artifacts \
   qtrim=r \
   ktrim=r \
@@ -75,14 +74,26 @@ bbduk.sh \
   tpe \
   ecco &
 
-cat \$pipe1_1 | tee \$pipe1_2 | gzip > ${outdir}/01_jellyfish/trimmed/\${sample}_1.fastq.gz &
-cat \$pipe2_1 | tee \$pipe2_2 | gzip > ${outdir}/01_jellyfish/trimmed/\${sample}_2.fastq.gz &
+## split the pipe for read1, transferring directly to jellyfish through another pipe, and also to gzip
+gzip < \$pipe1 > ${outdir}/01_jellyfish/trimmed/\${sample}_1.fastq.gz &
+gzip < \$pipe2 > ${outdir}/01_jellyfish/trimmed/\${sample}_2.fastq.gz
 
 #paired-end, unstranded data. theoretically I think I would like to first merge reads, then quality-control them (incl. adapter and quality trimming), then feed three files to jellyfish for each sample (merged, unmerged R1, unmerged R2). Downstream would need to be able to handle that new format
-jellyfish count -t ${n_threads} -m 31 -s 10000 -o \$pipe3 -C \$pipe1_2 \$pipe2_2 &
-jellyfish dump -c \$pipe3 | sort --parallel ${n_threads} -k 1 | gzip > ${outdir}/01_jellyfish/counts/\${sample}.tsv.gz
+jellyfish count \
+  -t ${n_threads} \
+  -m 31 \
+  -s 10000 \
+  -o \$pipe3 \
+  -C \
+  <(zcat ${outdir}/01_jellyfish/trimmed/\${sample}_1.fastq.gz) \
+  <(zcat ${outdir}/01_jellyfish/trimmed/\${sample}_2.fastq.gz) &
+  
+jellyfish dump \
+  -c \$pipe3 |
+  sort --parallel ${n_threads} -k 1 |
+  gzip > ${outdir}/01_jellyfish/counts/\${sample}.tsv.gz
 
-rm -rf ${outdir}/01_jellyfish/temp
+rm -f \$pipe1 \$pipe2 \$pipe3
 
 EOF
 
@@ -122,7 +133,11 @@ join_rec() {
 
 } #https://stackoverflow.com/questions/10726471/join-multiple-files
 
-cat <(printf "\$(printf '%s\t' 'kmer' "\${samples[@]}")\n") <(join_rec 1 \${files[@]}) | tr ' ' '\t') | gzip > ${outdir}/01_jellyfish/counts_matrix.tsv.gz
+cat \
+  <(printf "\$(printf '%s\t' 'kmer' "\${samples[@]}")\n") \
+  <(join_rec 1 \${files[@]}) |
+  tr ' ' '\t') |
+  gzip > ${outdir}/01_jellyfish/counts_matrix.tsv.gz
 
 EOF
 
