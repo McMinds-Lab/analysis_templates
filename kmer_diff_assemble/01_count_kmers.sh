@@ -134,7 +134,7 @@ join_rec() {
 } #https://stackoverflow.com/questions/10726471/join-multiple-files
 
 cat \
-  <(printf "\$(printf '%s\t' 'kmer' "\${samples[@]}")\n") \
+  <(printf "$(printf '%s\t' 'kmer' ${samples[@]})\n") \
   <(join_rec 1 \${files[@]}) |
   tr ' ' '\t') |
   gzip > ${outdir}/01_jellyfish/counts_matrix.tsv.gz
