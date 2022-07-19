@@ -36,9 +36,10 @@ in2=(${indir}/*/\${sample}/\${sample}_2.fastq.gz)
 mkdir -p ${subdir}/temp
 pipe1=${subdir}/temp/\${sample}_p1.fastq
 pipe2=${subdir}/temp/\${sample}_p2.fastq
-pipe3=${subdir}/temp/\${sample}_p3.tsv
+pipe3=${subdir}/temp/\${sample}_p3.fastq
+pipe4=${subdir}/temp/\${sample}_p4..tsv
 
-mkfifo \${pipe1} \${pipe2} \${pipe3}
+mkfifo \${pipe1} \${pipe2} \${pipe3} \${pipe4}
 
 ## conda seems to need extra help loading this package...
 module purge
@@ -49,59 +50,38 @@ conda deactivate
 conda deactivate
 source activate bbtools
 
-## overwrite is necessary for use of named output pipes
-## qtrim = trim the 3' ends of reads based on quality scores
-## ktrim = trim both 3' ends of reads based on matches to sequencing adapters and artifacts
-## k = use 23-mers to identify adapters and artifacts
-## mink = don't look for adapter matches below this size
-## hdist = allow two mismatches for adapter detection
-## minlength = default length of a single kmer downstream in dekupl; if a read is trimmed shorter than this just discard it
-## trimq = trim reads once they reach quality scores of 20 (for de-kupl I think it may pay to be stringent here; maybe even more than 20)
-## ftl = trim first ten bases no matter what. this was prompted by noting with fastqc that the first few bases have extremely repetitive kmers - this option is most important if this is due to adapter carrythough, but might not make the most sense if this represents biased starting locations, because it would mean the rest of the read is also biased; not to be a specific sequence, but to be close to a specific sequence, so trimming doesn't really fix that problem
-## tbo = trim read overhangs if they completely overlap
-## tpe = if kmer trimming happens, trim paired reads to same length (assuming it's because the read was read all the way through, regardless of assembly success)
-## ecco = perform error-correction using pair overlap. This, tbo, and tpe all suggest we expect overlaps to occur, and if this is so, it probably makes sense to actually merge reads rather than double-count kmers. but nobody seems to worry about this and it complicates things downstream
-bbduk.sh \
-  threads=${n_threads} \
-  overwrite=true \
+## merge reads; if a pair doesn't merge, quality trim and try again; if still no, output raw.
+bbmerge.sh \
   in1=\${in1} \
   in2=\${in2} \
-  out1=\${pipe1} \
-  out2=\${pipe2} \
-  ref=adapters,artifacts \
-  qtrim=r \
-  ktrim=r \
-  k=23 \
-  mink=11 \
-  hdist=2 \
-  minlength=31 \
-  trimq=20 \
-  ftl=10 \
-  tbo \
-  tpe \
-  ecco &
+  outu1=\${pipe1} \
+  outu2=\${pipe2} \
+  out=\${pipe3} \
+  qtrim2
 
-## although BBDuk is documented to gzip its output, it hasn't been consistent for me in the past
+## although BBMerge is documented to gzip its output, it hasn't been consistent for me in the past
 pigz < \${pipe1} > ${subdir}/trimmed/\${sample}_1.fastq.gz &
-pigz < \${pipe2} > ${subdir}/trimmed/\${sample}_2.fastq.gz
+pigz < \${pipe2} > ${subdir}/trimmed/\${sample}_2.fastq.gz &
+pigz < \${pipe3} > ${subdir}/trimmed/\${sample}_m.fastq.gz
 
-#paired-end, unstranded data. theoretically I think in future I would like to first merge reads, then quality-control them (incl. adapter and quality trimming), then feed three files to jellyfish for each sample (merged, unmerged R1, unmerged R2). Downstream would need to be able to handle that new format
+## unstranded
 jellyfish count \
   -t ${n_threads} \
   -m 31 \
   -s 10000 \
-  -o \${pipe3} \
+  -o \${pipe4} \
   -C \
   <(zcat ${subdir}/trimmed/\${sample}_1.fastq.gz) \
-  <(zcat ${subdir}/trimmed/\${sample}_2.fastq.gz) &
+  <(zcat ${subdir}/trimmed/\${sample}_2.fastq.gz) \
+  <(zcat ${subdir}/trimmed/\${sample}_m.fastq.gz) &
 
 ## sort doesn't actually parallelize for pipes unless you make the buffer big (S5G)
 jellyfish dump \
-  -c \${pipe3} |
+  -c \${pipe4} |
   sort -S5G --parallel ${n_threads} -k 1 |
   pigz > ${subdir}/counts/\${sample}.tsv.gz
 
-rm -f \${pipe1} \${pipe2} \${pipe3}
+rm -f \${pipe1} \${pipe2} \${pipe3} \${pipe4}
 
 EOF
 
