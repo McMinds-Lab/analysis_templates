@@ -21,6 +21,10 @@ Resources
 ===
 Here's a list of resources my students and I have found useful for learning the science and code:
 
+GitHub itself:
+===
+https://osf.io/preprints/metaarxiv/x3p2q/
+
 Stats
 ===
 General principles and great examples
