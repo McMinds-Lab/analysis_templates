@@ -136,7 +136,7 @@ join_rec() {
 cat \
   <(printf "$(printf '%s\t' 'kmer' ${samples[@]})\n") \
   <(join_rec 1 \${files[@]}) |
-  tr ' ' '\t') |
+  tr ' ' '\t' |
   gzip > ${outdir}/01_jellyfish/counts_matrix.tsv.gz
 
 EOF
