@@ -112,31 +112,30 @@ prefix=${outdir}/01_jellyfish/counts/
 files=(\${samples[@]/#/\${prefix}})
 files=(\${files[@]/%/'.tsv.gz'})
 
-join_rec() {
+multi_join() {
 
-  # first arg should be one when function is initially called; internally it is set to zero
-  # unzip first arg if it's not being piped
-  if [ \$1 -eq 1 ]; then
-    f1=<(zcat \$2)
+  # unzip first arg if it's the top level of the recursion (e.g. its a gzipped file not a raw pipe)
+  if [ -z \${in_recursion} ]; then
+    f1=<(zcat \$1)
+    export in_recursion=1
   else
-    f1=\$2
+    f1=\$1
   fi
-  f2=\$3
-  shift 3
+  f2=\$2
+  shift 2
 
   # if the number of remaining files is greater than two, continue the recursion; else join these two and end
   if [ \$# -gt 0 ]; then
-    join -o auto -a 1 -a 2 -e 0 "\$f1" <(zcat "\$f2") | join_rec 0 - "\$@"
+    join -o auto -a 1 -a 2 -e 0 "\$f1" <(zcat "\$f2") | multi_join - "\$@"
   else
     join -o auto -a 1 -a 2 -e 0 "\$f1" <(zcat "\$f2")
   fi
 
-} #https://stackoverflow.com/questions/10726471/join-multiple-files
+}
 
 cat \
-  <(printf "$(printf '%s\t' 'kmer' ${samples[@]})\n") \
-  <(join_rec 1 \${files[@]}) |
-  tr ' ' '\t' |
+  <(printf '%s\t' 'kmer' \${samples[@]} | sed 's/\t$/\n/g') \
+  <(multi_join \${files[@]} | tr ' ' '\t') |
   gzip > ${outdir}/01_jellyfish/counts_matrix.tsv.gz
 
 EOF
