@@ -15,12 +15,13 @@ zcat ${in_kmers} | tail -n +2 | awk '$5 > 0' | cut -f 1 > ${outdir}/kmers.txt
 
 ## search for both kmer itself and its reverse complement, in both reads. save matching lines with line numbers in a single file
 tr ACGTacgt TGCAtgca < ${in_kmers} | rev > ${outdir}/kmers_rc.txt
-zcat ${in1} | grep -F -n -B 1 -A 2 -f ${outdir}/kmers.txt -f ${outdir}/kmers_rc.txt > ${outdir}/keepers.txt
-zcat ${in2} | grep -F -n -B 1 -A 2 -f ${outdir}/kmers.txt -f ${outdir}/kmers_rc.txt >> ${outdir}/keepers.txt
+zcat ${in1} ${in2} | grep -F -n -B 1 -A 2 -f ${outdir}/kmers.txt -f ${outdir}/kmers_rc.txt > ${outdir}/keepers.txt
 
 ## save line numbers of matches into variable idx; "-" delimiter for lines before and after match; ":" delimiter for line with match itself.
-awk -F '[-:]' 'NR==FNR {idx[$1]; next} FNR in idx' ${outdir}/keepers.txt <(zcat ${in1}) | gzip > "${outdir}/filt_1.fastq.gz"
+awk -F '[-:]' 'NR==FNR {idx[$1]; next} FNR in idx' ${outdir}/keepers.txt <(zcat ${in1}) | gzip > "${outdir}/filt_1.fastq.gz" &
 awk -F '[-:]' 'NR==FNR {idx[$1]; next} FNR in idx' ${outdir}/keepers.txt <(zcat ${in2}) | gzip > "${outdir}/filt_2.fastq.gz"
+
+rm -f ${in1} ${in2}
 
 ## assemble reads with megahit. same for RNA or DNA? better newer tools now?
 module purge

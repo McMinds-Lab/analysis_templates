@@ -49,6 +49,7 @@ conda deactivate
 conda deactivate
 source activate bbtools
 
+## overwrite is necessary for use of named output pipes
 ## qtrim = trim the 3' ends of reads based on quality scores
 ## ktrim = trim both 3' ends of reads based on matches to sequencing adapters and artifacts
 ## k = use 23-mers to identify adapters and artifacts
@@ -56,9 +57,10 @@ source activate bbtools
 ## hdist = allow two mismatches for adapter detection
 ## minlength = default length of a single kmer downstream in dekupl; if a read is trimmed shorter than this just discard it
 ## trimq = trim reads once they reach quality scores of 20 (for de-kupl I think it may pay to be stringent here; maybe even more than 20)
+## ftl = trim first ten bases no matter what. this was prompted by noting with fastqc that the first few bases have extremely repetitive kmers - this option is most important if this is due to adapter carrythough, but might not make the most sense if this represents biased starting locations, because it would mean the rest of the read is also biased; not to be a specific sequence, but to be close to a specific sequence, so trimming doesn't really fix that problem
 ## tbo = trim read overhangs if they completely overlap
-## tpe = if kmer trimming happens, trim paired reads to same length
-## ecco = perform error-correction using pair overlap
+## tpe = if kmer trimming happens, trim paired reads to same length (assuming it's because the read was read all the way through, regardless of assembly success)
+## ecco = perform error-correction using pair overlap. This, tbo, and tpe all suggest we expect overlaps to occur, and if this is so, it probably makes sense to actually merge reads rather than double-count kmers. but nobody seems to worry about this and it complicates things downstream
 bbduk.sh \
   threads=${n_threads} \
   overwrite=true \
