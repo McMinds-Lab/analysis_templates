@@ -57,6 +57,7 @@ bbmerge.sh \
   outu1=\${pipe1} \
   outu2=\${pipe2} \
   out=\${pipe3} \
+  trimq=10,20,25,30 \
   qtrim2
 
 ## although BBMerge is documented to gzip its output, it hasn't been consistent for me in the past
