@@ -32,7 +32,7 @@ counts <- as.matrix(read.table(gzfile(ref_subset), header=TRUE, row.names=1))
 conditions <- read.table(sampledat, header=TRUE, row.names=1)
 
 counts <- counts[,colnames(counts) %in% rownames(conditions)]
-counts <- counts[apply(counts,1, \(x) sum(x>0)>1), ]
+counts <- counts[apply(counts,1, \(x) sum(x>0)>0), ]
 
 conditions <- conditions[colnames(counts),, drop=FALSE]
 
@@ -59,6 +59,8 @@ sig_increase <- (beta_pi[,keycolumn] > log(threshold))
 sig_decrease <- (beta_pi[,keycolumn] < -log(threshold))
 ##
 
+save.image(file.path(outdir,'02_id_diffs','zinbwave.RData'))
+
 invisible(foreach(i=1:length(files), .options.multicore=opts) %dopar% {
   
   RhpcBLASctl::omp_set_num_threads(1)
@@ -66,6 +68,7 @@ invisible(foreach(i=1:length(files), .options.multicore=opts) %dopar% {
   
   ## fix the above parameters and optimize zinbwave model for all genes using these values
   ## need to rewrite zinbwave optimizer to do this and use MPI to parallelize across multiple nodes like i did with de-kupl
+  ## for now just use the offsets in pscl::zeroinfl models
   
   counts <- as.matrix(read.table(gzfile(files[[i]]), header=TRUE, row.names=1))
   counts <- counts[,colnames(counts) %in% rownames(conditions)]
@@ -142,13 +145,37 @@ invisible(foreach(i=1:length(files), .options.multicore=opts) %dopar% {
                       pvalue=res[1,],
                       diffLogOdds=res[2,],
                       as.data.frame(sapply(1:ncol(counts), function(x) counts[,x] / exp(abundance_offsets[[x]]))))
+  
+  dir.create(file.path(outdir, '02_id_diffs', 'temp'))
+  
   write.table(outdf,
-              file  = gzfile(file.path(outdir, paste0('results_chunk_', i, 'tsv.gz'))),
+              file  = gzfile(file.path(outdir, '02_id_diffs', 'temp', paste0('results_chunk_', i, '.tsv.gz'))),
               sep   = "\t",
               quote = FALSE,
               col.names = FALSE,
               row.names = FALSE)
   
+  outfilt <- outdf[outdf$pvalue < threshold,]
+  write.table(outfilt,
+              file  = gzfile(file.path(outdir, '02_id_diffs', 'temp', paste0('sig_results_chunk_', i, '.tsv.gz'))),
+              sep   = "\t",
+              quote = FALSE,
+              col.names = FALSE,
+              row.names = FALSE)
+  pos <- outfilt[outfilt$diffLogOdds > 0,]
+  write.table(pos,
+              file  = gzfile(file.path(outdir, '02_id_diffs', 'temp', paste0('pos_sig_results_chunk_', i, '.tsv.gz'))),
+              sep   = "\t",
+              quote = FALSE,
+              col.names = FALSE,
+              row.names = FALSE)  
+  neg <- outfilt[outfilt$diffLogOdds < 0,]
+  write.table(neg,
+              file  = gzfile(file.path(outdir, '02_id_diffs', 'temp', paste0('neg_sig_results_chunk_', i, '.tsv.gz'))),
+              sep   = "\t",
+              quote = FALSE,
+              col.names = FALSE,
+              row.names = FALSE)  
 })
 
 closeCluster(cl)
