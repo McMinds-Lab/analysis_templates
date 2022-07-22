@@ -35,17 +35,11 @@ in2=(${indir}/*/\${sample}/\${sample}_2.fastq.gz)
 
 ## set up named pipes instead of temporary intermediate files
 mkdir -p ${subdir}/temp
-pipe1=${subdir}/temp/\${sample}_p1.fastq
-pipe2=${subdir}/temp/\${sample}_p2.fastq
-pipe3=${subdir}/temp/\${sample}_p3.fastq
-pipe4=${subdir}/temp/\${sample}_p4.fastq
-pipe5=${subdir}/temp/\${sample}_p5.fastq
-pipe6=${subdir}/temp/\${sample}_p6.tsv
-
 temp1=${subdir}/temp/\${sample}_t1.fastq.gz
 temp2=${subdir}/temp/\${sample}_t2.fastq.gz
 
-mkfifo \${pipe1} \${pipe2} \${pipe3} \${pipe4} \${pipe5} \${pipe6}
+pipe1=${subdir}/temp/\${sample}_p1.tsv
+mkfifo \${pipe1}
 
 ## conda seems to need extra help loading this package...
 module purge
@@ -61,41 +55,29 @@ bbmerge.sh \
   t=4 \
   in1=\${in1} \
   in2=\${in2} \
-  outu1=\${pipe1} \
-  outu2=\${pipe2} \
-  out=\${pipe3} \
+  outu1=\${temp1} \
+  outu2=\${temp2} \
+  out=${subdir}/trimmed/\${sample}_m.fastq.gz \
   trimq=10,20,25,30 \
-  qtrim2 &
+  qtrim2
   
-pigz < \${pipe1} > \${temp1} &
-pigz < \${pipe2} > \${temp2} &
-pigz < \${pipe3} > ${subdir}/trimmed/\${sample}_m.fastq.gz
-
-wait
-
 bbduk.sh \
   threads=4 \
   overwrite=true \
   in1=\${temp1} \
   in2=\${temp2} \
-  out1=\${pipe4} \
-  out2=\${pipe5} \
+  out1=${subdir}/trimmed/\${sample}_1.fastq.gz \
+  out2=${subdir}/trimmed/\${sample}_2.fastq.gz \
   qtrim=r \
   minlength=31 \
-  trimq=25 &
-
-## although BBMerge is documented to gzip its output, it hasn't been consistent for me in the past
-pigz < \${pipe4} > ${subdir}/trimmed/\${sample}_1.fastq.gz &
-pigz < \${pipe5} > ${subdir}/trimmed/\${sample}_2.fastq.gz
-
-wait
+  trimq=25
 
 ## unstranded
 jellyfish count \
   -t ${n_threads} \
   -m 31 \
   -s 10000 \
-  -o \${pipe6} \
+  -o \${pipe1} \
   -C \
   <(zcat ${subdir}/trimmed/\${sample}_1.fastq.gz) \
   <(zcat ${subdir}/trimmed/\${sample}_2.fastq.gz) \
@@ -103,11 +85,11 @@ jellyfish count \
 
 ## sort doesn't actually parallelize for pipes unless you make the buffer big (S5G)
 jellyfish dump \
-  -c \${pipe6} |
+  -c \${pipe1} |
   sort -S10G --parallel ${n_threads} -k 1 |
   pigz > ${subdir}/counts/\${sample}.tsv.gz
 
-rm -f \${pipe1} \${pipe2} \${pipe3} \${pipe4} \${pipe5} \${pipe6}
+rm -f \${pipe1} \${temp1} \${temp2}
 
 EOF
 
