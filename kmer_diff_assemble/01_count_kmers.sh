@@ -37,7 +37,10 @@ mkdir -p ${subdir}/temp
 pipe1=${subdir}/temp/\${sample}_p1.fastq
 pipe2=${subdir}/temp/\${sample}_p2.fastq
 pipe3=${subdir}/temp/\${sample}_p3.fastq
-pipe4=${subdir}/temp/\${sample}_p4.tsv
+pipe4=${subdir}/temp/\${sample}_p4.fastq
+pipe5=${subdir}/temp/\${sample}_p5.fastq
+pipe6=${subdir}/temp/\${sample}_p6.fastq
+pipe7=${subdir}/temp/\${sample}_p7.tsv
 
 mkfifo \${pipe1} \${pipe2} \${pipe3} \${pipe4}
 
@@ -60,17 +63,36 @@ bbmerge.sh \
   trimq=10,20,25,30 \
   qtrim2 &
 
+bbduk.sh \
+  overwrite=true \
+  in1=\${pipe1} \
+  in2=\${pipe2} \
+  out1=\${pipe4} \
+  out2=\${pipe5} \
+  qtrim=r \
+  minlength=31 \
+  trimq=25 &
+  
 ## although BBMerge is documented to gzip its output, it hasn't been consistent for me in the past
-pigz < \${pipe1} > ${subdir}/trimmed/\${sample}_1.fastq.gz &
-pigz < \${pipe2} > ${subdir}/trimmed/\${sample}_2.fastq.gz &
-pigz < \${pipe3} > ${subdir}/trimmed/\${sample}_m.fastq.gz
+pigz < \${pipe4} > ${subdir}/trimmed/\${sample}_1.fastq.gz &
+pigz < \${pipe5} > ${subdir}/trimmed/\${sample}_2.fastq.gz &
+
+bbduk.sh \
+  overwrite=true \
+  in=\${pipe3} \
+  out=\${pipe6} \
+  minlength=31 &
+
+pigz < \${pipe6} > ${subdir}/trimmed/\${sample}_m.fastq.gz
+
+wait
 
 ## unstranded
 jellyfish count \
   -t ${n_threads} \
   -m 31 \
   -s 10000 \
-  -o \${pipe4} \
+  -o \${pipe7} \
   -C \
   <(zcat ${subdir}/trimmed/\${sample}_1.fastq.gz) \
   <(zcat ${subdir}/trimmed/\${sample}_2.fastq.gz) \
@@ -78,11 +100,11 @@ jellyfish count \
 
 ## sort doesn't actually parallelize for pipes unless you make the buffer big (S5G)
 jellyfish dump \
-  -c \${pipe4} |
+  -c \${pipe7} |
   sort -S5G --parallel ${n_threads} -k 1 |
   pigz > ${subdir}/counts/\${sample}.tsv.gz
 
-rm -f \${pipe1} \${pipe2} \${pipe3} \${pipe4}
+rm -f \${pipe1} \${pipe2} \${pipe3} \${pipe4} \${pipe5} \${pipe6} \${pipe7}
 
 EOF
 
