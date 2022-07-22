@@ -42,6 +42,10 @@ pipe5=${subdir}/temp/\${sample}_p5.fastq
 pipe6=${subdir}/temp/\${sample}_p6.fastq
 pipe7=${subdir}/temp/\${sample}_p7.tsv
 
+temp1=${subdir}/temp/\${sample}_t1.fastq.gz
+temp2=${subdir}/temp/\${sample}_t2.fastq.gz
+temp3=${subdir}/temp/\${sample}_t3.fastq.gz
+
 mkfifo \${pipe1} \${pipe2} \${pipe3} \${pipe4} \${pipe5} \${pipe6} \${pipe7}
 
 ## conda seems to need extra help loading this package...
@@ -61,28 +65,33 @@ bbmerge.sh \
   outu2=\${pipe2} \
   out=\${pipe3} \
   trimq=10,20,25,30 \
-  qtrim2 &
+  qtrim2
+  
+pigz < \${pipe1} > ${temp1} &
+pigz < \${pipe2} > ${temp2} &
+pigz < \${pipe3} > ${temp3}
+
+wait
 
 bbduk.sh \
   overwrite=true \
-  in1=\${pipe1} \
-  in2=\${pipe2} \
+  in1=\${temp1} \
+  in2=\${temp2} \
   out1=\${pipe4} \
   out2=\${pipe5} \
   qtrim=r \
   minlength=31 \
   trimq=25 &
   
-## although BBMerge is documented to gzip its output, it hasn't been consistent for me in the past
-pigz < \${pipe4} > ${subdir}/trimmed/\${sample}_1.fastq.gz &
-pigz < \${pipe5} > ${subdir}/trimmed/\${sample}_2.fastq.gz &
-
 bbduk.sh \
   overwrite=true \
-  in=\${pipe3} \
+  in=\${temp3} \
   out=\${pipe6} \
   minlength=31 &
 
+## although BBMerge is documented to gzip its output, it hasn't been consistent for me in the past
+pigz < \${pipe4} > ${subdir}/trimmed/\${sample}_1.fastq.gz &
+pigz < \${pipe5} > ${subdir}/trimmed/\${sample}_2.fastq.gz &
 pigz < \${pipe6} > ${subdir}/trimmed/\${sample}_m.fastq.gz
 
 wait
