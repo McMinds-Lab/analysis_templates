@@ -37,7 +37,7 @@ mkdir -p ${subdir}/temp
 pipe1=${subdir}/temp/\${sample}_p1.fastq
 pipe2=${subdir}/temp/\${sample}_p2.fastq
 pipe3=${subdir}/temp/\${sample}_p3.fastq
-pipe4=${subdir}/temp/\${sample}_p4..tsv
+pipe4=${subdir}/temp/\${sample}_p4.tsv
 
 mkfifo \${pipe1} \${pipe2} \${pipe3} \${pipe4}
 
@@ -58,7 +58,7 @@ bbmerge.sh \
   outu2=\${pipe2} \
   out=\${pipe3} \
   trimq=10,20,25,30 \
-  qtrim2
+  qtrim2 &
 
 ## although BBMerge is documented to gzip its output, it hasn't been consistent for me in the past
 pigz < \${pipe1} > ${subdir}/trimmed/\${sample}_1.fastq.gz &
