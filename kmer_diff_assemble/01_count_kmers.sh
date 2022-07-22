@@ -42,7 +42,7 @@ pipe5=${subdir}/temp/\${sample}_p5.fastq
 pipe6=${subdir}/temp/\${sample}_p6.fastq
 pipe7=${subdir}/temp/\${sample}_p7.tsv
 
-mkfifo \${pipe1} \${pipe2} \${pipe3} \${pipe4}
+mkfifo \${pipe1} \${pipe2} \${pipe3} \${pipe4} \${pipe5} \${pipe6} \${pipe7}
 
 ## conda seems to need extra help loading this package...
 module purge
