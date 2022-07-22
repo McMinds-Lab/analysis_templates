@@ -39,14 +39,12 @@ pipe2=${subdir}/temp/\${sample}_p2.fastq
 pipe3=${subdir}/temp/\${sample}_p3.fastq
 pipe4=${subdir}/temp/\${sample}_p4.fastq
 pipe5=${subdir}/temp/\${sample}_p5.fastq
-pipe6=${subdir}/temp/\${sample}_p6.fastq
-pipe7=${subdir}/temp/\${sample}_p7.tsv
+pipe6=${subdir}/temp/\${sample}_p6.tsv
 
 temp1=${subdir}/temp/\${sample}_t1.fastq.gz
 temp2=${subdir}/temp/\${sample}_t2.fastq.gz
-temp3=${subdir}/temp/\${sample}_t3.fastq.gz
 
-mkfifo \${pipe1} \${pipe2} \${pipe3} \${pipe4} \${pipe5} \${pipe6} \${pipe7}
+mkfifo \${pipe1} \${pipe2} \${pipe3} \${pipe4} \${pipe5} \${pipe6}
 
 ## conda seems to need extra help loading this package...
 module purge
@@ -59,6 +57,7 @@ source activate bbtools
 
 ## merge reads; if a pair doesn't merge, quality trim and try again; if still no, output raw.
 bbmerge.sh \
+  threads=${n_threads} \
   in1=\${in1} \
   in2=\${in2} \
   outu1=\${pipe1} \
@@ -69,11 +68,12 @@ bbmerge.sh \
   
 pigz < \${pipe1} > \${temp1} &
 pigz < \${pipe2} > \${temp2} &
-pigz < \${pipe3} > \${temp3}
+pigz < \${pipe3} > ${subdir}/trimmed/\${sample}_m.fastq.gz
 
 wait
 
 bbduk.sh \
+  threads=${n_threads} \
   overwrite=true \
   in1=\${temp1} \
   in2=\${temp2} \
@@ -82,17 +82,10 @@ bbduk.sh \
   qtrim=r \
   minlength=31 \
   trimq=25 &
-  
-bbduk.sh \
-  overwrite=true \
-  in=\${temp3} \
-  out=\${pipe6} \
-  minlength=31 &
 
 ## although BBMerge is documented to gzip its output, it hasn't been consistent for me in the past
 pigz < \${pipe4} > ${subdir}/trimmed/\${sample}_1.fastq.gz &
-pigz < \${pipe5} > ${subdir}/trimmed/\${sample}_2.fastq.gz &
-pigz < \${pipe6} > ${subdir}/trimmed/\${sample}_m.fastq.gz
+pigz < \${pipe5} > ${subdir}/trimmed/\${sample}_2.fastq.gz
 
 wait
 
@@ -101,7 +94,7 @@ jellyfish count \
   -t ${n_threads} \
   -m 31 \
   -s 10000 \
-  -o \${pipe7} \
+  -o \${pipe6} \
   -C \
   <(zcat ${subdir}/trimmed/\${sample}_1.fastq.gz) \
   <(zcat ${subdir}/trimmed/\${sample}_2.fastq.gz) \
@@ -109,11 +102,11 @@ jellyfish count \
 
 ## sort doesn't actually parallelize for pipes unless you make the buffer big (S5G)
 jellyfish dump \
-  -c \${pipe7} |
-  sort -S5G --parallel ${n_threads} -k 1 |
+  -c \${pipe6} |
+  sort -S10G --parallel ${n_threads} -k 1 |
   pigz > ${subdir}/counts/\${sample}.tsv.gz
 
-rm -f \${pipe1} \${pipe2} \${pipe3} \${pipe4} \${pipe5} \${pipe6} \${pipe7}
+rm -f \${pipe1} \${pipe2} \${pipe3} \${pipe4} \${pipe5} \${pipe6}
 
 EOF
 
