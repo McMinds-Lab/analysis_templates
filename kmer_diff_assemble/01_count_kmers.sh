@@ -57,7 +57,7 @@ source activate bbtools
 
 ## merge reads; if a pair doesn't merge, quality trim and try again; if still no, output raw.
 bbmerge.sh \
-  threads=${n_threads} \
+  t=4 \
   in1=\${in1} \
   in2=\${in2} \
   outu1=\${pipe1} \
@@ -73,7 +73,7 @@ pigz < \${pipe3} > ${subdir}/trimmed/\${sample}_m.fastq.gz
 wait
 
 bbduk.sh \
-  threads=${n_threads} \
+  threads=4 \
   overwrite=true \
   in1=\${temp1} \
   in2=\${temp2} \
