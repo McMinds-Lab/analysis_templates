@@ -67,9 +67,9 @@ bbmerge.sh \
   trimq=10,20,25,30 \
   qtrim2 &
   
-pigz < \${pipe1} > ${temp1} &
-pigz < \${pipe2} > ${temp2} &
-pigz < \${pipe3} > ${temp3}
+pigz < \${pipe1} > \${temp1} &
+pigz < \${pipe2} > \${temp2} &
+pigz < \${pipe3} > \${temp3}
 
 wait
 
