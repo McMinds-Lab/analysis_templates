@@ -65,7 +65,7 @@ bbmerge.sh \
   outu2=\${pipe2} \
   out=\${pipe3} \
   trimq=10,20,25,30 \
-  qtrim2
+  qtrim2 &
   
 pigz < \${pipe1} > ${temp1} &
 pigz < \${pipe2} > ${temp2} &
