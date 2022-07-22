@@ -25,7 +25,7 @@ cat <<EOF > ${subdir}/02_id_diffs.sbatch
 #SBATCH --time=2-00:00:00
 #SBATCH --job-name=02_id_diffs
 #SBATCH --ntasks=${n_processes}
-#SBATCH --cpus-per-task=1
+#SBATCH --cpus-per-task=${n_threads}
 
 pipe1=${subdir}/temp/p1
 mkfifo \${pipe1}
