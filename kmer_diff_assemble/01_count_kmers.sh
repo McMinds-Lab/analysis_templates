@@ -57,7 +57,7 @@ bbmerge.sh \
   outu1=\${temp1} \
   outu2=\${temp2} \
   out=${subdir}/trimmed/\${sample}_m.fastq.gz \
-  trimq=10,20,25,30 \
+  trimq=5,10,20,25,30 \
   qtrim=r
   
 bbduk.sh \
