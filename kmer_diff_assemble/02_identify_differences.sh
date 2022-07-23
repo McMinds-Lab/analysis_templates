@@ -34,7 +34,7 @@ mkfifo \${pipe1}
 #first shuffle lines. skip header for shuffling, then pipe result to both a single file that adds back the header, and to split, which adds the header to each result
 #if i want to do any filtering it might be good to do before this?
 nlines=\$(zcat ${in_kmers} | wc -l)
-paste <(shuf -i2-${nlines}) <(zcat ${in_kmers} | tail -n +2) |
+paste <(shuf -i2-\${nlines}) <(zcat ${in_kmers} | tail -n +2) |
   sort -S20G --parallel ${n_threads} -T ${subdir}/temp --compress-program pigz -k 1 -n |
   cut -f2- |
   tee \${pipe1} |
