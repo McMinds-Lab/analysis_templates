@@ -53,7 +53,7 @@ source activate bbtools
 ## merge reads; if a pair doesn't merge, quality trim and try again; if still no, output raw.
 bbmerge.sh \
   threads=1 \
-  -Xmx10G \
+  -Xmx1G \
   in1=\${in1} \
   in2=\${in2} \
   outu1=\${temp1} \
@@ -64,7 +64,7 @@ bbmerge.sh \
   
 bbduk.sh \
   threads=1 \
-  -Xmx10G \
+  -Xmx1G \
   in1=\${temp1} \
   in2=\${temp2} \
   out1=${subdir}/trimmed/\${sample}_1.fastq.gz \
