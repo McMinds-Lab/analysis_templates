@@ -10,12 +10,11 @@ splitsize=$6
 threshold=$7
 sampledat=$8
 formula=$9
-keycolumn=$10
+keycolumn=${10}
 
 subdir=${outdir}/02_id_diffs
 
-mkdir -p ${subdir}/logs
-mkdir ${subdir}/temp
+mkdir -p ${subdir}/temp
 
 cat <<EOF > ${subdir}/02_id_diffs.sbatch
 #!/bin/bash
@@ -26,6 +25,7 @@ cat <<EOF > ${subdir}/02_id_diffs.sbatch
 #SBATCH --job-name=02_id_diffs
 #SBATCH --ntasks=${n_processes}
 #SBATCH --cpus-per-task=${n_threads}
+#SBATCH --output=${subdir}/02_id_diffs.log
 
 pipe1=${subdir}/temp/p1
 mkfifo \${pipe1}
@@ -43,7 +43,7 @@ paste <(shuf -i2-\${nlines}) <(zcat ${in_kmers} | tail -n +2) |
 
 split -d \
   -l ${splitsize} \
-  --filter='cat <(zcat ${in_kmers} | head -1) - | gzip > $FILE' \
+  --filter='cat <(zcat ${in_kmers} | head -1) - | gzip > \$FILE' \
   --additional-suffix='.gz' \
   \${pipe1} \
   ${subdir}/temp/chunk_
