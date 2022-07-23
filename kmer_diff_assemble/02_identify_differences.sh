@@ -20,7 +20,7 @@ cat <<EOF > ${subdir}/02_id_diffs.sbatch
 #!/bin/bash
 #SBATCH --qos=rra
 #SBATCH --partition=rra
-#SBATCH --mem-per-cpu=1G
+#SBATCH --mem=${maxmem}
 #SBATCH --time=2-00:00:00
 #SBATCH --job-name=02_id_diffs
 #SBATCH --ntasks=${n_processes}
