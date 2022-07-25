@@ -13,7 +13,7 @@ subdir=${outdir}/02_id_diffs
 mkdir ${subdir}
 
 ## get samplewise offsets and latent factors
-cat <<EOF > ${subdir}/02a_id_diffs_newwave.sbatch
+cat <<EOF > ${subdir}/02_id_diffs_newwave.sbatch
 #!/bin/bash
 #SBATCH --qos=rra
 #SBATCH --partition=rra
