@@ -5,7 +5,7 @@ threshold=$3
 formula=$4
 keycolumn=$5
 outdir=$6
-n_processes=$7
+n_cores=$7
 maxmem=$8
 
 subdir=${outdir}/02_id_diffs
@@ -20,7 +20,7 @@ cat <<EOF > ${subdir}/02_id_diffs_newwave.sbatch
 #SBATCH --mem=${maxmem}
 #SBATCH --time=7-00:00:00
 #SBATCH --job-name=02_id_diffs
-#SBATCH --ntasks=${n_processes}
+#SBATCH --ntasks=${n_cores}
 #SBATCH --cpus-per-task=1
 #SBATCH --output=${subdir}/id_diffs_newwave.log
 
