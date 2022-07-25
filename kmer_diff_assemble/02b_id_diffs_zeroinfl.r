@@ -18,7 +18,7 @@ load(file.path(outdir,'02_id_diffs','zinbwave.RData'))
 
 counts <- as.matrix(read.table(gzfile(files[[taskID + 1]]), header=TRUE, row.names=1))
 counts <- counts[,colnames(counts) %in% rownames(conditions)]
-counts <- counts[apply(counts,1, \(x) sum(x>0)>1), ]
+counts <- counts[apply(counts,1, \(x) sum(x>0)>0), ]
 
 res <- apply(counts, 1, function(jcounts) {
   
