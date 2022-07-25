@@ -24,7 +24,7 @@ nkmers <- 0
 while(TRUE) {
   block <- read.table(inconnect, nrows=block_rows, row.names = 1)
   inrownames <- c(inrownames, rownames(block))
-  addedkmers <- nrows(block)
+  addedkmers <- nrow(block)
   if(addedkmers) {
     nkmers <- nkmers + addedkmers
   } else {
