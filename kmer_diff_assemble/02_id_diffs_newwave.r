@@ -13,18 +13,15 @@ n_cores <- as.numeric(args[[7]])
 conditions <- read.table(sampledat, header=TRUE, row.names=1)
 
 ## set chunk size for reading in counts
-block_rows <- 100000
+block_rows <- 1e6
 
 ## find number of kmers and samples in counts file
 inconnect <- gzfile(countsfile, 'r')
 incolnames <- read.table(inconnect, nrows=1)[-1]
-inrownames <- vector('character')
 nsamples <- length(incolnames)
 nkmers <- 0
 while(TRUE) {
-  block <- read.table(inconnect, nrows=block_rows, row.names = 1)
-  inrownames <- c(inrownames, rownames(block))
-  addedkmers <- nrow(block)
+  addedkmers <- length(readLines(inconnect, block_rows))
   if(addedkmers) {
     nkmers <- nkmers + addedkmers
   } else {
@@ -38,9 +35,8 @@ mode(nsamples) <- 'integer'
 
 ## convert counts file to delayed array
 DelayedArray::setAutoRealizationBackend("HDF5Array")
-sink <- DelayedArray::AutoRealizationSink(c(nkmers, nsamples), dimnames=list(inrownames,incolnames), type='integer')
+sink <- DelayedArray::AutoRealizationSink(c(nkmers, nsamples), dimnames=list(paste0('line_',1:nkmers),incolnames), type='integer')
 sink_grid <- DelayedArray::RegularArrayGrid(dim(sink), spacings=c(block_rows, nsamples))
-rm(inrownames, incolnames)
 
 inconnect <- gzfile(countsfile, 'r')
 for (bid in seq_along(sink_grid)) {
