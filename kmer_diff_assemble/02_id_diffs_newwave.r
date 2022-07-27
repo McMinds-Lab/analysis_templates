@@ -16,6 +16,7 @@ conditions <- read.table(sampledat, header=TRUE, row.names=1)
 block_rows <- 1e6
 
 ## find number of kmers and samples in counts file
+print('finding number of kmers in input')
 inconnect <- gzfile(countsfile, 'r')
 incolnames <- read.table(inconnect, nrows=1)[-1]
 nsamples <- length(incolnames)
@@ -31,13 +32,17 @@ while(TRUE) {
 close(inconnect)
 mode(nkmers) <- 'integer'
 mode(nsamples) <- 'integer'
+print('done')
 ##
 
 ## convert counts file to delayed array
+print('create delayed array container')
 DelayedArray::setAutoRealizationBackend("HDF5Array")
-sink <- DelayedArray::AutoRealizationSink(c(nkmers, nsamples), dimnames=list(NULL,incolnames), type='integer')
+sink <- DelayedArray::AutoRealizationSink(c(nkmers, nsamples), type='integer')
 sink_grid <- DelayedArray::RegularArrayGrid(dim(sink), spacings=c(block_rows, nsamples))
+print('container created')
 
+print('filling container')
 inconnect <- gzfile(countsfile, 'r')
 for (bid in seq_along(sink_grid)) {
   viewport <- sink_grid[[bid]]
@@ -47,23 +52,31 @@ for (bid in seq_along(sink_grid)) {
 }
 close(sink)
 close(inconnect)
+print('container filled; converting container')
 counts <- as(sink, "DelayedArray")
+print('converted')
 ##
 
 ## make sure counts and conditions match
-counts <- counts[,colnames(counts) %in% rownames(conditions)]
+print('filtering samples by conditions file')
+filtsamplenames <- incolnames[incolnames %in% rownames(conditions)]
+counts <- counts[,incolnames %in% rownames(conditions)]
+print('filtering kmers by prevalence')
 incounts_keep <- apply(counts,1, \(x) sum(x>0)>2)
 counts <- counts[incounts_keep, ]
+print('done')
 
-conditions <- conditions[colnames(counts),, drop=FALSE]
+conditions <- conditions[filtsamplenames,, drop=FALSE]
 ##
 
+print('fitting model')
 nfit <- NewWave::newFit(counts, 
                         X = model.matrix(formula, data=conditions), 
                         K = 2,
                         children=n_cores,
                         n_gene_par = 1000,
                         commondispersion = FALSE)
+print('done')
 
 ## beta are coefficients of X (samplewise model)
 ## gamma are coefficients of V (genewise model - intercept gives samplewise 'size factors' that could be used as offsets in other linear models)
