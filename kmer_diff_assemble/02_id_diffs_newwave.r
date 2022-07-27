@@ -35,7 +35,7 @@ mode(nsamples) <- 'integer'
 
 ## convert counts file to delayed array
 DelayedArray::setAutoRealizationBackend("HDF5Array")
-sink <- DelayedArray::AutoRealizationSink(c(nkmers, nsamples), dimnames=list(paste0('line_',1:nkmers),incolnames), type='integer')
+sink <- DelayedArray::AutoRealizationSink(c(nkmers, nsamples), dimnames=list(NULL,incolnames), type='integer')
 sink_grid <- DelayedArray::RegularArrayGrid(dim(sink), spacings=c(block_rows, nsamples))
 
 inconnect <- gzfile(countsfile, 'r')
@@ -52,7 +52,8 @@ counts <- as(sink, "DelayedArray")
 
 ## make sure counts and conditions match
 counts <- counts[,colnames(counts) %in% rownames(conditions)]
-counts <- counts[apply(counts,1, \(x) sum(x>0)>0), ]
+incounts_keep <- apply(counts,1, \(x) sum(x>0)>2)
+counts <- counts[incounts_keep, ]
 
 conditions <- conditions[colnames(counts),, drop=FALSE]
 ##
