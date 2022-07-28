@@ -40,6 +40,8 @@ print('done')
 
 ## convert counts file to delayed array
 print('create delayed array container')
+dir.create(file.path(outdir,'02_id_diffs', 'hdf5_files'), recursive = TRUE)
+HDF5Array::setHDF5DumpDir(file.path(outdir, '02_id_diffs', 'hdf5_files'))
 DelayedArray::setAutoRealizationBackend("HDF5Array")
 sink <- DelayedArray::AutoRealizationSink(c(nkmers, nsamples), type='integer')
 sink_grid <- DelayedArray::RegularArrayGrid(dim(sink), spacings=c(block_rows, nsamples))
