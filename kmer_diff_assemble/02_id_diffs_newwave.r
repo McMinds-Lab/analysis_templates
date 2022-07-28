@@ -16,7 +16,7 @@ BPPARAM <- SnowParam(n_cores)
 conditions <- read.table(sampledat, header=TRUE, row.names=1)
 
 ## set chunk size for reading in counts
-block_rows <- 1e6
+block_rows <- 1e8
 
 ## find number of kmers and samples in counts file
 print('finding number of kmers in input')
@@ -69,7 +69,7 @@ counts <- counts[,incolnames %in% rownames(conditions)]
 
 print('filtering kmers by prevalence')
 counts_grid <- DelayedArray::RegularArrayGrid(dim(counts), spacings=c(1, length(filtsamplenames)))
-incounts_keep <- simplify2array(DelayedArray::blockApply(counts, \(block) sum(block>0)>2, grid=counts_grid, BPPARAM=BPPARAM, verbose=TRUE))
+incounts_keep <- unlist(DelayedArray::blockApply(counts, \(block) sum(block>0)>2, grid=counts_grid, BPPARAM=BPPARAM, verbose=TRUE))
 counts <- counts[incounts_keep, ]
 print('done')
 
@@ -80,7 +80,7 @@ print('fitting model')
 nfit <- NewWave::newFit(counts, 
                         X = model.matrix(formula, data=conditions), 
                         K = 2,
-                        children=n_cores,
+                        children = n_cores,
                         n_gene_par = 1000,
                         commondispersion = FALSE)
 print('done')
