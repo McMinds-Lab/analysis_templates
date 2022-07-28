@@ -1,3 +1,4 @@
+library(BiocParallel)
 
 args <- commandArgs(TRUE)
 
@@ -8,6 +9,8 @@ formula <- as.formula(args[[4]])
 keycolumn <- as.numeric(args[[5]])
 outdir <- args[[6]]
 n_cores <- as.numeric(args[[7]])
+
+BPPARAM <- SnowParam(n_cores)
 
 ## read in sample metadata
 conditions <- read.table(sampledat, header=TRUE, row.names=1)
@@ -61,8 +64,10 @@ print('converted')
 print('filtering samples by conditions file')
 filtsamplenames <- incolnames[incolnames %in% rownames(conditions)]
 counts <- counts[,incolnames %in% rownames(conditions)]
+
 print('filtering kmers by prevalence')
-incounts_keep <- apply(counts,1, \(x) sum(x>0)>2)
+counts_grid <- DelayedArray::RegularArrayGrid(dim(counts), spacings=c(1, length(filtsamplenames)))
+incounts_keep <- simplify2array(DelayedArray::blockApply(counts, \(block) sum(block>0)>2, grid=counts_grid, BPPARAM=BPPARAM, verbose=TRUE))
 counts <- counts[incounts_keep, ]
 print('done')
 
