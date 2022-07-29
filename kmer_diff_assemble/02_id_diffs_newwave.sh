@@ -24,7 +24,7 @@ cat <<EOF > ${subdir}/02_id_diffs_newwave.sbatch
 #SBATCH --cpus-per-task=1
 #SBATCH --output=${subdir}/id_diffs_newwave.log
 
-nodenames=\$(scontrol show hostname \$SLURM_NODELIST)
+nodenames=\$(scontrol show hostname \$SLURM_NODELIST | tr '\n' '\s')
 
 module purge
 module load hub.apps/R/4.1.1
