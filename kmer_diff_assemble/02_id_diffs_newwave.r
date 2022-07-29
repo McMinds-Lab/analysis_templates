@@ -8,7 +8,6 @@ threshold <- as.numeric(args[[3]])
 formula <- as.formula(args[[4]])
 keycolumn <- as.numeric(args[[5]])
 outdir <- args[[6]]
-n_cores <- args[[7]]
 nodenames <- strsplit(args[[8]], ' ')
 
 nodenames_expanded <- as.vector(sapply(nodenames, \(x) rep(x,20)))
