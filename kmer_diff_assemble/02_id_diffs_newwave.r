@@ -20,7 +20,7 @@ conditions <- read.table(sampledat, header=TRUE, row.names=1)
 block_rows <- 1e8
 
 ## find number of kmers and samples in counts file
-cat('finding number of kmers in input')
+cat('finding number of kmers in input\n')
 inconnect <- gzfile(countsfile, 'r')
 incolnames <- read.table(inconnect, nrows=1)[-1]
 nsamples <- length(incolnames)
@@ -36,19 +36,19 @@ while(TRUE) {
 close(inconnect)
 mode(nkmers) <- 'integer'
 mode(nsamples) <- 'integer'
-cat('done')
+cat('done\n')
 ##
 
 ## convert counts file to delayed array
-cat('create delayed array container')
+cat('create delayed array container\n')
 dir.create(file.path(outdir,'02_id_diffs', 'hdf5_files'), recursive = TRUE)
 HDF5Array::setHDF5DumpDir(file.path(outdir, '02_id_diffs', 'hdf5_files'))
 DelayedArray::setAutoRealizationBackend("HDF5Array")
 sink <- DelayedArray::AutoRealizationSink(c(nkmers, nsamples), type='integer')
 sink_grid <- DelayedArray::RegularArrayGrid(dim(sink), spacings=c(block_rows, nsamples))
-cat('container created')
+cat('container created\n')
 
-cat('filling container')
+cat('filling container\n')
 inconnect <- gzfile(countsfile, 'r')
 for (bid in seq_along(sink_grid)) {
   viewport <- sink_grid[[bid]]
@@ -58,33 +58,33 @@ for (bid in seq_along(sink_grid)) {
 }
 close(sink)
 close(inconnect)
-cat('container filled; converting container')
+cat('container filled; converting container\n')
 counts <- as(sink, "DelayedArray")
-cat('converted')
+cat('converted\n')
 ##
 
 ## make sure counts and conditions match
-cat('filtering samples by conditions file')
+cat('filtering samples by conditions file\n')
 filtsamplenames <- incolnames[incolnames %in% rownames(conditions)]
 counts <- counts[,incolnames %in% rownames(conditions)]
 
-cat('filtering kmers by prevalence')
+cat('filtering kmers by prevalence\n')
 counts_grid <- DelayedArray::RegularArrayGrid(dim(counts), spacings=c(1e6, length(filtsamplenames)))
 incounts_keep <- unlist(clusterApply(cl, counts_grid, \(viewport) apply(read_block(counts, viewport), 1, sum(x>0)>2)))
 counts <- counts[incounts_keep, ]
-cat('done')
+cat('done\n')
 
 conditions <- conditions[filtsamplenames,, drop=FALSE]
 ##
 
-cat('fitting model')
+cat('fitting model\n')
 nfit <- NewWave::newFit(counts, 
                         X = model.matrix(formula, data=conditions), 
                         K = 2,
                         children = nodenames_expanded,
                         n_gene_par = 1000,
                         commondispersion = FALSE) ## using character vector for children is undocumented but looking into code it might work
-cat('done')
+cat('done\n')
 
 ## beta are coefficients of X (samplewise model)
 ## gamma are coefficients of V (genewise model - intercept gives samplewise 'size factors' that could be used as offsets in other linear models)
