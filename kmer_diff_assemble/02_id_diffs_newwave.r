@@ -1,4 +1,4 @@
-library(BiocParallel)
+library(parallel)
 
 args <- commandArgs(TRUE)
 
@@ -8,9 +8,11 @@ threshold <- as.numeric(args[[3]])
 formula <- as.formula(args[[4]])
 keycolumn <- as.numeric(args[[5]])
 outdir <- args[[6]]
-n_cores <- as.numeric(args[[7]])
+n_cores <- args[[7]]
+nodenames <- strsplit(args[[8]], ' ')
 
-BPPARAM <- SnowParam(n_cores)
+nodenames_expanded <- as.vector(sapply(nodenames, \(x) rep(x,20)))
+cl <- makePSOCKcluster(nodenames_expanded)
 
 ## read in sample metadata
 conditions <- read.table(sampledat, header=TRUE, row.names=1)
@@ -68,8 +70,8 @@ filtsamplenames <- incolnames[incolnames %in% rownames(conditions)]
 counts <- counts[,incolnames %in% rownames(conditions)]
 
 print('filtering kmers by prevalence')
-counts_grid <- DelayedArray::RegularArrayGrid(dim(counts), spacings=c(1, length(filtsamplenames)))
-incounts_keep <- unlist(DelayedArray::blockApply(counts, \(block) sum(block>0)>2, grid=counts_grid, BPPARAM=BPPARAM, verbose=TRUE))
+counts_grid <- DelayedArray::RegularArrayGrid(dim(counts), spacings=c(1e6, length(filtsamplenames)))
+incounts_keep <- unlist(clusterApply(cl, counts_grid, \(viewport) apply(read_block(counts, viewport), 1, sum(x>0)>2)))
 counts <- counts[incounts_keep, ]
 print('done')
 
@@ -80,9 +82,9 @@ print('fitting model')
 nfit <- NewWave::newFit(counts, 
                         X = model.matrix(formula, data=conditions), 
                         K = 2,
-                        children = n_cores,
+                        children = nodenames_expanded,
                         n_gene_par = 1000,
-                        commondispersion = FALSE)
+                        commondispersion = FALSE) ## using character vector for children is undocumented but looking into code it might work
 print('done')
 
 ## beta are coefficients of X (samplewise model)
