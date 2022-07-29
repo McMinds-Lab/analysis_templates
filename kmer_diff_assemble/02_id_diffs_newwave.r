@@ -8,7 +8,7 @@ threshold <- as.numeric(args[[3]])
 formula <- as.formula(args[[4]])
 keycolumn <- as.numeric(args[[5]])
 outdir <- args[[6]]
-nodenames <- strsplit(args[[8]], ' ')
+nodenames <- strsplit(args[[7]], ' ')
 
 nodenames_expanded <- as.vector(sapply(nodenames, \(x) rep(x,20)))
 cl <- makePSOCKcluster(nodenames_expanded)
@@ -20,7 +20,7 @@ conditions <- read.table(sampledat, header=TRUE, row.names=1)
 block_rows <- 1e8
 
 ## find number of kmers and samples in counts file
-print('finding number of kmers in input')
+cat('finding number of kmers in input')
 inconnect <- gzfile(countsfile, 'r')
 incolnames <- read.table(inconnect, nrows=1)[-1]
 nsamples <- length(incolnames)
@@ -36,19 +36,19 @@ while(TRUE) {
 close(inconnect)
 mode(nkmers) <- 'integer'
 mode(nsamples) <- 'integer'
-print('done')
+cat('done')
 ##
 
 ## convert counts file to delayed array
-print('create delayed array container')
+cat('create delayed array container')
 dir.create(file.path(outdir,'02_id_diffs', 'hdf5_files'), recursive = TRUE)
 HDF5Array::setHDF5DumpDir(file.path(outdir, '02_id_diffs', 'hdf5_files'))
 DelayedArray::setAutoRealizationBackend("HDF5Array")
 sink <- DelayedArray::AutoRealizationSink(c(nkmers, nsamples), type='integer')
 sink_grid <- DelayedArray::RegularArrayGrid(dim(sink), spacings=c(block_rows, nsamples))
-print('container created')
+cat('container created')
 
-print('filling container')
+cat('filling container')
 inconnect <- gzfile(countsfile, 'r')
 for (bid in seq_along(sink_grid)) {
   viewport <- sink_grid[[bid]]
@@ -58,33 +58,33 @@ for (bid in seq_along(sink_grid)) {
 }
 close(sink)
 close(inconnect)
-print('container filled; converting container')
+cat('container filled; converting container')
 counts <- as(sink, "DelayedArray")
-print('converted')
+cat('converted')
 ##
 
 ## make sure counts and conditions match
-print('filtering samples by conditions file')
+cat('filtering samples by conditions file')
 filtsamplenames <- incolnames[incolnames %in% rownames(conditions)]
 counts <- counts[,incolnames %in% rownames(conditions)]
 
-print('filtering kmers by prevalence')
+cat('filtering kmers by prevalence')
 counts_grid <- DelayedArray::RegularArrayGrid(dim(counts), spacings=c(1e6, length(filtsamplenames)))
 incounts_keep <- unlist(clusterApply(cl, counts_grid, \(viewport) apply(read_block(counts, viewport), 1, sum(x>0)>2)))
 counts <- counts[incounts_keep, ]
-print('done')
+cat('done')
 
 conditions <- conditions[filtsamplenames,, drop=FALSE]
 ##
 
-print('fitting model')
+cat('fitting model')
 nfit <- NewWave::newFit(counts, 
                         X = model.matrix(formula, data=conditions), 
                         K = 2,
                         children = nodenames_expanded,
                         n_gene_par = 1000,
                         commondispersion = FALSE) ## using character vector for children is undocumented but looking into code it might work
-print('done')
+cat('done')
 
 ## beta are coefficients of X (samplewise model)
 ## gamma are coefficients of V (genewise model - intercept gives samplewise 'size factors' that could be used as offsets in other linear models)
