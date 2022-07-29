@@ -70,7 +70,7 @@ counts <- counts[,incolnames %in% rownames(conditions)]
 
 cat('filtering kmers by prevalence\n')
 counts_grid <- DelayedArray::RegularArrayGrid(dim(counts), spacings=c(1e6, length(filtsamplenames)))
-incounts_keep <- unlist(clusterApply(cl, counts_grid, \(viewport) apply(read_block(counts, viewport), 1, sum(x>0)>2)))
+incounts_keep <- unlist(clusterApply(cl, counts_grid, \(viewport) apply(read_block(counts, viewport), 1, \(x) sum(x>0)>2)))
 counts <- counts[incounts_keep, ]
 cat('done\n')
 
