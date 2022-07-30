@@ -11,7 +11,6 @@ outdir <- args[[6]]
 nodenames <- strsplit(args[[7]], ' ')
 
 nodenames_expanded <- as.vector(sapply(nodenames, \(x) rep(x,20)))
-cl <- makePSOCKcluster(nodenames_expanded)
 
 ## read in sample metadata
 conditions <- read.table(sampledat, header=TRUE, row.names=1)
@@ -54,7 +53,7 @@ for (bid in seq_along(sink_grid)) {
   viewport <- sink_grid[[bid]]
   block <- as.matrix(read.table(inconnect, header=(bid==1), row.names=1, nrows=block_rows))
   mode(block) <- 'integer'
-  sink <- write_block(sink, viewport, block)
+  sink <- DelayedArray::write_block(sink, viewport, block)
 }
 close(sink)
 close(inconnect)
@@ -69,8 +68,11 @@ filtsamplenames <- incolnames[incolnames %in% rownames(conditions)]
 counts <- counts[,incolnames %in% rownames(conditions)]
 
 cat('filtering kmers by prevalence\n')
+cl <- makePSOCKcluster(nodenames_expanded)
+clusterExport(cl, 'counts')
 counts_grid <- DelayedArray::RegularArrayGrid(dim(counts), spacings=c(1e6, length(filtsamplenames)))
-incounts_keep <- unlist(clusterApply(cl, counts_grid, \(viewport) apply(read_block(counts, viewport), 1, \(x) sum(x>0)>2)))
+incounts_keep <- unlist(clusterApplyLB(cl, counts_grid, \(viewport) apply(DelayedArray::read_block(counts, viewport), 1, \(x) sum(x>0)>2)))
+stopCluster(cl)
 counts <- counts[incounts_keep, ]
 cat('done\n')
 
