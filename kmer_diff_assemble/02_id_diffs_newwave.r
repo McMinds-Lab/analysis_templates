@@ -21,7 +21,7 @@ block_rows <- 1e8
 ## find number of kmers and samples in counts file
 cat('finding number of kmers in input\n')
 inconnect <- gzfile(countsfile, 'r')
-incolnames <- read.table(inconnect, nrows=1)[-1]
+incolnames <- as.vector(read.table(inconnect, nrows=1)[-1])
 nsamples <- length(incolnames)
 nkmers <- 0
 while(TRUE) {
@@ -57,7 +57,7 @@ for (bid in seq_along(sink_grid)) {
 }
 close(sink)
 close(inconnect)
-cat('container filled; converting container\n')
+cat('container filled\nconverting container\n')
 counts <- as(sink, "DelayedArray")
 cat('converted\n')
 ##
@@ -71,10 +71,12 @@ cat('filtering kmers by prevalence\n')
 cl <- makePSOCKcluster(nodenames_expanded)
 clusterExport(cl, 'counts')
 counts_grid <- DelayedArray::RegularArrayGrid(dim(counts), spacings=c(1e6, length(filtsamplenames)))
+cat('  determining which kmers to keep\n')
 incounts_keep <- unlist(clusterApplyLB(cl, counts_grid, \(viewport) apply(DelayedArray::read_block(counts, viewport), 1, \(x) sum(x>0)>2)))
 stopCluster(cl)
+cat('  filtering\n')
 counts <- counts[incounts_keep, ]
-cat('done\n')
+cat('done filtering kmers\n')
 
 conditions <- conditions[filtsamplenames,, drop=FALSE]
 ##
