@@ -21,7 +21,7 @@ block_rows <- 1e8
 ## find number of kmers and samples in counts file
 cat('finding number of kmers in input\n')
 inconnect <- gzfile(countsfile, 'r')
-incolnames <- as.vector(read.table(inconnect, nrows=1)[-1])
+incolnames <- unlist(read.table(inconnect, nrows=1)[-1])
 nsamples <- length(incolnames)
 nkmers <- 0
 while(TRUE) {
