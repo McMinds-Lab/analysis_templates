@@ -46,7 +46,6 @@ if(file.exists(file.path(outdir,'02_id_diffs', 'hdf5_files', 'auto00001.h5'))) {
   
   cat('filling container\n')
   inconnect <- gzfile(countsfile, 'r')
-  invisible(read.table(inconnect, nrows=1))
   for (bid in seq_along(sink_grid)) {
     viewport <- sink_grid[[bid]]
     block <- as.matrix(read.table(inconnect, header=(bid==1), row.names=1, nrows=block_rows))
