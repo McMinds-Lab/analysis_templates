@@ -15,49 +15,36 @@ nodenames_expanded <- as.vector(sapply(nodenames, \(x) rep(x,20)))
 ## read in sample metadata
 conditions <- read.table(sampledat, header=TRUE, row.names=1)
 
+inconnect <- gzfile(countsfile, 'r')
+incolnames <- unlist(read.table(inconnect, nrows=1)[-1])
+close(inconnect)
+
 if(file.exists(file.path(outdir,'02_id_diffs', 'hdf5_files', 'auto00001.h5'))) {
   
   counts <- HDF5Array::HDF5Array(file.path(outdir,'02_id_diffs', 'hdf5_files', 'auto00001.h5'), 'counts', as.sparse=TRUE, type='integer')
   
-  inconnect <- gzfile(countsfile, 'r')
-  incolnames <- unlist(read.table(inconnect, nrows=1)[-1])
-  close(inconnect)
-
 } else {
   
-  ## set chunk size for reading in counts
-  block_rows <- 1e8
-  
   ## find number of kmers and samples in counts file
-  cat('  finding number of kmers in input\n')
-  inconnect <- gzfile(countsfile, 'r')
-  incolnames <- unlist(read.table(inconnect, nrows=1)[-1])
+  cat('finding number of kmers in input\n')
+  nkmers <- as.numeric(scan(text = system(paste0('zcat ', countsfile, ' | wc -l'), intern = TRUE), what = '')[[1]]) - 1
   nsamples <- length(incolnames)
-  nkmers <- 0
-  while(TRUE) {
-    addedkmers <- length(readLines(inconnect, block_rows))
-    if(addedkmers) {
-      nkmers <- nkmers + addedkmers
-    } else {
-      break
-    }
-  }
-  close(inconnect)
   mode(nkmers) <- 'integer'
   mode(nsamples) <- 'integer'
-  cat('  done\n')
+  cat('done\n')
   ##
   
   ## convert counts file to delayed array
-  cat('  create delayed array container\n')
-  dir.create(file.path(outdir,'02_id_diffs', 'hdf5_files'), recursive = TRUE)
+  cat('create delayed array container\n')
+  block_rows <- ceiling(nkmers / (length(nodenames_expanded) * 10)) ## make sure there are at least as many blocks as tasks so the workers don't have to read in too much data from mismatching blocks
+  dir.create(file.path(outdir, '02_id_diffs', 'hdf5_files'), recursive = TRUE)
   HDF5Array::setHDF5DumpDir(file.path(outdir, '02_id_diffs', 'hdf5_files'))
   DelayedArray::setAutoRealizationBackend("HDF5Array")
-  sink <- DelayedArray::AutoRealizationSink(c(nkmers, nsamples), type='integer', as.sparse=TRUE)
-  sink_grid <- DelayedArray::RegularArrayGrid(dim(sink), spacings=c(block_rows, nsamples))
-  cat('  container created\n')
+  sink <- DelayedArray::AutoRealizationSink(c(nkmers, nsamples), type='integer', as.sparse = TRUE)
+  sink_grid <- DelayedArray::RegularArrayGrid(dim(sink), spacings = c(block_rows, nsamples))
+  cat('container created\n')
   
-  cat('  filling container\n')
+  cat('filling container\n')
   inconnect <- gzfile(countsfile, 'r')
   for (bid in seq_along(sink_grid)) {
     viewport <- sink_grid[[bid]]
@@ -67,10 +54,10 @@ if(file.exists(file.path(outdir,'02_id_diffs', 'hdf5_files', 'auto00001.h5'))) {
   }
   close(sink)
   close(inconnect)
-  cat('  container filled\n')
-  cat('  converting container\n')
+  cat('container filled\n')
+  cat('converting container\n')
   counts <- as(sink, "DelayedArray")
-  cat('  converted\n')
+  cat('converted\n')
 
 }
 
@@ -81,10 +68,10 @@ print(dim(counts))
 ## make sure counts and conditions match
 cat('filtering samples by conditions file\n')
 filtsamplenames <- incolnames[incolnames %in% rownames(conditions)]
-counts <- counts[,incolnames %in% rownames(conditions)]
-
 cat('remaining samples:\n')
 print(filtsamplenames)
+
+counts <- counts[,incolnames %in% rownames(conditions)]
 
 cat('filtering kmers by prevalence\n')
 cl <- makePSOCKcluster(nodenames_expanded)
@@ -96,6 +83,8 @@ stopCluster(cl)
 cat('  filtering\n')
 counts <- counts[incounts_keep, ]
 cat('done filtering kmers\n')
+
+
 cat('new dimensions:\n')
 print(dim(counts))
 
