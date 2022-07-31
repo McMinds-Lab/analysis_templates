@@ -60,12 +60,17 @@ close(inconnect)
 cat('container filled\nconverting container\n')
 counts <- as(sink, "DelayedArray")
 cat('converted\n')
+cat('size of input matrix:\n')
+print(dim(counts))
 ##
 
 ## make sure counts and conditions match
 cat('filtering samples by conditions file\n')
 filtsamplenames <- incolnames[incolnames %in% rownames(conditions)]
 counts <- counts[,incolnames %in% rownames(conditions)]
+
+cat('remaining samples:\n')
+print(filtsamplenames)
 
 cat('filtering kmers by prevalence\n')
 cl <- makePSOCKcluster(nodenames_expanded)
@@ -77,6 +82,8 @@ stopCluster(cl)
 cat('  filtering\n')
 counts <- counts[incounts_keep, ]
 cat('done filtering kmers\n')
+cat('new dimensions:\n')
+print(dim(counts))
 
 conditions <- conditions[filtsamplenames,, drop=FALSE]
 ##
