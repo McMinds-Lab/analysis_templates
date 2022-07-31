@@ -87,7 +87,8 @@ nfit <- NewWave::newFit(counts,
                         K = 2,
                         children = nodenames_expanded,
                         n_gene_par = 1000,
-                        commondispersion = FALSE) ## using character vector for children is undocumented but looking into code it might work
+                        commondispersion = FALSE,
+                        verbose = TRUE) ## using character vector for children is undocumented but looking into code it might work
 cat('done\n')
 
 ## beta are coefficients of X (samplewise model)
