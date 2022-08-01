@@ -8,9 +8,17 @@ threshold <- as.numeric(args[[3]])
 formula <- as.formula(args[[4]])
 keycolumn <- as.numeric(args[[5]])
 outdir <- args[[6]]
-nodenames <- strsplit(args[[7]], ' ')
+input_children <- strsplit(args[[7]], ' ')[[1]]
 
-nodenames_expanded <- as.vector(sapply(nodenames, \(x) rep(x,20)))
+if(any(is.na(suppressWarnings(as.numeric(input_children))))) {
+  cat('interpreting "children" option to be node names, not number of processes')
+  children <- as.vector(sapply(input_children, \(x) rep(x,20)))
+  n_children <- length(children)
+} else {
+  cat('interpreting "children" option to be number of processes on single node, not node names')
+  children <- as.numeric(input_children)
+  n_children <- children
+}
 
 ## read in sample metadata
 conditions <- read.table(sampledat, header=TRUE, row.names=1)
@@ -36,7 +44,7 @@ if(file.exists(file.path(outdir,'02_id_diffs', 'hdf5_files', 'auto00001.h5'))) {
   
   ## convert counts file to delayed array
   cat('create delayed array container\n')
-  block_rows <- ceiling(nkmers / (length(nodenames_expanded) * 10)) ## make sure there are at least as many blocks as tasks so the workers don't have to read in too much data from mismatching blocks
+  block_rows <- ceiling(nkmers / (n_children * 10)) ## make sure there are at least as many blocks as tasks so the workers don't have to read in too much data from mismatching blocks
   dir.create(file.path(outdir, '02_id_diffs', 'hdf5_files'), recursive = TRUE)
   HDF5Array::setHDF5DumpDir(file.path(outdir, '02_id_diffs', 'hdf5_files'))
   DelayedArray::setAutoRealizationBackend("HDF5Array")
@@ -74,7 +82,7 @@ print(filtsamplenames)
 counts <- counts[,incolnames %in% rownames(conditions)]
 
 cat('filtering kmers by prevalence\n')
-cl <- makePSOCKcluster(nodenames_expanded)
+cl <- makePSOCKcluster(children)
 clusterExport(cl, 'counts')
 counts_grid <- DelayedArray::RegularArrayGrid(dim(counts), spacings=c(1e6, length(filtsamplenames)))
 cat('  determining which kmers to keep\n')
@@ -95,10 +103,10 @@ cat('fitting model\n')
 nfit <- NewWave::newFit(counts, 
                         X = model.matrix(formula, data=conditions), 
                         K = 2,
-                        children = nodenames_expanded,
+                        children = children,
                         n_gene_par = 1000,
                         commondispersion = FALSE,
-                        verbose = TRUE) ## using character vector for children is undocumented but looking into code it might work
+                        verbose = TRUE) ## using character vector for children is undocumented but my github repo has edits to potentially make it work
 cat('done\n')
 
 ## beta are coefficients of X (samplewise model)

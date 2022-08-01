@@ -7,6 +7,7 @@ keycolumn=$5
 outdir=$6
 n_cores=$7
 maxmem=$8
+autorun=$9
 
 subdir=${outdir}/02_id_diffs
 
@@ -33,4 +34,6 @@ Rscript 02_id_diffs_newwave.r ${in_kmers} ${sampledat} ${threshold} ${formula} $
 
 EOF
 
-sbatch ${subdir}/02_id_diffs_newwave.sbatch
+if $autorun; then
+   sbatch ${subdir}/02_id_diffs_newwave.sbatch
+fi
