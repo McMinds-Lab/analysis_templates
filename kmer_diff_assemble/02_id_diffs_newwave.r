@@ -11,11 +11,11 @@ outdir <- args[[6]]
 input_children <- strsplit(args[[7]], ' ')[[1]]
 
 if(any(is.na(suppressWarnings(as.numeric(input_children))))) {
-  cat('interpreting "children" option to be node names, not number of processes')
+  cat('interpreting "children" option to be node names, not number of processes\n')
   children <- as.vector(sapply(input_children, \(x) rep(x,20)))
   n_children <- length(children)
 } else {
-  cat('interpreting "children" option to be number of processes on single node, not node names')
+  cat('interpreting "children" option to be number of processes on single node, not node names\n')
   children <- as.numeric(input_children)
   n_children <- children
 }
@@ -29,7 +29,7 @@ close(inconnect)
 
 if(file.exists(file.path(outdir,'02_id_diffs', 'hdf5_files', 'auto00001.h5'))) {
   
-  counts <- HDF5Array::HDF5Array(file.path(outdir,'02_id_diffs', 'hdf5_files', 'auto00001.h5'), 'counts', as.sparse=TRUE, type='integer')
+  counts <- HDF5Array::HDF5Array(file.path(outdir,'02_id_diffs', 'hdf5_files', 'auto00001.h5'), 'HDF5ArrayAUTO00001', as.sparse=TRUE, type='integer')
   
 } else {
   
