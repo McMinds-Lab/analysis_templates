@@ -5,9 +5,8 @@ threshold=$3
 formula=$4
 keycolumn=$5
 outdir=$6
-n_cores=$7
-maxmem=$8
-autorun=$9
+n_nodes=$7
+autorun=$8
 
 subdir=${outdir}/02_id_diffs
 
@@ -18,11 +17,11 @@ cat <<EOF > ${subdir}/02_id_diffs_newwave.sbatch
 #!/bin/bash
 #SBATCH --qos=rra
 #SBATCH --partition=rra
-#SBATCH --mem=${maxmem}
+#SBATCH --mem=0
 #SBATCH --time=7-00:00:00
 #SBATCH --job-name=02_id_diffs
-#SBATCH --ntasks=${n_cores}
-#SBATCH --cpus-per-task=1
+#SBATCH --nodes=${n_nodes}
+#SBATCH --exclusive
 #SBATCH --output=${subdir}/id_diffs_newwave.log
 
 nodenames=\$(scontrol show hostname \$SLURM_NODELIST | tr '\n' ' ')

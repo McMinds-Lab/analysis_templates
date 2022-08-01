@@ -12,7 +12,14 @@ input_children <- strsplit(args[[7]], ' ')[[1]]
 
 if(any(is.na(suppressWarnings(as.numeric(input_children))))) {
   cat('interpreting "children" option to be node names, not number of processes\n')
-  children <- as.vector(sapply(input_children, \(x) rep(x,20)))
+  firstnodesize <- as.numeric(system(paste0('sinfo --Node --nodes ', input_children[[1]],' --format %c | tail -1'), internal=TRUE))
+  children <- rep(input_children[[1]], ceiling(firstnodesize / 2))
+  if(length(input_children) > 1) {
+    children <- c(children, as.vector(sapply(input_children[-1], \(x) {
+      nodesize <- as.numeric(system(paste0('sinfo --Node --nodes ', x,' --format %c | tail -1'), internal=TRUE))
+      rep(x, max(1, nodesize - 1))
+    })))
+  }
   n_children <- length(children)
 } else {
   cat('interpreting "children" option to be number of processes on single node, not node names\n')
