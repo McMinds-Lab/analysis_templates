@@ -5,7 +5,7 @@ threshold=$3
 formula=$4
 keycolumn=$5
 outdir=$6
-n_nodes=$7
+n_nodes=$7 ## will not actually work with more than 1 node at the moment
 autorun=$8
 
 subdir=${outdir}/02_id_diffs

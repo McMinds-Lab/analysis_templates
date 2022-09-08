@@ -6,7 +6,7 @@ Milli-Q Water
 
 AccuStart II PCR ToughMix (2x)
 
-Fwd Primer (515Fb\_MAf, 10µM)
+Fwd Primer (515Fb\_MAf, 10 µM)
 
 Rev Primer (806Rb\_MAr, 10 µM)
 
@@ -27,7 +27,7 @@ Sample DNA
 
 2. Aliquot master mix into PCR tubes (12 µL for this 12.5µL reaction).
 3. Add 0.5 µL of sample DNA to each experimental PCR tube. Use Milli-Q water for negative controls.
-4. Mix and spin down, and run the following thermocycler protocol:
+4. Mix and spin down, and run the thermocycler protocol "1st step amplicon":
 
 | Temperature (°C) | Time | --- |
 | --- | --- | --- |
@@ -37,9 +37,17 @@ Sample DNA
 | 72 | 90s | end repeat |
 | 72 | 10 min | --- |
 
-5. Run 10 uL of all samples and negative controls on a 1% low melting-point agarose gel with the 10uL well comb. Add loading dye directly to the PCR tubes and mix by pipetting, then space samples every OTHER well (multichannel pipet should work for this in the big gel rig). Run samples until the bacteria-mitochondria double band is separated by at least half a centimeter, and isolate the bacterial band (or location where it should be) with the gel extraction tool.
-6. Perform a gel cleanup using the SV Wizard kit.
-7. Perform second PCR, this time adding 12.5 µL ToughMix and 9.5 µL water directly to each well, then 1 µL of each of the appropriate index primers directly to each well, and finally 1 µL of the PCR product from the first amplification. Run the thermocycler program Adaptor -> Indexed.
+5. Run 10 uL of all samples and negative controls on a 1% low melting-point agarose gel with the 10 uL well comb. Add loading dye directly to the PCR tubes and mix by pipetting, then space samples every OTHER well (multichannel pipet should work for this in the big gel rig). Run samples until the bacteria-mitochondria double band is separated by at least half a centimeter (if applicable), and isolate the bacterial band (or location where it should be) with a 1000 µL pipette tip.
+7. Perform second PCR, this time adding 12.5 µL ToughMix and 9.5 µL water directly to each well, then 1 µL of each of the appropriate index primers directly to each well, and swirling therein the pipette tip with gel residue / PCR product from the first amplification. Run the thermocycler program "Adaptor -> Indexed":
+
+| Temperature (°C) | Time | --- |
+| --- | --- | --- |
+| 94 | 3 min. | --- |
+| 94 | 45 s | start repeat 12X |
+| 63 | 60 s | --- |
+| 72 | 90s | end repeat |
+| 72 | 10 min | --- |
+
 8. Run on gel to verify amplification &amp; purity (the intermediate amplicon can be diluted 1:25 and run alongside these products as a negative control).
 9. Pool samples in equal volumes.
 10. Clean up samples using standard bead protocol.
