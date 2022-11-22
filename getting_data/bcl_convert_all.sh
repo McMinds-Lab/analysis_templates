@@ -10,7 +10,7 @@ cat <<EOF > ${outdir}/bcl_convert_all.sbatch
 #SBATCH --qos=rra
 #SBATCH --partition=rra
 #SBATCH --time=6-00:00:00
-#SBATCH --mem=${maxram}
+#SBATCH --mem=60
 #SBATCH --job-name=bcl_convert_all
 #SBATCH --output=${outdir}/bcl_convert_all.log
 
