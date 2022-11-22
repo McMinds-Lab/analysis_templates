@@ -1,6 +1,3 @@
-# get local variables
-source local.env
-
 ## five positional arguments specifying 1) directory with input fastqs, 2) forward primer sequence, 3) reverse primer sequence, 4) output directory, and 5) number of threads
 indir=$1
 primer_fwd=$2
@@ -39,8 +36,8 @@ for file in ${indir}/*_R1_001.fastq.gz; do
   source activate cutadapt-3.5
   cutadapt \
     --cores=${nthreads} \
-    -g ${primer_fwd} \
-    -G ${primer_rev} \
+    -g "${primer_fwd};min_overlap=${#primer_fwd}" \
+    -G "${primer_rev};min_overlap=${#primer_rev}" \
     --output ${outdir}/01_init_QC/trimmed/\${sampleid}_R1.fastq.gz \
     --paired-output ${outdir}/01_init_QC/trimmed/\${sampleid}_R2.fastq.gz \
     \${file} \
