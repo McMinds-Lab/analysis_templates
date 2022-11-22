@@ -16,7 +16,7 @@ cat <<EOF > ${outdir}/download_basespace.sbatch
 #SBATCH --output=${outdir}/download_basespace.log
 
 module purge
-module loadhub.apps/basespace/april.2021
+module load hub.apps/basespace/april.2021
 
 bs --version
 
