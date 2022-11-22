@@ -1,6 +1,3 @@
-# get local variables
-source local.env
-
 indir=$1
 outdir=$2
 
@@ -11,13 +8,11 @@ cp 02_dada2.r ${outdir}/02_dada2/
 cat <<EOF > ${outdir}/02_dada2/02_dada2.sbatch
 #!/bin/bash
 #SBATCH --job-name=02_dada2
-#SBATCH --partition=${partition}
-#SBATCH --qos=${qos}
-#SBATCH --mail-user=${email}
-#SBATCH --mail-type=END,FAIL
+#SBATCH --partition=rra
+#SBATCH --qos=rra
 #SBATCH --output=${outdir}/02_dada2/02_dada2.log
 #SBATCH --ntasks=${nthreads}
-#SBATCH --mem=${maxram}
+#SBATCH --mem=20G
 #SBATCH --time=3-00:00:00
 
 module load hub.apps/R
