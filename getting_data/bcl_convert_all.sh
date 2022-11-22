@@ -16,7 +16,7 @@ cat <<EOF > ${outdir}/bcl_convert_all.sbatch
 
 /shares/omicshub/apps/bcl-convert/bcl-convert --version
 
-/shares/omicshub/apps/bcl-convert/bcl-convert --no-sample-sheet true --bcl-input-directory ${indir} --output-directory ${outdir}
+/shares/omicshub/apps/bcl-convert/bcl-convert --no-sample-sheet true --bcl-input-directory ${indir} --output-directory ${outdir}/raw_fastqs
 
 EOF
 
