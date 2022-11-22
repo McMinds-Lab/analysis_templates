@@ -11,7 +11,7 @@ cat <<EOF > ${outdir}/download_basespace.sbatch
 #SBATCH --qos=rra
 #SBATCH --partition=rra
 #SBATCH --time=6-00:00:00
-#SBATCH --mem=${maxram}
+#SBATCH --mem=60G
 #SBATCH --job-name=download_basespace
 #SBATCH --output=${outdir}/download_basespace.log
 
