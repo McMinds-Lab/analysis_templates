@@ -40,6 +40,7 @@ for file in ${indir}/*_R1_001.fastq.gz; do
     -G "${primer_rev};min_overlap=${#primer_rev}" \
     --output ${outdir}/01_init_QC/trimmed/\${sampleid}_R1.fastq.gz \
     --paired-output ${outdir}/01_init_QC/trimmed/\${sampleid}_R2.fastq.gz \
+    --discard-untrimmed \
     \${file} \
     \${file/R1/R2}
   
