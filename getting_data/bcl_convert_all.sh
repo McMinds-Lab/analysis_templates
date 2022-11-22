@@ -10,11 +10,13 @@ cat <<EOF > ${outdir}/bcl_convert_all.sbatch
 #SBATCH --qos=rra
 #SBATCH --partition=rra
 #SBATCH --time=6-00:00:00
-#SBATCH --mem=60
+#SBATCH --mem=60G
 #SBATCH --job-name=bcl_convert_all
 #SBATCH --output=${outdir}/bcl_convert_all.log
 
 /shares/omicshub/apps/bcl-convert/bcl-convert --version
+echo \'indir=\'${indir}
+echo \'outdir=\'${outdir}
 
 /shares/omicshub/apps/bcl-convert/bcl-convert --no-sample-sheet true --bcl-input-directory ${indir} --output-directory ${outdir}/raw_fastqs
 
