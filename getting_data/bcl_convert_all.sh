@@ -3,7 +3,6 @@
 indir=$1
 outdir=$2
 sample_sheet=$3
-runinfo=$4
 
 mkdir -p ${outdir}
 
@@ -20,7 +19,7 @@ cat <<EOF > ${outdir}/bcl_convert_all.sbatch
 echo \'indir=\'${indir}
 echo \'outdir=\'${outdir}
 
-/shares/omicshub/apps/bcl-convert/bcl-convert --bcl-input-directory ${indir} --output-directory ${outdir}/raw_fastqs --sample-sheet ${sample_sheet} --run-info ${runinfo}
+/shares/omicshub/apps/bcl-convert/bcl-convert --bcl-input-directory ${indir} --output-directory ${outdir}/raw_fastqs --sample-sheet ${sample_sheet}
 
 EOF
 
