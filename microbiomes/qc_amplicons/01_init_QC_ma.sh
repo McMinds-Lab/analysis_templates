@@ -32,12 +32,12 @@ for file in ${indir}/*_R1_001.fastq.gz; do
   filename=\$(basename \$file)
   sampleid=\${filename/_L001_R1*/}
   
-  # trim primers
+  # trim primers and keep only the reads with the primers at exactly the beginning
   source activate cutadapt-3.5
   cutadapt \
     --cores=${nthreads} \
-    -g "${primer_fwd};min_overlap=${#primer_fwd}" \
-    -G "${primer_rev};min_overlap=${#primer_rev}" \
+    -g ^${primer_fwd} \
+    -G ^${primer_rev} \
     --output ${outdir}/01_init_QC/trimmed/\${sampleid}_R1.fastq.gz \
     --paired-output ${outdir}/01_init_QC/trimmed/\${sampleid}_R2.fastq.gz \
     --discard-untrimmed \
