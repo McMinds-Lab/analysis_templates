@@ -14,22 +14,24 @@ png(file.path(outdir, "quality_profile.png"), height=600, width=600)
 dada2::plotQualityProfile(merged_reads[1:10])
 dev.off()
 
-#learning errors is a key component, must be done with reads that have no N's
-err_merged_reads <- dada2::learnErrors(merged_reads, multithread=nthreads)
+# only reads as many samples as needed to get to 1e8 bases (can be changed), with samples randomized
+err_merged_reads <- dada2::learnErrors(merged_reads, multithread=nthreads, randomize=TRUE)
 
 pdf(file.path(outdir, "dada_err.pdf"))
 dada2::plotErrors(err_merged_reads, nominalQ=TRUE)
 dev.off()
 
-#after dada2 has learned errors, user can denoise
+#denoise
 derepped <- dada2::derepFastq(merged_reads)
 dada_merged <- dada2::dada(derepped, err=err_merged_reads, pool='pseudo', multithread=nthreads)
 
-#Construct ASV
+#Construct ASV table
 seqtab <- dada2::makeSequenceTable(dada_merged)
+rownames(seqtab) <- sample.names
 
 write.table(seqtab, file.path(outdir, 'asv.tsv'), sep='\t')
 
+## write fasta with ASV representative seqs
 dna <-Biostrings::DNAStringSet(dada2::getSequences(seqtab))
 names(dna) <- sprintf(paste0('ASV%0',floor(log10(length(dna))) + 1,'d'),1:length(dna))
 
