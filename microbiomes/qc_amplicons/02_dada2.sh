@@ -1,6 +1,6 @@
 indir=$1
 outdir=$2
-ntasks=$3
+nthreads=$3
 
 mkdir -p ${outdir}/02_dada2/
 echo "bash $0 $@" > ${outdir}/02_dada2/this_command.sh
