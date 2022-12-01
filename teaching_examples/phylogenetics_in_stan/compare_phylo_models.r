@@ -63,14 +63,14 @@ all(round(cov_geiger,digits=5) == round(cov_pigshift,digits=5))
 
 ## analyze using geiger cov and stan model 1
 ## assumes working directory is 'phylogenetics_in_stan'
-model_stan1_geiger <- cmdstanr::cmdstan_model('01_gaussian_ou_fixed_precalc.stan')
-res_stan1_geiger <- model_stan1_geiger$sample(data = list(N_samples=N_samples, N_effects=ncol(model_matrix)+1, model_matrix=cbind(1,model_matrix), N_tips=N_tips, phy_cov=cov_geiger, idx_tips=idx_tips, y=as.vector(y)), parallel_chains=4)
+model_stan1 <- cmdstanr::cmdstan_model('01_gaussian_ou_fixed_precalc.stan')
+res_stan1_geiger <- model_stan1$sample(data = list(N_samples=N_samples, N_effects=ncol(model_matrix)+1, model_matrix=cbind(1,model_matrix), N_tips=N_tips, phy_cov=cov_geiger, idx_tips=idx_tips, y=as.vector(y)), parallel_chains=4)
 res_stan1_geiger$summary(variables=c('beta','sigma','sigma_phy'))
 
-## analyze using geiger cov and stan model 2 (should be same model, just calc the covariance within Stan)
-model_stan2_geiger <- cmdstanr::cmdstan_model('02_gaussian_ou_fixed_stancalc.stan')
-res_stan2_geiger <- model_stan2_geiger$sample(data = list(N_samples=N_samples, N_effects=ncol(model_matrix)+1, model_matrix=cbind(1,model_matrix), N_tips=N_tips, phy_dist=ape::cophenetic.phylo(mytree), phy_shared=phytools::findMRCA(mytree,type='height'), theta=theta_dv, idx_tips=idx_tips, y=as.vector(y)), parallel_chains=4)
-res_stan2_geiger$summary(variables=c('beta','sigma','sigma_phy'))
+## analyze using stan model 2 (should be same model, just calc the covariance within Stan)
+model_stan2 <- cmdstanr::cmdstan_model('02_gaussian_ou_fixed_stancalc.stan')
+res_stan2 <- model_stan2$sample(data = list(N_samples=N_samples, N_effects=ncol(model_matrix)+1, model_matrix=cbind(1,model_matrix), N_tips=N_tips, phy_dist=ape::cophenetic.phylo(mytree), phy_shared=phytools::findMRCA(mytree,type='height'), theta=theta_dv, idx_tips=idx_tips, y=as.vector(y)), parallel_chains=4)
+res_stan2$summary(variables=c('beta','sigma','sigma_phy'))
 
 ## analyze using stan model 3 (using the covariance calculations that we demonstrated in the previous model, but now we don't have to guess theta beforehand!)
 model_stan3 <- cmdstanr::cmdstan_model('03_gaussian_ou_est_theta_naive.stan')
@@ -82,5 +82,8 @@ model_stan4 <- cmdstanr::cmdstan_model('04_gaussian_ou_est_theta_naive_prior.sta
 res_stan4 <- model_stan4$sample(data = list(N_samples=N_samples, N_effects=ncol(model_matrix)+1, model_matrix=cbind(1,model_matrix), N_tips=N_tips, phy_dist=ape::cophenetic.phylo(mytree), phy_shared=phytools::findMRCA(mytree,type='height'), idx_tips=idx_tips, y=as.vector(y)), parallel_chains=4)
 res_stan4$summary(variables=c('beta','sigma','sigma_phy','theta'))
 
-
-
+## analyze using stan model 5 (explicitly model evolution with ancestral states, like a multilevel model)
+model_stan5 <- cmdstanr::cmdstan_model('05_gaussian_ou_multilevel.stan')
+res_stan5 <- model_stan5$sample(data = list(N_samples=N_samples, N_effects=ncol(model_matrix)+1, model_matrix=cbind(1,model_matrix), N_tips=N_tips, N_nodes=mytree$Nnode+N_tips, edge=mytree$edge, edge_lengths=mytree$edge.length, idx_tips=idx_tips, y=as.vector(y)), parallel_chains=4)
+res_stan5$summary(variables=c('beta','sigma','sigma_phy','theta'))
+## much faster (no covariance matrix decompositions), and you can get ancestral states!
