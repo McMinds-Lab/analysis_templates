@@ -37,11 +37,15 @@ sigma_phy <- 2
 sigma_resid <- 0.5
 intercept <- rnorm(1,0,10)
 
-## generate random data according to OU evolution with random intercept, and given tree, independent variables, and theta
+## generate random data according to OU evolution with given intercept, tree, independent variables, and theta
 y <- intercept + model_matrix %*% betas + castor::simulate_ou_model(mytree, 0, sigma_phy / sqrt(2*theta_dv), theta_dv, include_nodes=FALSE)$tip_states[idx_tips] + rnorm(N_samples,0,sigma_resid)
 
 ## combine data and model matrix
 dat <- data.frame(y=y, tip=as.factor(mytree$tip.label[idx_tips]), model_matrix)
+
+## analyze using phyr with Brownian species effect + nonphylogenetic species random effects (sort of a standard model)
+res_phyr_brownian <- phyr::pglmm(y ~ iv_1 + iv_2 + iv_3 + iv_4 + (1 | tip__), cov_ranef = list(tip = mytree), data=dat)
+summary(res_phyr_brownian)
 
 ## analyze using phyr with geiger-generated cov
 cov_geiger <- ape::vcv.phylo(geiger::rescale(mytree, 'OU', alpha = theta_dv, sigsq = 1))
