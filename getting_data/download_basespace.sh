@@ -1,5 +1,5 @@
 ## two positional arguments specifying 1) an run ID and 2) the output directory
-## run IDs can be found via 'bs list run' after loading loadhub.apps/basespace/april.2021
+## run IDs can be found via 'bs list run' after loading load hub.apps/basespace/april.2021
 
 runid=$1
 outdir=$2

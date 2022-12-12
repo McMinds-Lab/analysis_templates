@@ -3,7 +3,7 @@
 # https://discourse.mc-stan.org/t/rescaling-phylogenetic-tree-for-non-brownian-phylogenetic-models-in-brms/29637
 # https://bookdown.org/content/4857/adventures-in-covariance.html#example-phylogenetic-distance
 
-## code some simple examples of phylogenetic linear models in stan. progress from brownian model to OU model with fixed alpha to OU model with estimated alpha, then explore different parameterizations (simple vcv formula a la above code vs multilevel model with transformed branch lengths a la above code vs explicit evolutionary model with ancestral states.)
+## code some simple examples of phylogenetic linear models in stan. progress from brownian + iid model to OU model with fixed alpha to OU model with estimated alpha, then explore different parameterizations (simple vcv formula a la above code vs multilevel model with transformed branch lengths a la above code vs explicit evolutionary model with ancestral states.)
 
   
 ## define tree size, number of samples per tip, and mapping between samples and tree
@@ -13,7 +13,7 @@ N_samples <- N_tips * N_samples_per_tip
 idx_tips <- rep(1:N_tips, each = N_samples_per_tip)
 
 ## generate random tree
-mytree <- ape::chronos(ape::rtree(N_tips))
+mytree <- ape::reorder.phylo(ape::chronos(ape::rtree(N_tips)), 'postorder')
 
 ## generate sample traits for non-phylogenetic (unstructured) independent variables (assume standardized)
 N_iv_us <- 2
@@ -86,4 +86,5 @@ res_stan4$summary(variables=c('beta','sigma','sigma_phy','theta'))
 model_stan5 <- cmdstanr::cmdstan_model('05_gaussian_ou_multilevel.stan')
 res_stan5 <- model_stan5$sample(data = list(N_samples=N_samples, N_effects=ncol(model_matrix)+1, model_matrix=cbind(1,model_matrix), N_tips=N_tips, N_nodes=mytree$Nnode+N_tips, edge=mytree$edge, edge_lengths=mytree$edge.length, idx_tips=idx_tips, y=as.vector(y)), parallel_chains=4)
 res_stan5$summary(variables=c('beta','sigma','sigma_phy','theta'))
-## much faster (no covariance matrix decompositions), and you can get ancestral states!
+## much faster (no covariance matrix decompositions), and you can get ancestral states (beta_phy)!
+
