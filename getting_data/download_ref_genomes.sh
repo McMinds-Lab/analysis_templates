@@ -20,9 +20,12 @@ source activate ncbi_datasets
 
 cd ${outdir}
 
-datasets download genome accession --include genome,gtf,gbff,gff3,rna,cds,protein,seq-report --inputfile accession_list.txt
+datasets download genome accession --dehydrated --no-progressbar --include genome,gtf,gbff,gff3,rna,cds,protein,seq-report --inputfile accession_list.txt
 
 unzip ncbi_dataset.zip
+rm ncbi_dataset.zip
+
+datasets rehydrate --gzip --directory ncbi_dataset
 
 EOF
 
