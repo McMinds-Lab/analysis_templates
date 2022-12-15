@@ -1,3 +1,4 @@
+## requires bcl-convert (tested with v3.10.5), downloaded from https://support.illumina.com/sequencing/sequencing_software/bcl-convert/downloads.html (.rpm file can simply be unzipped and the binary inside is usable without any fancy installation)
 ## two positional arguments specifying 1) an input basecall directory and 2) the output directory
 
 indir=$1

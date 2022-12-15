@@ -1,3 +1,4 @@
+## requires basespace CLI (tested with v4.0.3), installation instructions here: https://developer.basespace.illumina.com/docs/content/documentation/cli/cli-overview
 ## two positional arguments specifying 1) an run ID and 2) the output directory
 ## run IDs can be found via 'bs list run' after loading load hub.apps/basespace/april.2021
 
