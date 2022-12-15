@@ -25,7 +25,7 @@ datasets download genome accession --dehydrated --no-progressbar --include genom
 unzip ncbi_dataset.zip
 rm ncbi_dataset.zip
 
-datasets rehydrate --gzip --directory ncbi_dataset
+datasets rehydrate --gzip --directory ./
 
 EOF
 
