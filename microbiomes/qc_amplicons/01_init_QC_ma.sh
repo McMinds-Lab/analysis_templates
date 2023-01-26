@@ -59,29 +59,13 @@ for file in ${indir}/*_R1_001.fastq.gz; do
     --fastqout - | gzip --best > ${outdir}/01_init_QC/merged/\${sampleid}.fastq.gz
     
   # quality trim reads that did not merge. might want to play with this quality threshold based on the avg quality of the reads
-  source activate cutadapt-3.5
-  cutadapt \
-    --cores=${nthreads} \
-    --quality-cutoff 20 \
-    --output ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_Q20t_R1.fastq \
-    --paired-output ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_Q20t_R2.fastq \
-    --untrimmed-output ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_Q20ut_R1.fastq \
-    --untrimmed-paired-output ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_Q20ut_R2.fastq\
-    ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R1.fastq \
-    ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R2.fastq
-
-  # add concatenated fwd and reverse reads that could not be merged but which had high-quality bases throughout the reads and thus were not trimmed (assuming that they are accurate but were not merged because they had a gap between reads)
-  source activate vsearch
   vsearch \
-    --fastq_join ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_Q20ut_R1.fastq \
-    --reverse ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_Q20ut_R2.fastq \
-    --join_padgap '' \
-    --fastqout - |
-  vsearch \
-    --fastx_filter - \
-    --fastq_maxns 0 \
-    --fastqout - |
-  gzip --best >> ${outdir}/01_init_QC/merged/\${sampleid}.fastq.gz
+    --threads ${nthreads} \
+    --fastx_filter ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R1.fastq \
+    --reverse ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R2.fastq \
+    --fastq_truncqual 20 \
+    --fastqout ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_Q20t_R1.fastq \
+    --fastqout_rev ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_Q20t_R2.fastq
   
   # retry merging reads that were quality trimmed
   vsearch \
