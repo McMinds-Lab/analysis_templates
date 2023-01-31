@@ -114,10 +114,10 @@ for file in ${indir}/*_R1_001.fastq.gz; do
     --fastqout ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_filt_R1.fastq \
     --fastqout_rev ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_filt_R2.fastq
     
-  vsearch \	
-    --fastq_join ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_filt_R1.fastq \	
-    --reverse ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_filt_R2.fastq \	
-    --join_padgap '' \	
+  vsearch \
+    --fastq_join ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_filt_R1.fastq \
+    --reverse ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_filt_R2.fastq \
+    --join_padgap '' \
     --fastqout - | gzip --best >> ${outdir}/01_init_QC/merged/\${sampleid}.fastq.gz
   
 done
