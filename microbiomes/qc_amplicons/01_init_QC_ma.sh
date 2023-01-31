@@ -97,7 +97,7 @@ for file in ${indir}/*_R1_001.fastq.gz; do
   
   echo "adding concatenated reads if they didnt merge but are good quality"
   
-  zcat ${outdir}/01_init_QC/merged/\${sampleid}.fastq.gz | awk 'NR%4==1 {print $1}' | cut -c 2- > ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_labels.txt
+  zcat ${outdir}/01_init_QC/merged/\${sampleid}.fastq.gz | awk 'NR%4==1 {print \$1}' | cut -c 2- > ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_labels.txt
   
   vsearch \
     --fastx_getseqs ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R1.fastq \
