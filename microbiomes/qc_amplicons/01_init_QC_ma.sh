@@ -1,4 +1,14 @@
-## five positional arguments specifying 1) directory with input fastqs, 2) forward primer sequence, 3) reverse primer sequence, 4) output directory, and 5) number of threads
+## five positional arguments specifying: 
+## 1) directory with input fastqs
+## 2) forward primer sequence
+## 3) reverse primer sequence
+## 4) output directory
+## 5) number of threads
+## 6) lower quality score threshold for iterative trimming and merging
+## 7) upper quality score threshold for iterative trimming and merging
+## 8) increment for iterative trimming and merging
+## 9) quality threshold to keep and concatenate unmerged read pairs (as percent of bases expected to be wrong in a read pair) 
+
 indir=$1
 primer_fwd=$2
 primer_rev=$3
