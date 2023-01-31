@@ -38,6 +38,7 @@ for file in ${indir}/*_R1_001.fastq.gz; do
   # trim primers and keep only the reads with the primers at exactly the beginning
   source activate cutadapt-3.5
   cutadapt \
+    -e 0.25 \
     --cores=${nthreads} \
     -g ^${primer_fwd} \
     -G ^${primer_rev} \
@@ -50,7 +51,7 @@ for file in ${indir}/*_R1_001.fastq.gz; do
   # merge paired-end reads such that short reads, where the read is longer than the insertion (such as mitochondria), are not discarded, and nucleotides are trimmed that extend past the beginning of the paired read (which are just adaptor sequences)
   source activate vsearch
   vsearch \
-    --threads ${nthreads}\
+    --threads ${nthreads} \
     --fastq_mergepairs ${outdir}/01_init_QC/trimmed/\${sampleid}_R1.fastq.gz \
     --reverse ${outdir}/01_init_QC/trimmed/\${sampleid}_R2.fastq.gz \
     --fastq_allowmergestagger \
@@ -70,7 +71,6 @@ for file in ${indir}/*_R1_001.fastq.gz; do
     
     # quality trim reads that did not merge. 
     vsearch \
-      --threads ${nthreads} \
       --fastx_filter ${outdir}/01_init_QC/merged/\${sampleid}_latest_R1.fastq \
       --reverse ${outdir}/01_init_QC/merged/\${sampleid}_latest_R2.fastq \
       --fastq_truncqual \${thresh} \
@@ -98,6 +98,7 @@ for file in ${indir}/*_R1_001.fastq.gz; do
 done
 
 rm ${outdir}/01_init_QC/merged/*unmerged*
+rm ${outdir}/01_init_QC/merged/*latest*
 
 EOF
 
