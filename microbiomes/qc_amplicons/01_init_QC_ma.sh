@@ -97,15 +97,19 @@ for file in ${indir}/*_R1_001.fastq.gz; do
   
   echo "adding concatenated reads if they didnt merge but are good quality"
   
+  zcat ${outdir}/01_init_QC/merged/\${sampleid}.fastq.gz | awk 'NR%4==1 {print $1}' | cut -c 2- > ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_labels.txt
+  
   vsearch \
     --fastx_getseqs ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R1.fastq \
-    --labels <(awk 'NR%4==1' ${outdir}/01_init_QC/merged/\${sampleid}_latest_R1.fastq | cut -c 2-) \
-    --fastqout ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_final_R1.fastq
+    --label_substr_match \
+    --labels ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_labels.txt \
+    --notmatchedfq ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_final_R1.fastq
     
   vsearch \
     --fastx_getseqs ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R2.fastq \
-    --labels <(awk 'NR%4==1' ${outdir}/01_init_QC/merged/\${sampleid}_latest_R2.fastq | cut -c 2-) \
-    --fastqout ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_final_R2.fastq
+    --label_substr_match \
+    --labels ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_labels.txt \
+    --notmatchedfq ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_final_R2.fastq
     
   vsearch \
     --fastx_filter ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_final_R1.fastq \
