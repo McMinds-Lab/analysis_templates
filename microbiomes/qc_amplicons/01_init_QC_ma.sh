@@ -94,7 +94,32 @@ for file in ${indir}/*_R1_001.fastq.gz; do
       mv -f ${outdir}/01_init_QC/merged/\${sampleid}_tmp_R2.fastq ${outdir}/01_init_QC/merged/\${sampleid}_latest_R2.fastq
       
   done
+  
+  echo "adding concatenated reads if they didnt merge but are good quality"
+  
+  vsearch \
+    --fastx_getseqs ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R1.fastq \
+    --labels <(awk 'NR%4==1' ${outdir}/01_init_QC/merged/\${sampleid}_latest_R1.fastq | cut -c 2-) \
+    --fastqout ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_final_R1.fastq
     
+  vsearch \
+    --fastx_getseqs ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R2.fastq \
+    --labels <(awk 'NR%4==1' ${outdir}/01_init_QC/merged/\${sampleid}_latest_R2.fastq | cut -c 2-) \
+    --fastqout ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_final_R2.fastq
+    
+  vsearch \
+    --fastx_filter ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_final_R1.fastq \
+    --reverse ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_final_R2.fastq \
+    --fastq_maxee_rate 0.1 \
+    --fastqout ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_filt_R1.fastq \
+    --fastqout_rev ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_filt_R2.fastq
+    
+  vsearch \	
+    --fastq_join ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_filt_R1.fastq \	
+    --reverse ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_filt_R2.fastq \	
+    --join_padgap '' \	
+    --fastqout - | gzip --best >> ${outdir}/01_init_QC/merged/\${sampleid}.fastq.gz
+  
 done
 
 rm ${outdir}/01_init_QC/merged/*unmerged*
