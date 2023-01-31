@@ -4,7 +4,9 @@ primer_fwd=$2
 primer_rev=$3
 outdir=$4
 nthreads=$5
-thresh=$6
+thresh_low=$6
+thresh_hi=$7
+thresh_inc=$8
 
 mkdir -p ${outdir}/01_init_QC
 echo "bash $0 $@" > ${outdir}/01_init_QC/this_command.sh
@@ -58,26 +60,40 @@ for file in ${indir}/*_R1_001.fastq.gz; do
     --fastqout_notmerged_fwd ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R1.fastq \
     --fastqout_notmerged_rev ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R2.fastq \
     --fastqout - | gzip --best > ${outdir}/01_init_QC/merged/\${sampleid}.fastq.gz
-    
-  # quality trim reads that did not merge. might want to play with this quality threshold based on the avg quality of the reads
-  vsearch \
-    --threads ${nthreads} \
-    --fastx_filter ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R1.fastq \
-    --reverse ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R2.fastq \
-    --fastq_truncqual ${thresh} \
-    --fastqout ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_Q20t_R1.fastq \
-    --fastqout_rev ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_Q20t_R2.fastq
   
-  # retry merging reads that were quality trimmed
-  vsearch \
-    --threads ${nthreads}\
-    --fastq_mergepairs ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_Q20t_R1.fastq \
-    --reverse ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_Q20t_R2.fastq \
-    --fastq_allowmergestagger \
-    --fastq_maxdiffs 1000 \
-    --fasta_width 0 \
-    --fastq_maxns 0 \
-    --fastqout - | gzip --best >> ${outdir}/01_init_QC/merged/\${sampleid}.fastq.gz
+  cp ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R1.fastq ${outdir}/01_init_QC/merged/\${sampleid}_latest_R1.fastq
+  cp ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R2.fastq ${outdir}/01_init_QC/merged/\${sampleid}_latest_R2.fastq
+  
+  for thresh in \{${thresh_low}..${thresh_hi}..${thresh_inc}}; do
+  
+    echo "Retrying merge after quality trimming with threshold \${thresh}"
+    
+    # quality trim reads that did not merge. 
+    vsearch \
+      --threads ${nthreads} \
+      --fastx_filter ${outdir}/01_init_QC/merged/\${sampleid}_latest_R1.fastq \
+      --reverse ${outdir}/01_init_QC/merged/\${sampleid}_latest_R2.fastq \
+      --fastq_truncqual \${thresh} \
+      --fastqout ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_Q\${thresh}t_R1.fastq \
+      --fastqout_rev ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_Q\${thresh}t_R2.fastq
+  
+    # retry merging reads that were quality trimmed
+    vsearch \
+      --threads ${nthreads}\
+      --fastq_mergepairs ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_Q\${thresh}t_R1.fastq \
+      --reverse ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_Q\${thresh}t_R2.fastq \
+      --fastq_allowmergestagger \
+      --fastq_maxdiffs 1000 \
+      --fasta_width 0 \
+      --fastq_maxns 0 \
+      --fastqout_notmerged_fwd ${outdir}/01_init_QC/merged/\${sampleid}_tmp_R1.fastq \
+      --fastqout_notmerged_rev ${outdir}/01_init_QC/merged/\${sampleid}_tmp_R2.fastq \
+      --fastqout - | gzip --best >> ${outdir}/01_init_QC/merged/\${sampleid}.fastq.gz
+      
+      mv -f ${outdir}/01_init_QC/merged/\${sampleid}_tmp_R1.fastq ${outdir}/01_init_QC/merged/\${sampleid}_latest_R1.fastq
+      mv -f ${outdir}/01_init_QC/merged/\${sampleid}_tmp_R2.fastq ${outdir}/01_init_QC/merged/\${sampleid}_latest_R2.fastq
+      
+  done
     
 done
 
