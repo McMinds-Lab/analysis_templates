@@ -4,6 +4,7 @@ primer_fwd=$2
 primer_rev=$3
 outdir=$4
 nthreads=$5
+thresh=$6
 
 mkdir -p ${outdir}/01_init_QC
 echo "bash $0 $@" > ${outdir}/01_init_QC/this_command.sh
@@ -63,7 +64,7 @@ for file in ${indir}/*_R1_001.fastq.gz; do
     --threads ${nthreads} \
     --fastx_filter ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R1.fastq \
     --reverse ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R2.fastq \
-    --fastq_truncqual 10 \
+    --fastq_truncqual ${thresh} \
     --fastqout ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_Q20t_R1.fastq \
     --fastqout_rev ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_Q20t_R2.fastq
   
