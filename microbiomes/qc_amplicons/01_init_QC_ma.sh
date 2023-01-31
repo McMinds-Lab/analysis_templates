@@ -7,6 +7,7 @@ nthreads=$5
 thresh_low=$6
 thresh_hi=$7
 thresh_inc=$8
+maxee_rate=$9
 
 mkdir -p ${outdir}/01_init_QC
 echo "bash $0 $@" > ${outdir}/01_init_QC/this_command.sh
@@ -114,7 +115,7 @@ for file in ${indir}/*_R1_001.fastq.gz; do
   vsearch \
     --fastx_filter ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_final_R1.fastq \
     --reverse ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_final_R2.fastq \
-    --fastq_maxee_rate 0.1 \
+    --fastq_maxee_rate ${maxee_rate} \
     --fastqout ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_filt_R1.fastq \
     --fastqout_rev ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_filt_R2.fastq
     
