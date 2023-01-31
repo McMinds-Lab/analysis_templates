@@ -63,7 +63,7 @@ for file in ${indir}/*_R1_001.fastq.gz; do
     --threads ${nthreads} \
     --fastx_filter ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R1.fastq \
     --reverse ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R2.fastq \
-    --fastq_truncqual 20 \
+    --fastq_truncqual 30 \
     --fastqout ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_Q20t_R1.fastq \
     --fastqout_rev ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_Q20t_R2.fastq
   
