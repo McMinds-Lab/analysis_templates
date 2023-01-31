@@ -64,7 +64,7 @@ for file in ${indir}/*_R1_001.fastq.gz; do
   cp ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R1.fastq ${outdir}/01_init_QC/merged/\${sampleid}_latest_R1.fastq
   cp ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R2.fastq ${outdir}/01_init_QC/merged/\${sampleid}_latest_R2.fastq
   
-  for thresh in \{${thresh_low}..${thresh_hi}..${thresh_inc}}; do
+  for thresh in {${thresh_low}..${thresh_hi}..${thresh_inc}}; do
   
     echo "Retrying merge after quality trimming with threshold \${thresh}"
     
