@@ -7,7 +7,7 @@
 ## 6) lower quality score threshold for iterative trimming and merging
 ## 7) upper quality score threshold for iterative trimming and merging
 ## 8) increment for iterative trimming and merging
-## 9) quality threshold to keep and concatenate unmerged read pairs (as percent of bases expected to be wrong in a read pair) 
+## 9) quality threshold to keep and concatenate unmerged read pairs (as fraction of bases expected to be wrong in a read pair, including 0 to mean do not concatenate or 1 to mean concatenate all, or 'fwd' to mean just keep the fwd read) 
 
 indir=$1
 primer_fwd=$2
@@ -78,7 +78,7 @@ for file in ${indir}/*_R1_001.fastq.gz; do
   
   for thresh in {${thresh_low}..${thresh_hi}..${thresh_inc}}; do
   
-    echo "Retrying merge after quality trimming with threshold \${thresh}"
+    echo "Retrying merge after quality trimming with threshold \${thresh}\n"
     
     # quality trim reads that did not merge. 
     vsearch \
@@ -106,34 +106,56 @@ for file in ${indir}/*_R1_001.fastq.gz; do
       
   done
   
-  echo "adding concatenated reads if they didnt merge but are good quality"
+  if [ "${maxee_rate}" = 0 ]; then
   
-  zcat ${outdir}/01_init_QC/merged/\${sampleid}.fastq.gz | awk 'NR%4==1 {print \$1}' | cut -c 2- > ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_labels.txt
+    echo 'discarding unmerged reads\n'
+
+  else 
   
-  vsearch \
-    --fastx_getseqs ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R1.fastq \
-    --label_substr_match \
-    --labels ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_labels.txt \
-    --notmatchedfq ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_final_R1.fastq
+    zcat ${outdir}/01_init_QC/merged/\${sampleid}.fastq.gz | awk 'NR%4==1 {print \$1}' | cut -c 2- > ${outdir}/01_init_QC/merged/\${sampleid}_merged_labels.txt
+  
+    if [ "${maxee_rate}" = "fwd" ]; then
+  
+      echo 'adding unmerged forward reads\n'
+      
+      vsearch \
+        --fastx_getseqs ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R1.fastq \
+        --label_substr_match \
+        --labels ${outdir}/01_init_QC/merged/\${sampleid}_merged_labels.txt \
+        --notmatchedfq - | gzip --best >> ${outdir}/01_init_QC/merged/\${sampleid}.fastq.gz
+
+    else
+
+      echo "adding concatenated reads if they didnt merge but are good quality\n"
     
-  vsearch \
-    --fastx_getseqs ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R2.fastq \
-    --label_substr_match \
-    --labels ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_labels.txt \
-    --notmatchedfq ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_final_R2.fastq
+      vsearch \
+        --fastx_getseqs ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R1.fastq \
+        --label_substr_match \
+        --labels ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_labels.txt \
+        --notmatchedfq ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_final_R1.fastq
     
-  vsearch \
-    --fastx_filter ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_final_R1.fastq \
-    --reverse ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_final_R2.fastq \
-    --fastq_maxee_rate ${maxee_rate} \
-    --fastqout ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_filt_R1.fastq \
-    --fastqout_rev ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_filt_R2.fastq
+      vsearch \
+        --fastx_getseqs ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R2.fastq \
+        --label_substr_match \
+        --labels ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_labels.txt \
+        --notmatchedfq ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_final_R2.fastq
     
-  vsearch \
-    --fastq_join ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_filt_R1.fastq \
-    --reverse ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_filt_R2.fastq \
-    --join_padgap '' \
-    --fastqout - | gzip --best >> ${outdir}/01_init_QC/merged/\${sampleid}.fastq.gz
+      vsearch \
+        --fastx_filter ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_final_R1.fastq \
+        --reverse ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_final_R2.fastq \
+        --fastq_maxee_rate ${maxee_rate} \
+        --fastqout ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_filt_R1.fastq \
+        --fastqout_rev ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_filt_R2.fastq
+    
+      vsearch \
+        --fastq_join ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_filt_R1.fastq \
+        --reverse ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_filt_R2.fastq \
+        --join_padgap '' \
+        --fastqout - | gzip --best >> ${outdir}/01_init_QC/merged/\${sampleid}.fastq.gz
+  
+    fi
+  
+  fi
   
 done
 
