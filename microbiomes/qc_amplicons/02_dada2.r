@@ -19,7 +19,7 @@ dada2::plotQualityProfile(filt_reads[1:10])
 dev.off()
 
 # only reads as many samples as needed to get to 1e8 bases (can be changed), with samples randomized
-err_merged_reads <- dada2::learnErrors(filt_reads, multithread = nthreads, randomize = TRUE, MAX_CONSIST = 30, verbose = 2)
+err_merged_reads <- dada2::learnErrors(filt_reads, multithread = nthreads, randomize = TRUE, MAX_CONSIST = 30, pool = 'pseudo')
 
 pdf(file.path(outdir, "dada_err.pdf"))
 dada2::plotErrors(err_merged_reads, nominalQ=TRUE)
