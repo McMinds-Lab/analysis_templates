@@ -12,7 +12,7 @@ sample.names <- sub('.fastq.gz', '', basename(merged_reads))
 
 filt_reads <- file.path(outdir, "filtered", basename(merged_reads))
 # filter out reads that are probably just primer dimer
-filt <- dada2::filterAndTrim(merged_reads, filt_reads, minLen = 50, compress = TRUE, multithread = nthreads)
+filt <- dada2::filterAndTrim(merged_reads, filt_reads, truncQ = 0, minLen = 50, compress = TRUE, multithread = nthreads)
 
 png(file.path(outdir, "quality_profile.png"), height=600, width=600)
 dada2::plotQualityProfile(filt_reads[1:10])
