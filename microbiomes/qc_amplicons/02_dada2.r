@@ -10,7 +10,7 @@ outdir <- args[[3]]
 merged_reads <- sort(list.files(indir, pattern = ".fastq.gz", full.names = TRUE))
 sample.names <- sub('.fastq.gz', '', basename(merged_reads))
 
-filt_reads <- file.path(indir, "filtered", basename(merged_reads))
+filt_reads <- file.path(outdir, "filtered", basename(merged_reads))
 # filter out reads that are probably just primer dimer
 filt <- dada2::filterAndTrim(merged_reads, filt_reads, minLen = 50, compress = TRUE, multithread = nthreads)
 
