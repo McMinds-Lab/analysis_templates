@@ -1,0 +1,7 @@
+name: download_ncbi_genomes
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - ncbi-datasets-cli=14.6.1=ha770c72_0

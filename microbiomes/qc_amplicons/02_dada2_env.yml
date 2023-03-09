@@ -1,0 +1,8 @@
+name: 02_dada2
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - r-base=4.2.2
+  - bioconductor-dada2=1.26.0

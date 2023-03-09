@@ -1,0 +1,8 @@
+name: 01_init_QC
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - vsearch=2.18.0=h95f258a_0
+  - cutadapt=3.5=py39h38f01e4_0
