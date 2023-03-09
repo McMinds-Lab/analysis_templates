@@ -1,3 +1,6 @@
+## indir should point to the merged reads folder
+## outdir should point to the top level of the output directory
+
 indir=$1
 outdir=$2
 nthreads=$3

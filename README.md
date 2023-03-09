@@ -35,6 +35,10 @@ Linear models / GLMMs
 ___
 https://trialsjournal.biomedcentral.com/articles/10.1186/s13063-022-06097-z
 
+Good analysis of how stats are related to causal inference
+___
+[Inferring Multiple Causality: The Limitations of Path Analysis](https://www.jstor.org/stable/pdf/2389934.pdf?refreqid=excelsior%3A510214cf80f9fb879aaee87301ea1e5d&ab_segments=&origin=&initiator=&acceptTC=1)
+
 Coding
 ===
 In R
