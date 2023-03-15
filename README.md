@@ -1,11 +1,10 @@
-Analysis templates
-===
+# Analysis templates
 Standard lab protocols, recommendations, and a collection of scripts for basic data processing, analysis and visualization, to be modified as necessary for different projects
 
-Organization
-===
-File structure (Mise en place)
-___
+## Organization
+
+### File structure (Mise en place)
+
 This is something I'm actively optimizing and learning about, so my strategy might not exactly be a gold strategy, but it is extremely important to at least be thinking about!
 
 Primary principles:
@@ -17,41 +16,41 @@ Primary principles:
     - Order scripts by starting their filenames with a 2-digit number (e.g. 01_sequencing_qc.sh)
     - Have each script place all its outputs (including log files) in a folder with the same name as the script, within the overall output directory specified by the user
 
-Resources
-===
+## Resources
+
 Here's a list of resources my students and I have found useful for learning the science and code:
 
-GitHub itself:
-===
+### GitHub itself:
+
 https://osf.io/preprints/metaarxiv/x3p2q/
 
-Stats
-===
-General principles and great examples
-___
-https://betanalpha.github.io/
+### Stats
 
-Linear models / GLMMs
-___
-https://trialsjournal.biomedcentral.com/articles/10.1186/s13063-022-06097-z
+[General principles and great examples](https://betanalpha.github.io/)
 
-Good analysis of how stats are related to causal inference
-___
+[Linear models / GLMMs](https://trialsjournal.biomedcentral.com/articles/10.1186/s13063-022-06097-z)
+
+#### Good analysis of how stats are related to causal inference
+
 [Inferring Multiple Causality: The Limitations of Path Analysis](https://www.jstor.org/stable/pdf/2389934.pdf?refreqid=excelsior%3A510214cf80f9fb879aaee87301ea1e5d&ab_segments=&origin=&initiator=&acceptTC=1)
 
-Coding
-===
-In R
-___
+### Coding
+
+#### Shell and general HPC use
+
+[HPC Best Practices](https://arxiv.org/abs/2101.06737)
+
+#### In R
+
 https://nyu-cdsc.github.io/learningr/assets/simulation.pdf  
 https://intro2r.com/  
 https://www.codecademy.com/learn/learn-r  
 
-In Stan
-___
+#### In Stan
+
 https://betanalpha.github.io/  
 
-In Markdown
-___
+#### In Markdown
+
 https://www.markdownguide.org/basic-syntax/  
 
