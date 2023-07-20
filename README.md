@@ -23,7 +23,7 @@ Here's a list of resources my students and I have found useful for learning the 
 ### GitHub itself:
 
 [Not just for programmers: How GitHub can accelerate collaborative and reproducible research in ecology and evolution](https://osf.io/preprints/metaarxiv/x3p2q/)
-
+<br>
 [An entire paper written and edited directly on GitHub](https://github.com/ERC-Subsilience/Axlor_paleoclimatic_data/blob/main/generate_article/rmarkdown/Pederzani_Axlor_Main_Text.Rmd)
 
 ### Stats
