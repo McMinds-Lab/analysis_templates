@@ -8,7 +8,7 @@ outdir=$2
 mkdir -p ${outdir}/logs
 
 module purge
-module load hub.apps/anaconda3
+module load hub.apps/anaconda3/2020.11
 source activate entrez-direct
 
 esearch -db sra -query ${srp} | efetch -format runinfo > ${outdir}/runInfo.csv
@@ -33,7 +33,7 @@ subdir=\$(grep \${sample} ${outdir}/runInfo.csv | cut -d ',' -f 13)
 mkdir -p ${outdir}/\${subdir}/\${sample}
 
 module purge
-module load hub.apps/anaconda3
+module load hub.apps/anaconda3/2020.11
 source activate entrez-direct
 
 ## make sure the web requests of all array jobs aren't submitted at once

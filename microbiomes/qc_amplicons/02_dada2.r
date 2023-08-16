@@ -36,7 +36,7 @@ rownames(seqtab) <- sample.names
 write.table(seqtab, file.path(outdir, 'asv.tsv'), sep='\t')
 
 ## write fasta with ASV representative seqs
-dna <-Biostrings::DNAStringSet(dada2::getSequences(seqtab))
+dna <- Biostrings::DNAStringSet(dada2::getSequences(seqtab))
 names(dna) <- sprintf(paste0('ASV%0',floor(log10(length(dna))) + 1,'d'),1:length(dna))
 
 Biostrings::writeXStringSet(dna, file.path(outdir, 'ASVs.fasta.gz'), compress = TRUE, format = 'fasta', width = 10000)
