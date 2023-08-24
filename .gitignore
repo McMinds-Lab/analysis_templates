@@ -5,3 +5,4 @@
 *.hpp
 *prepare_path.sh
 *slurm_params.sh
+*.Rhistory
