@@ -4,7 +4,6 @@
 srp=$1
 outdir=$2
 slurm_params=$3
-prepare_path=$4
 
 ## input error checking
 if [ $# -lt 3 ]; then
@@ -13,11 +12,15 @@ fi
 
 ## if tools are not automatically in path, put them there
 if [ $# -eq 4 ]; then
+  prepare_path=$4
   source ${prepare_path}
 fi
 
 ## this tells the script where to find this file and download_SRA_sample.sh
-scriptdir=$(dirname "$(realpath -s "$0")")
+scriptdir=$(dirname "$(realpath "$0")")
+
+## prepare output directory
+mkdir -p ${outdir}
 
 ## download a list of samples, and some of their metadata, associated with the specified project
 esearch -db sra -query ${srp} | efetch -format runinfo > ${outdir}/runInfo.csv

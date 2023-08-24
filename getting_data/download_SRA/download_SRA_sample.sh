@@ -2,10 +2,10 @@
 sample=$1
 biosample=$2
 outdir=$3
-prepare_path=$4
 
 ## if tools are not automatically in path, put them there
 if [ $# -eq 4 ]; then
+  prepare_path=$4
   source ${prepare_path}
 fi
 
