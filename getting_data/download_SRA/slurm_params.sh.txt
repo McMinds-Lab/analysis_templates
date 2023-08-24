@@ -4,13 +4,8 @@ email=yourname@yourdomain.com
 nthreads=20
 
 ## max ram
-maxram=20G
+mem=20G
 
 ## what slurm partition and qos do you want to use
 partition=rra
 qos=rra
-
-autorun=true
-
-## this tells the scripts where to find this file
-scriptdir=$(dirname "$(realpath -s "$0")")

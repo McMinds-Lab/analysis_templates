@@ -1,0 +1,8 @@
+export PATH=/path/to/sra_toolkit_binaries:/path/to/entrez_direct_binaries:${PATH}
+
+## OR
+
+module purge
+module load hub.apps/anaconda3/2020.11
+source activate entrez-direct
+module load apps/sratoolkit/2.10.7

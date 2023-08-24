@@ -3,3 +3,5 @@
 *DS_Store
 .Rapp.history
 *.hpp
+*prepare_path.sh
+*slurm_params.sh
