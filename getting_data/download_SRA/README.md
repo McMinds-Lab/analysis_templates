@@ -20,5 +20,7 @@ download the sequences and metadata from a single sample, when the software is a
 
 to keep a log of the script's output, try something like:
 
-`mkdir -p destination_directory/logs`
-`bash download_SRA_project.sh (options) | tee destination_directory/logs/download_SRA_project.log`
+```
+mkdir -p destination_directory/logs
+bash download_SRA_project.sh (options) | tee destination_directory/logs/download_SRA_project.log
+```
