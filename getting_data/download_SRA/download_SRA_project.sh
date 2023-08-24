@@ -35,7 +35,7 @@ if [ ${slurm_params} != "false" ]; then
 mkdir -p ${outdir}/logs
 
 # get slurm parameters
-source slurm_params.txt
+source ${slurm_params}
 
 cat <<EOF > ${outdir}/download_SRA_samples.sbatch
 #!/bin/bash
@@ -58,7 +58,7 @@ if [ \$SLURM_ARRAY_TASK_ID -lt ${nthreads:-1} ]; then
   sleep \$((\$SLURM_ARRAY_TASK_ID * 10))
 fi
 
-bash ${scriptdir}/download_SRA_sample.sh \${sample} \${biosample} ${subdir} ${prepare_path}
+bash ${scriptdir}/download_SRA_sample.sh \${sample} \${biosample} \${subdir} ${prepare_path}
 
 EOF
 
