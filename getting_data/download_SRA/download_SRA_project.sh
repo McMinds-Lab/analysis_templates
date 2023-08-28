@@ -11,7 +11,7 @@ if [ $# -lt 3 ]; then
 fi
 
 ## if tools are not automatically in path, put them there
-if [ $# -eq 4 ]; then
+if [ $# -ge 4 ]; then
   prepare_path=$4
   source ${prepare_path}
 fi
@@ -31,38 +31,40 @@ samples=($(grep SRR ${outdir}/runInfo.csv | cut -d ',' -f 1))
 ## require the explicit input of 'false' to enable for-loop
 if [ ${slurm_params} != "false" ]; then
 
-## create a logs directory
-mkdir -p ${outdir}/logs
+  ## create a logs directory
+  mkdir -p ${outdir}/logs
 
-# get slurm parameters
-source ${slurm_params}
+  # get slurm parameters
+  source ${slurm_params}
 
-cat <<EOF > ${outdir}/download_SRA_samples.sbatch
-#!/bin/bash
-#SBATCH --qos=${qos:-rra}
-#SBATCH --partition=${partition:-rra}
-#SBATCH --time=${time:-6-00:00:00}
-#SBATCH --mem=${mem:-1G}
-#SBATCH --job-name=${job_name:-download_SRA_project}
-#SBATCH --output=${outdir}/logs/download_SRA_project_%a.log
-#SBATCH --array=0-$((${#samples[@]}-1))%${nthreads:-1}
+  ## create a slrum submission script (strip indentation with sed before saving)
+  cat <<__EOF | sed -e 's/^  //' > ${outdir}/download_SRA_samples.sbatch
+  #!/bin/bash
+  #SBATCH --qos=${qos:-rra}
+  #SBATCH --partition=${partition:-rra}
+  #SBATCH --time=${time:-6-00:00:00}
+  #SBATCH --mem=${mem:-1G}
+  #SBATCH --job-name=${job_name:-download_SRA_project}
+  #SBATCH --output=${outdir}/logs/download_SRA_project_%a.log
+  #SBATCH --array=0-$((${#samples[@]}-1))%${nthreads:-1}
 
-## use task ID to assign each batch job a single unique sample
-samples=(${samples[@]})
-sample=\${samples[\$SLURM_ARRAY_TASK_ID]}
-biosample=\$(grep \${sample} ${outdir}/runInfo.csv | cut -d ',' -f 26)
-subdir=${outdir}/\$(grep \${sample} ${outdir}/runInfo.csv | cut -d ',' -f 13)
+  ## use task ID to assign each batch job a single unique sample
+  samples=(${samples[@]})
+  sample=\${samples[\$SLURM_ARRAY_TASK_ID]}
+  biosample=\$(grep \${sample} ${outdir}/runInfo.csv | cut -d ',' -f 26)
+  subdir=${outdir}/\$(grep \${sample} ${outdir}/runInfo.csv | cut -d ',' -f 13)
 
-## make sure the web requests of all array jobs aren't submitted at once
-if [ \$SLURM_ARRAY_TASK_ID -lt ${nthreads:-1} ]; then
-  sleep \$((\$SLURM_ARRAY_TASK_ID * 10))
-fi
+  ## make sure the web requests of all array jobs aren't submitted at once
+  if [ \$SLURM_ARRAY_TASK_ID -lt ${nthreads:-1} ]; then
+    sleep \$((\$SLURM_ARRAY_TASK_ID * 10))
+  fi
 
-bash ${scriptdir}/download_SRA_sample.sh \${sample} \${biosample} \${subdir} ${prepare_path}
+  bash ${scriptdir}/download_SRA_sample.sh \${sample} \${biosample} \${subdir} ${prepare_path}
 
-EOF
+__EOF
 
-sbatch ${outdir}/download_SRA_samples.sbatch
+  ## submit array job to slurm
+  sbatch ${outdir}/download_SRA_samples.sbatch
 
 else
 

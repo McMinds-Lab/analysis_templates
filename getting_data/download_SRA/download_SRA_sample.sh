@@ -18,8 +18,8 @@ esearch -db biosample -query ${biosample} | efetch -format xml > ${outdir}/${sam
 ## download raw sequences from sample
 fasterq-dump -e 1 ${sample} -t ${outdir}/${sample} -O ${outdir}/${sample}
 
-## compress sequence file
+## compress sequence file (in parallel)
 for file in ${outdir}/${sample}/*.fastq; do
   gzip --best ${file} &
 done
-wait
+wait ## this is needed so that the script does not finish before the subshells created with '&' are finished
