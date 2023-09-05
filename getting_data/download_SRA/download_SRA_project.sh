@@ -17,7 +17,7 @@ if [ $# -ge 4 ]; then
 fi
 
 ## this tells the script where to find this file and download_SRA_sample.sh
-scriptdir=$(dirname "$(readlink -f "$0")")
+scriptdir=$(dirname $( cd "$(dirname "$0")" ; pwd -P ))
 
 ## prepare output directory
 mkdir -p ${outdir}

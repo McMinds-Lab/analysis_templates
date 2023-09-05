@@ -22,9 +22,9 @@ model_dir <- newargs[[12]]
 algorithm <- newargs[[13]]
 ##
 
-rownames(seqtab) <- sapply(rownames(seqtab), function(x) samplenames$Sample[samplenames$Tag == sub('.fastq.gz','',sub('-',':',x))])
+rownames(seqtab) <- sapply(rownames(seqtab), \(x) samplenames$Sample[samplenames$Tag == sub('.fastq.gz','',sub('-',':',x))])
 seqtab_F <- seqtab[grep('UFL',rownames(seqtab)),]
-seqtab_M <- t(sapply(unique(sub('_.*','',rownames(seqtab_F))), function(x) apply(seqtab_F[grep(x,rownames(seqtab_F)),], 2, sum)))
+seqtab_M <- t(sapply(unique(sub('_.*','',rownames(seqtab_F))), \(x) apply(seqtab_F[grep(x,rownames(seqtab_F)),], 2, sum)))
 
 metadat$id_argaly <- id_conversion$id_argaly[match(metadat$ID..Alison, id_conversion$id_alison)]
 m2 <- metadat[match(rownames(seqtab_M),metadat$id_argaly),]
@@ -96,7 +96,7 @@ NS <- ncol(counts)
 NF <- nrow(counts)
 
 X_s <- cbind(Intercept=1, model.matrix(~ 0 + Location, m2)) ## standardize continuous variables before placing in model
-X_s[,-1] <- apply(X_s[,-1], 2, function(x) x - mean(x))
+X_s[,-1] <- apply(X_s[,-1], 2, \(x) x - mean(x))
 rownames(X_s) <- rownames(m2)
 X_s <- X_s[colnames(counts),]
 
@@ -105,33 +105,33 @@ NSB <- max(idx_s)
 NB_s <- length(idx_s)
 
 ## work on this section to make sure columns are unique and so that taxa are filtered out if they apply to ALL samples as well as none
-int_taxid <- cbind('Intercept',unique(taxid))
-estimables <- lapply(2:(ncol(int_taxid)-1), function(x) {
+int_taxid <- cbind('Intercept', unique(taxid))
+estimables <- lapply(2:(ncol(int_taxid)-1), \(x) {
   y <- unique(int_taxid[,1:x])
-  keepers <- apply(y, 1, function(z) sum(apply(y[,1:(x-1),drop=F],1, function(r) identical(z[1:(x-1)],r))) > 1 & !is.na(z[[x]]))
+  keepers <- apply(y, 1, \(z) sum(apply(y[,1:(x-1),drop=F],1, \(r) identical(z[1:(x-1)],r))) > 1 & !is.na(z[[x]]))
   return(unname(y[keepers,x]))
 })
 
-X_f <- cbind(Intercept=1, do.call(cbind, sapply(1:length(estimables), function(x) sapply(estimables[[x]], function(y) as.numeric(taxid[,x] == y)))))
+X_f <- cbind(Intercept=1, do.call(cbind, sapply(1:length(estimables), \(x) sapply(estimables[[x]], \(y) as.numeric(taxid[,x] == y)))))
 rownames(X_f) <- rownames(taxid)
 X_f <- X_f[rownames(counts),]
 X_f[is.na(X_f)] <- 0
 mode(X_f) <- 'numeric'
 X_f_nonUnique <- colSums(X_f)>1 & !duplicated(t(X_f))
 X_f <- X_f[,X_f_nonUnique]
-X_f[,-1] <- apply(X_f[,-1], 2, function(x) x-mean(x))
+X_f[,-1] <- apply(X_f[,-1], 2, \(x) x-mean(x))
 ##
 
 ## order the samples and features such that the ones that seem to define latent dims are first to be constrained in the cholesky factor
 counts_rlog <- DESeq2::rlog(counts)
-counts_rlog_centered <- t(apply(apply(counts_rlog,2,function(x) x-mean(x)),1,function(x) x-mean(x)))
-counts_rlog_standard <- t(apply((apply(apply(counts_rlog_centered,1,function(x) x/sd(x)),1,function(x) x/sd(x))),1,function(x) x/sd(x)))
+counts_rlog_centered <- t(apply(apply(counts_rlog, 2, \(x) x-mean(x)), 1, \(x) x-mean(x)))
+counts_rlog_standard <- t(apply((apply(apply(counts_rlog_centered, 1, \(x) x/sd(x)), 1, \(x) x/sd(x))), 1, \(x) x/sd(x)))
 counts_rlog_residuals <- counts_rlog_standard - X_f %*% MASS::ginv(X_f) %*% counts_rlog_standard %*% t(X_s %*% MASS::ginv(X_s))
 pr <- prcomp(counts_rlog_residuals)$rotation
 sampleOrder <- vector('numeric')
 sampsLeft <- rownames(pr)
 for(i in 1:(ncol(pr)-1)) {
-  winner <- which.max(apply(pr[sampsLeft,i:ncol(pr)],1,function(x) abs(x[1]) / sqrt(sum(x^2))))
+  winner <- which.max(apply(pr[sampsLeft,i:ncol(pr)],1, \(x) abs(x[1]) / sqrt(sum(x^2))))
   sampleOrder <- c(sampleOrder, sampsLeft[winner])
   sampsLeft <- sampsLeft[-winner]
 }
@@ -140,7 +140,7 @@ counts <- counts[,sampleOrder]
 X_s <- X_s[colnames(counts),]
 ##
 
-idx_f = c(1, rep(2,ncol(X_f)-1))
+idx_f = c(1, rep(2, ncol(X_f)-1))
 NFB   = max(idx_f)
 NB_f  = length(idx_f)
 
@@ -148,8 +148,8 @@ countsbin <- t(as.matrix(counts))
 countsbin[countsbin > 0] <- 1
 
 prior_scale_p <- sqrt(exp(mean(log(apply(countsbin,2,var)[apply(countsbin,2,var) > 0]))))
-counts_clr <- apply(log(counts), 2, function(x) x-mean(x[!is.infinite(x)]))
-logfscales <- log(apply(counts_clr,1,function(x) var(x[!is.infinite(x)])))
+counts_clr <- apply(log(counts), 2, \(x) x-mean(x[!is.infinite(x)]))
+logfscales <- log(apply(counts_clr,1,\(x) var(x[!is.infinite(x)])))
 prior_scale_a <- sqrt(exp(mean(logfscales[!is.na(logfscales)])))
 
 standat <- list(NS            = NS,
@@ -178,10 +178,10 @@ inits <- list(global_scale_prevalence = 0.1,
               beta_abundance_s        = matrix(0,NB_s+K_s,NF),
               beta_abundance_f        = matrix(0,NS,NB_f-1),
               residuals               = matrix(0,NS,NF),
-              multinomial_nuisance    = apply(counts,2,function(x) weighted.mean(c(log(mean(x)), mean(log(x[x>0]))),c(sum(x==0),sum(x>0)))),
+              multinomial_nuisance    = apply(counts,2, \(x) weighted.mean(c(log(mean(x)), mean(log(x[x>0]))),c(sum(x==0),sum(x>0)))),
               L_s                     = diag(1,NS,K_s))
 
-relabund <- apply(counts, 2, function(x) x / sum(x))
+relabund <- apply(counts, 2, \(x) x / sum(x))
 
 save.image(file.path(outdir, 'zip_glm', 'zip_glm_setup.RData'))
 
