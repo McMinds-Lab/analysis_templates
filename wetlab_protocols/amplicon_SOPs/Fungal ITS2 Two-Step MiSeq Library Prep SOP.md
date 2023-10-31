@@ -37,8 +37,8 @@ Sample DNA
 | 72 | 90s | end repeat |
 | 72 | 10 min | --- |
 
-5. Run 10 uL of all samples and negative controls on a 1% low melting-point agarose gel with the 10 uL well comb. Add loading dye directly to the PCR tubes and mix by pipetting, then space samples every OTHER well (multichannel pipet should work for this in the big gel rig). Run samples until the bacteria-mitochondria double band is separated by at least half a centimeter (if applicable), and isolate the bacterial band (or location where it should be) with a 1000 µL pipette tip.
-7. Perform second PCR, this time adding 12.5 µL ToughMix and 9.5 µL water directly to each well, then 1 µL of each of the appropriate index primers directly to each well, and swirling therein the pipette tip with gel residue / PCR product from the first amplification. Run the thermocycler program "Adaptor -> Indexed":
+5. Run 10 uL of all samples and negative controls on a 1% low melting-point agarose gel with the 10 uL well comb. Add loading dye directly to the PCR tubes and mix by pipetting, then space samples every OTHER well (multichannel pipet should work for this in the big gel rig).
+7. Perform second PCR, this time adding 12.5 µL ToughMix and 9.5 µL water directly to each well, then 1 µL of each of the appropriate index primers directly to each well, and swirling therein the pipette tip with PCR product from the first amplification. Run the thermocycler program "Adaptor -> Indexed":
 
 | Temperature (°C) | Time | --- |
 | --- | --- | --- |
