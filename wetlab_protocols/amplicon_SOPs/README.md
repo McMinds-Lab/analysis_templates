@@ -1,4 +1,4 @@
-#Basic Principles
+# Basic Principles
 Amplified DNA is a major risk for cross-contamination of unamplified DNA. Many opinion papers cover basic protocols (which I should collate here in the future), but for now:
 
 1. it is best to set up PCRs in a positive-flow hood. Once your template DNA is diluted into a PCR mixture, it is at risk of being contaminated.
