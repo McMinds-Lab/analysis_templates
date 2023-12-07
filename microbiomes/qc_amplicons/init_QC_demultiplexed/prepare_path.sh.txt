@@ -1,0 +1,8 @@
+export PATH=/path/to/cutadapt:/path/to/vsearch:${PATH}
+
+## OR
+
+module purge
+module load hub.apps/anaconda3/2020.11
+alias cutadapt='source activate cutadapt-3.5; cutadapt'
+alias vsearch='source activate vsearch; vsearch'
