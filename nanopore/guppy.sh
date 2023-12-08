@@ -3,4 +3,6 @@
 
 ## this should be implied by the choice of config: --flowcell FLO-MIN114 --kit SQK-LSK114 -m /Users/Ryan/scripts/ont-guppy-cpu/data/template_r10.4.1_e8.2_400bps_5khz_fast.jsn
 
-## better in future to use dorado and duplex basecalling...
+## might want to add --min_qscore 0 because i can do that downstream if needed?
+
+## better to use dorado and duplex basecalling...

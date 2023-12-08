@@ -10,14 +10,14 @@ rm /Users/Ryan/outputs/lambda/lambda_genome.zip
 ## map reads to lambda reference
 conda activate minimap2
 mkdir /Users/Ryan/outputs/sym1
-minimap2 -ax map-ont /Users/Ryan/outputs/lambda/lambda_genome/ncbi_dataset/data/genomic.fna /Users/Ryan/outputs/nano/pass/*.fastq.gz > /Users/Ryan/outputs/sym1/lambdamap.sam
+minimap2 -ax map-ont /Users/Ryan/outputs/lambda/lambda_genome/ncbi_dataset/data/genomic.fna /Users/Ryan/outputs/nano/*/*.fastq.gz > /Users/Ryan/outputs/sym1/lambdamap.sam
 
 ## find unmapped reads
 conda activate samtools
 samtools view -S -f4 /Users/Ryan/outputs/sym1/lambdamap.sam | cut -f1 | sort | uniq > /Users/Ryan/outputs/sym1/notlambda_reads.txt
 
 conda activate seqtk
-seqtk subseq <(zcat </Users/Ryan/outputs/nano/pass/*.fastq.gz) /Users/Ryan/outputs/sym1/notlambda_reads.txt > /Users/Ryan/outputs/sym1/notlambda_reads.fastq
+seqtk subseq <(zcat </Users/Ryan/outputs/nano/*/*.fastq.gz) /Users/Ryan/outputs/sym1/notlambda_reads.txt > /Users/Ryan/outputs/sym1/notlambda_reads.fastq
 
 ## assemble and or annotate remainder
 conda activate flye
