@@ -1,41 +1,41 @@
 conda activate samtools
 
-samtools view -b -h -d dx:1 ~/outputs/nano2/duplex.bam > ~/outputs/nano2/onlyduplex.bam
-samtools view -b -h -d dx:0 ~/outputs/nano2/duplex.bam > ~/outputs/nano2/onlysimplex.bam
+samtools view -b -h -d dx:1 ~/outputs/nano/duplex.bam > ~/outputs/nano/onlyduplex.bam
+samtools view -b -h -d dx:0 ~/outputs/nano/duplex.bam > ~/outputs/nano/onlysimplex.bam
 
 
 conda activate nanoplot
 
-NanoPlot --ubam ~/outputs/nano2/onlyduplex.bam -o ~/outputs/nano2/nanoplot_onlyduplex
-NanoPlot --ubam ~/outputs/nano2/onlysimplex.bam -o ~/outputs/nano2/nanoplot_onlysimplex
+NanoPlot --ubam ~/outputs/nano/onlyduplex.bam -o ~/outputs/nano/nanoplot_onlyduplex
+NanoPlot --ubam ~/outputs/nano/onlysimplex.bam -o ~/outputs/nano/nanoplot_onlysimplex
 
 
-## filter bam for duplex/simplex, delete the last line because the file is incomplete and the last line might be nonsense, convert it to fastq and gzip
+## filter bam for duplex/simplex, convert it to fastq and gzip. samtools might have option to do all at once?
 
 conda activate samtools
-samtools view -h -d dx:1 ~/outputs/nano2/duplex.bam | sed -e '$ d' | samtools fastq | gzip --best > ~/outputs/nano2/onlyduplex.fastq.gz
+samtools view -h -d dx:1 ~/outputs/nano/duplex.bam | samtools fastq | gzip --best > ~/outputs/nano/onlyduplex.fastq.gz
 
 conda activate minimap2
-minimap2 -ax map-ont /Users/Ryan/outputs/lambda/lambda_genome/ncbi_dataset/data/genomic.fna ~/outputs/nano2/onlyduplex.fastq.gz > ~/outputs/nano2/onlyduplex_lambdamap.sam
+minimap2 -ax map-ont ~/outputs/lambda/lambda_genome/ncbi_dataset/data/genomic.fna ~/outputs/nano/onlyduplex.fastq.gz > ~/outputs/nano/onlyduplex_lambdamap.sam
 
 conda activate samtools
-samtools sort -O BAM ~/outputs/nano2/onlyduplex_lambdamap.sam > ~/outputs/nano2/onlyduplex_lambdamap.bam
+samtools sort -O BAM ~/outputs/nano/onlyduplex_lambdamap.sam > ~/outputs/nano/onlyduplex_lambdamap.bam
 
 conda activate nanoplot
-NanoPlot --bam ~/outputs/nano2/onlyduplex_lambdamap.bam -o ~/outputs/nano2/nanoplot_onlyduplex_lambdamap
+NanoPlot --bam ~/outputs/nano/onlyduplex_lambdamap.bam -o ~/outputs/nano/nanoplot_onlyduplex_lambdamap
 
 
 
 conda activate samtools
-samtools view -h -d dx:0 ~/outputs/nano2/duplex.bam | sed -e '$ d' | samtools fastq | gzip --best > ~/outputs/nano2/onlysimplex.fastq.gz
+samtools view -h -d dx:0 ~/outputs/nano/duplex.bam | samtools fastq | gzip --best > ~/outputs/nano/onlysimplex.fastq.gz
 
 conda activate minimap2
-minimap2 -ax map-ont /Users/Ryan/outputs/lambda/lambda_genome/ncbi_dataset/data/genomic.fna ~/outputs/nano2/onlysimplex.fastq.gz > ~/outputs/nano2/onlysimplex_lambdamap.sam
+minimap2 -ax map-ont ~/outputs/lambda/lambda_genome/ncbi_dataset/data/genomic.fna ~/outputs/nano/onlysimplex.fastq.gz > ~/outputs/nano/onlysimplex_lambdamap.sam
 
 conda activate samtools
-samtools sort -O BAM ~/outputs/nano2/onlysimplex_lambdamap.sam > ~/outputs/nano2/onlysimplex_lambdamap.bam
+samtools sort -O BAM ~/outputs/nano/onlysimplex_lambdamap.sam > ~/outputs/nano/onlysimplex_lambdamap.bam
 
 conda activate nanoplot
-NanoPlot --bam ~/outputs/nano2/onlysimplex_lambdamap.bam -o ~/outputs/nano2/nanoplot_onlysimplex_lambdamap
+NanoPlot --bam ~/outputs/nano/onlysimplex_lambdamap.bam -o ~/outputs/nano/nanoplot_onlysimplex_lambdamap
 
 
