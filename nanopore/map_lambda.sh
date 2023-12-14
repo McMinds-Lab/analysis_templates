@@ -24,7 +24,7 @@ seqtk subseq <(zcat <~/outputs/nano/duplex.fastq.gz) ~/outputs/nano/notlambda_re
 
 ## assemble and or annotate remainder
 conda activate flye
-flye -m 1000 --meta --nano-raw ~/outputs/nano/notlambda_reads.fastq -o ~/outputs/nano/flye_out
+flye -m 1000 --meta --nano-hq ~/outputs/nano/notlambda_reads.fastq -o ~/outputs/nano/flye_out
 
 ## annotate
 conda activate mmseqs2
