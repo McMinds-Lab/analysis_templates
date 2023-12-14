@@ -22,4 +22,6 @@ seqtk subseq <(zcat <~/outputs/nano/duplex.fastq.gz) ~/outputs/nano/pyruvatibact
 conda activate flye
 flye -m 1000 --nano-hq ~/outputs/nano/pyruvatibacter_reads.fastq -o ~/outputs/nano/flye_out_pyruvatibacter
 
+## this conda env had to be made manually; it includes the dependencies for circlator
+conda activate circlator
 circlator all --data_type nanopore-corrected --assemble_not_only_assembler --assemble_not_careful ~/outputs/nano/flye_out_pyruvatibacter/assembly.fasta ~/outputs/nano/pyruvatibacter_reads.fastq ~/outputs/nano/flye_out_pyruvatibacter/circlator_out
