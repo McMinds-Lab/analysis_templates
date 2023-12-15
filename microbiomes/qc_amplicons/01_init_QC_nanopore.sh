@@ -34,7 +34,7 @@ source activate cutadapt-4.6
 
 # find all pairs with both primers plus at least 8 extra bp in forward orientation, trim everything before the adapter
 cutadapt \
-  --cores=${nthreads} \
+  --cores=24 \
   --revcomp \
   --action=retain \
   -g "N{8}${primer_fwd};min_overlap=$((${#primer_fwd}+8))" \
@@ -44,7 +44,7 @@ cutadapt \
 
 # demultiplex, allowing a single error in each 8bp index
 cutadapt \
-  --cores=${nthreads} \
+  --cores=24 \
   -e 1 \
   --overlap 8 \
   -g file:${barcodes_file} \
@@ -62,7 +62,7 @@ for file in ${outdir}/01_init_QC/demultiplexed/*.fastq.gz; do
   # trim primers
   source activate cutadapt-4.6
   cutadapt \
-    --cores=${nthreads} \
+    --cores=24 \
     -g ${primer_fwd} \
     -G ${primer_rev} \
     --output ${outdir}/01_init_QC/trimmed/\${sampleid}.fastq.gz \
