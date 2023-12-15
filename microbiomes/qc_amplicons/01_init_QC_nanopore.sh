@@ -37,26 +37,23 @@ primer_rev_rc=$(echo ${primer_rev} | tr ACGTRYSWKMBVDHacgtryswkmbvdh TGCAYRSWMKV
 twostep_rev_rc=$(echo ${twostep_rev} | tr ACGTRYSWKMBVDHacgtryswkmbvdh TGCAYRSWMKVBHDtgcayrswmkvbhd | rev)
 
 # find seq lengths
-overhang_fwd=$((${#twostep_fwd}+8))
-overhang_rev=$((${#twostep_rev}+8))
-overlap_fwd=$((${overhang_fwd}+${#primer_fwd}))
-overlap_rev=$((${overhang_rev}+${#primer_rev}))
+overlap_fwd=$((${#twostep_fwd}+8))
+overlap_rev=$((${#twostep_rev}+8))
 
 source activate cutadapt-4.6
-# find all pairs with both primers plus at least enough bp to see whole index, reorient them, then trim everything before the index, then demultiplex
+# find all pairs with both adaptors plus at least enough bp to see whole index, reorient them, then trim everything before the index, then demultiplex
 # revcomp option exists but has weird interaction with trimming so doing it manually with pipe
-# using length of twostep adaptors instead of actual sequences so the percent error for matching only applies to the target-specific primer (can reconsider specifics in future; for instance seq could be useful for orientation)
 cutadapt \
   --cores=24 \
   --revcomp \
   --action=none \
-  -g "N{\${overhang_fwd}}${primer_fwd};min_overlap=\${overlap_rev}...\${primer_rev_rc}N{\${overhang_rev}};min_overlap=\${overlap_rev}" \
+  -g ${twostep_fwd}...\${twostep_rev_rc} \
   ${outdir}/01_init_QC/reads.fastq.gz |
 cutadapt \
   --cores=24 \
   --action=retain \
   --discard-untrimmed \
-  -g "N{\${overhang_fwd}}${primer_fwd};min_overlap=\${overlap_rev}...\${primer_rev_rc}N{\${overhang_rev}};min_overlap=\${overlap_rev}" \
+  -g "N{8}${twostep_fwd};min_overlap=$((${#twostep_fwd}+8))...\${twostep_rev_rc}N{8};min_overlap=$((${#twostep_rev}+8))" \
   - |
 cutadapt \
   --cores=24 \
@@ -74,10 +71,10 @@ for file in ${outdir}/01_init_QC/demultiplexed/*.fastq.gz; do
   sampleid=\${filename/.fastq.gz/}
   
   # trim primers
-  source activate cutadapt-4.6
   cutadapt \
     --cores=24 \
-    -g ${twostep_fwd}${primer_fwd}...\${primer_rev_rc}\${twostep_rev_rc} \
+    --discard-untrimmed \
+    -g ${primer_fwd}...\${primer_rev_rc} \
     --output ${outdir}/01_init_QC/trimmed/\${sampleid}.fastq.gz \
     \${file}
   
@@ -89,8 +86,4 @@ done
 
 EOF
 
-if $autorun; then
-
 sbatch ${outdir}/01_init_QC/01_init_QC.sbatch
-
-fi
