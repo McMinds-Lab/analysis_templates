@@ -25,7 +25,7 @@ module load hub.apps/anaconda3
 
 # trim indices and primers from sequences, demultiplex, and discard any sequences that don't contain both full barcodes and primers
 
-source activate SAMTOOLS
+source activate samtools-1.19
 # extract duplex and simplex reads from dorado basecalling file (excluding simplex parents of duplex reads, dx:-1)
 samtools view -b -d dx:1 ${in_bam} | samtools fastq -@ 24 -c 9 - > ${outdir}/01_init_QC/reads.fastq.gz
 samtools view -b -d dx:0 ${in_bam} | samtools fastq -@ 24 -c 9 - >> ${outdir}/01_init_QC/reads.fastq.gz
@@ -39,7 +39,7 @@ cutadapt \
   --cores=24 \
   --revcomp \
   --action=retain \
-  -g "N{8}${primer_fwd};min_overlap=$((${#primer_fwd}+8))...${primer_rev_rc}N{8};min_overlap=$((${#primer_rev_rc}+8))" \
+  -g "N{8}${primer_fwd};min_overlap=$((${#primer_fwd}+8))...\${primer_rev_rc}N{8};min_overlap=$((${#primer_rev}+8))" \
   --output ${outdir}/01_init_QC/oriented.fastq.gz \
   ${outdir}/01_init_QC/reads.fastq.gz
 
@@ -64,7 +64,7 @@ for file in ${outdir}/01_init_QC/demultiplexed/*.fastq.gz; do
   source activate cutadapt-4.6
   cutadapt \
     --cores=24 \
-    -g ${primer_fwd}...${primer_rev_rc} \
+    -g ${primer_fwd}...\${primer_rev_rc} \
     --output ${outdir}/01_init_QC/trimmed/\${sampleid}.fastq.gz \
     \${file}
   
