@@ -1,10 +1,9 @@
-## six positional arguments specifying 1) input basecalls bam (with duplex basecalling), 2) forward primer sequence, 3) reverse primer sequence, 4) input fwd barcodes file, 5) input rev barcodes file, and 6) the output directory
+## six positional arguments specifying 1) input basecalls bam (with duplex basecalling), 2) forward primer sequence, 3) reverse primer sequence, 4) input linked barcodes file, and 5) the output directory
 in_bam=$1
 primer_fwd=$2
 primer_rev=$3
-barcodes_fwd=$4
-barcodes_rev=$5
-outdir=$6
+barcodes_file=$4
+outdir=$5
 
 mkdir -p ${outdir}/01_init_QC
 echo "bash $0 $@" > ${outdir}/01_init_QC/this_command.sh
@@ -48,9 +47,8 @@ cutadapt \
   --cores=${nthreads} \
   -e 1 \
   --overlap 8 \
-  -g file:${barcodes_fwd} \
-  -G file:${barcodes_rev} \
-  --output ${outdir}/01_init_QC/demultiplexed/{name1}-{name2}.fastq.gz \
+  -g file:${barcodes_file} \
+  --output ${outdir}/01_init_QC/demultiplexed/{name}.fastq.gz \
   ${outdir}/01_init_QC/oriented.fastq.gz
 
 rm ${outdir}/01_init_QC/demultiplexed/*unknown*
