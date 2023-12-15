@@ -27,8 +27,8 @@ module load hub.apps/anaconda3
 
 source activate samtools-1.19
 # extract duplex and simplex reads from dorado basecalling file (excluding simplex parents of duplex reads, dx:-1)
-samtools view -b -d dx:1 ${in_bam} | samtools fastq -@ 24 -c 9 - > ${outdir}/01_init_QC/reads.fastq.gz
-samtools view -b -d dx:0 ${in_bam} | samtools fastq -@ 24 -c 9 - >> ${outdir}/01_init_QC/reads.fastq.gz
+samtools view -b -d dx:1 ${in_bam} | samtools fastq -@ 24 -c 9 - | gzip --best > ${outdir}/01_init_QC/reads.fastq.gz
+samtools view -b -d dx:0 ${in_bam} | samtools fastq -@ 24 -c 9 - | gzip --best >> ${outdir}/01_init_QC/reads.fastq.gz
 
 source activate cutadapt-4.6
 
