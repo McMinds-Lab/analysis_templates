@@ -1,9 +1,11 @@
-## six positional arguments specifying 1) input basecalls bam (with duplex basecalling), 2) forward primer sequence, 3) reverse primer sequence, 4) input linked barcodes file, and 5) the output directory
+## six positional arguments specifying 1) input basecalls bam (with duplex basecalling), 2) forward primer sequence, 3) reverse primer sequence, 4) sequence between primer and barcode on forward end, 5) sequence between primer and barcode on reverse end, 6) input linked barcodes file, and 7) the output directory
 in_bam=$1
 primer_fwd=$2
 primer_rev=$3
-barcodes_file=$4
-outdir=$5
+twostep_fwd=$4
+twostep_rev=$5
+barcodes_file=$6
+outdir=$7
 
 mkdir -p ${outdir}/01_init_QC
 echo "bash $0 $@" > ${outdir}/01_init_QC/this_command.sh
@@ -32,26 +34,36 @@ samtools view -b -d dx:0 ${in_bam} | samtools fastq - | gzip --best >> ${outdir}
 
 # find reverse complement of reverse primer
 primer_rev_rc=$(echo ${primer_rev} | tr ACGTRYSWKMBVDHacgtryswkmbvdh TGCAYRSWMKVBHDtgcayrswmkvbhd | rev)
+twostep_rev_rc=$(echo ${twostep_rev} | tr ACGTRYSWKMBVDHacgtryswkmbvdh TGCAYRSWMKVBHDtgcayrswmkvbhd | rev)
+
+# find seq lengths
+overhang_fwd=$((${#twostep_fwd}+8))
+overhang_rev=$((${#twostep_rev}+8))
+overlap_fwd=$((${overhang_fwd}+${#primer_fwd}))
+overlap_rev=$((${overhang_rev}+${#primer_rev}))
 
 source activate cutadapt-4.6
-# find all pairs with both primers plus at least 8 extra bp in forward orientation, trim everything before the adapter
+# find all pairs with both primers plus at least enough bp to see whole index, reorient them, then trim everything before the index, then demultiplex
+# revcomp option exists but has weird interaction with trimming so doing it manually with pipe
+# using length of twostep adaptors instead of actual sequences so the percent error for matching only applies to the target-specific primer (can reconsider specifics in future; for instance seq could be useful for orientation)
 cutadapt \
   --cores=24 \
   --revcomp \
-  --action=retain \
-  --discard-untrimmed \
-  -g "N{8}${primer_fwd};min_overlap=$((${#primer_fwd}+8))...\${primer_rev_rc}N{8};min_overlap=$((${#primer_rev}+8))" \
-  --output ${outdir}/01_init_QC/oriented.fastq.gz \
-  ${outdir}/01_init_QC/reads.fastq.gz
-
-# demultiplex, allowing a single error in each 8bp index
+  --action=none \
+  -g "N{\${overhang_fwd}}${primer_fwd};min_overlap=\${overlap_rev}...\${primer_rev_rc}N{\${overhang_rev}};min_overlap=\${overlap_rev}" \
+  ${outdir}/01_init_QC/reads.fastq.gz |
 cutadapt \
   --cores=24 \
-  -e 1 \
-  --overlap 8 \
+  --action=retain \
+  --discard-untrimmed \
+  -g "N{\${overhang_fwd}}${primer_fwd};min_overlap=\${overlap_rev}...\${primer_rev_rc}N{\${overhang_rev}};min_overlap=\${overlap_rev}" \
+  - |
+cutadapt \
+  --cores=24 \
+  --no-indels \
   -g file:${barcodes_file} \
   --output ${outdir}/01_init_QC/demultiplexed/{name}.fastq.gz \
-  ${outdir}/01_init_QC/oriented.fastq.gz
+  -
 
 rm ${outdir}/01_init_QC/demultiplexed/*unknown*
 
@@ -65,7 +77,7 @@ for file in ${outdir}/01_init_QC/demultiplexed/*.fastq.gz; do
   source activate cutadapt-4.6
   cutadapt \
     --cores=24 \
-    -g ${primer_fwd}...\${primer_rev_rc} \
+    -g ${twostep_fwd}${primer_fwd}...\${primer_rev_rc}\${twostep_rev_rc} \
     --output ${outdir}/01_init_QC/trimmed/\${sampleid}.fastq.gz \
     \${file}
   
