@@ -27,18 +27,19 @@ module load hub.apps/anaconda3
 
 source activate samtools-1.19
 # extract duplex and simplex reads from dorado basecalling file (excluding simplex parents of duplex reads, dx:-1)
-samtools view -b -d dx:1 ${in_bam} | samtools fastq -@ 24 -c 9 - | gzip --best > ${outdir}/01_init_QC/reads.fastq.gz
-samtools view -b -d dx:0 ${in_bam} | samtools fastq -@ 24 -c 9 - | gzip --best >> ${outdir}/01_init_QC/reads.fastq.gz
-
-source activate cutadapt-4.6
+samtools view -b -d dx:1 ${in_bam} | samtools fastq - | gzip --best > ${outdir}/01_init_QC/reads.fastq.gz
+samtools view -b -d dx:0 ${in_bam} | samtools fastq - | gzip --best >> ${outdir}/01_init_QC/reads.fastq.gz
 
 # find reverse complement of reverse primer
 primer_rev_rc=$(echo ${primer_rev} | tr ACGTRYSWKMBVDHacgtryswkmbvdh TGCAYRSWMKVBHDtgcayrswmkvbhd | rev)
+
+source activate cutadapt-4.6
 # find all pairs with both primers plus at least 8 extra bp in forward orientation, trim everything before the adapter
 cutadapt \
   --cores=24 \
   --revcomp \
   --action=retain \
+  --discard-untrimmed \
   -g "N{8}${primer_fwd};min_overlap=$((${#primer_fwd}+8))...\${primer_rev_rc}N{8};min_overlap=$((${#primer_rev}+8))" \
   --output ${outdir}/01_init_QC/oriented.fastq.gz \
   ${outdir}/01_init_QC/reads.fastq.gz
