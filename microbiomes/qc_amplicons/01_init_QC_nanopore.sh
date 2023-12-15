@@ -1,4 +1,4 @@
-## six positional arguments specifying 1) input basecalls bam (with duplex basecalling), 2) forward primer sequence, 3) reverse primer sequence, 4) sequence between primer and barcode on forward end, 5) sequence between primer and barcode on reverse end, 6) input linked barcodes file, and 7) the output directory
+## six positional arguments specifying 1) input basecalls bam (with duplex basecalling), 2) forward primer sequence, 3) reverse primer sequence, 4) orienting sequence next to barcode on forward end, 5) orienting sequence next to barcode on reverse end, 6) input linked barcodes file, and 7) the output directory
 in_bam=$1
 primer_fwd=$2
 primer_rev=$3
