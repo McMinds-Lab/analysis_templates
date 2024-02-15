@@ -49,5 +49,5 @@ TubulinF	TubulinR	Orbicella faveolata	beta tubulin			443
 27F	En771R	Endozoicomonas	SSU (16S)				
 515fB	806rB	"Bacteria,Archaea"	SSU (16S V4)	449	380	313	270
 515fB	926r	"Bacteria,Archaea"	SSU (16S V4-V5)	551	482	415	372
-27F_B	2241R	"Bacteria,Archaea"	rrn			~1500	
-27F_B	1492R	"Bacteria,Archaea"	SSU (16S)			~4300	
+27F_B	2241R	"Bacteria,Archaea"	rrn			~4300	
+27F_B	1492R	"Bacteria,Archaea"	SSU (16S)			~1500	
