@@ -30,7 +30,7 @@ module load hub.apps/anaconda3
 
 source activate samtools-1.19
 # extract reads from dorado basecalling file
-samtools fastq ${in_bam} | gzip > ${outdir}/01_init_QC/reads.fastq.gz
+samtools fastq -@ 24 ${in_bam} | pigz -p 24 > ${outdir}/01_init_QC/reads.fastq.gz
 
 # find reverse complement of reverse primer
 primer_rev_rc=$(echo ${primer_rev} | tr ACGTRYSWKMBVDHacgtryswkmbvdh TGCAYRSWMKVBHDtgcayrswmkvbhd | rev)
