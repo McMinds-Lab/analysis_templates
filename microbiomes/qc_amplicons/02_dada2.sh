@@ -1,9 +1,9 @@
 ## indir should point to the merged reads folder
 ## outdir should point to the top level of the output directory
 
-indir=$1
-outdir=$2
-nthreads=$3
+nthreads=$1
+indir=$2
+outdir=$3
 
 mkdir -p ${outdir}/02_dada2/
 echo "bash $0 $@" > ${outdir}/02_dada2/this_command.sh
@@ -16,7 +16,7 @@ cat <<EOF > ${outdir}/02_dada2/02_dada2.sbatch
 #SBATCH --qos=rra
 #SBATCH --output=${outdir}/02_dada2/02_dada2.log
 #SBATCH --ntasks=${nthreads}
-#SBATCH --mem=20G
+#SBATCH --mem=175G
 #SBATCH --time=3-00:00:00
 
 module load hub.apps/R
