@@ -1,11 +1,12 @@
-## six positional arguments specifying 1) input basecalls bam (with simplex basecalling), 2) forward primer sequence, 3) reverse primer sequence, 4) orienting sequence next to barcode on forward end, 5) orienting sequence next to barcode on reverse end, 6) input linked barcodes file, and 7) the output directory
+## eight positional arguments specifying 1) input basecalls bam (with simplex basecalling), 2) the maximum length an amplicon can be (will trim to this length to avoid chimeric reads) 3) forward primer sequence, 4) reverse primer sequence, 5) orienting sequence next to barcode on forward end, 6) orienting sequence next to barcode on reverse end, 7) input linked barcodes file, and 8) the output directory
 in_bam=$1
-primer_fwd=$2
-primer_rev=$3
-twostep_fwd=$4
-twostep_rev=$5
-barcodes_file=$6
-outdir=$7
+maxlen=$2
+primer_fwd=$3
+primer_rev=$4
+twostep_fwd=$5
+twostep_rev=$6
+barcodes_file=$7
+outdir=$8
 
 mkdir -p ${outdir}/01_init_QC
 echo "bash $0 $@" > ${outdir}/01_init_QC/this_command.sh
@@ -48,6 +49,10 @@ cutadapt \
   --action=none \
   -g ${twostep_fwd}...\${twostep_rev_rc} \
   ${outdir}/01_init_QC/reads.fastq.gz |
+cutadapt \
+  --cores=24 \
+  --length=${maxlen} \
+  - |
 cutadapt \
   --cores=24 \
   --action=retain \
