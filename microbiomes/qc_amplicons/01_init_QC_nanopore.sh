@@ -62,7 +62,7 @@ cutadapt \
   --cores=24 \
   --revcomp \
   --action=none \
-  -g "\"N{8}${twostep_fwd};max_error_rate=0.25...\${twostep_rev_rc}N{8};max_error_rate=0.25\"" \
+  -g "N{8}${twostep_fwd};max_error_rate=0.25...\${twostep_rev_rc}N{8};max_error_rate=0.25" \
   ${outdir}/01_init_QC/reads_split.fastq.gz |
 cutadapt \
   --cores=24 \
