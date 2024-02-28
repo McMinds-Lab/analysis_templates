@@ -1,4 +1,4 @@
-## eight positional arguments specifying 1) input basecalls bam (with simplex basecalling), 2) the maximum length an amplicon can be (will trim to this length to avoid chimeric reads) 3) forward primer sequence, 4) reverse primer sequence, 5) orienting sequence next to barcode on forward end, 6) orienting sequence next to barcode on reverse end, 7) input linked barcodes file, and 8) the output directory
+## nine positional arguments specifying 1) input basecalls bam (with simplex basecalling), 2) the maximum length an amplicon can be (will trim to this length to avoid chimeric reads) 3) forward primer sequence, 4) reverse primer sequence, 5) orienting sequence next to barcode on forward end, 6) orienting sequence next to barcode on reverse end, 7) input linked barcodes file, 8) the porechop-formatted adapters file, and 9) the output directory
 in_bam=$1
 maxlen=$2
 primer_fwd=$3
@@ -6,7 +6,8 @@ primer_rev=$4
 twostep_fwd=$5
 twostep_rev=$6
 barcodes_file=$7
-outdir=$8
+adapters_file=$8
+outdir=$9
 
 mkdir -p ${outdir}/01_init_QC
 echo "bash $0 $@" > ${outdir}/01_init_QC/this_command.sh
@@ -32,6 +33,20 @@ source activate samtools-1.19
 # extract reads from dorado basecalling file
 samtools fastq -@ 24 ${in_bam} | pigz -p 24 > ${outdir}/01_init_QC/reads.fastq.gz
 
+# find adapters in the middle of the reads and split chimeras (also trims adapters from ends)
+source activate porechop_abi
+porechop_abi \
+  --threads 24 \
+  --min_split_read_size 50 \
+  --extra_end_trim 0 \
+  --middle_threshold 75.0 \
+  --extra_middle_trim_good_side 0 \
+  --extra_middle_trim_bad_side 0 \
+  --discard_database \
+  --custom_adapters ${adapters_file} \
+  --input ${outdir}/01_init_QC/reads.fastq.gz \
+  --output ${outdir}/01_init_QC/reads_split.fastq.gz
+
 # find reverse complement of reverse primer
 primer_rev_rc=$(echo ${primer_rev} | tr ACGTRYSWKMBVDHacgtryswkmbvdh TGCAYRSWMKVBHDtgcayrswmkvbhd | rev)
 twostep_rev_rc=$(echo ${twostep_rev} | tr ACGTRYSWKMBVDHacgtryswkmbvdh TGCAYRSWMKVBHDtgcayrswmkvbhd | rev)
@@ -47,14 +62,15 @@ cutadapt \
   --cores=24 \
   --revcomp \
   --action=none \
-  -g ${twostep_fwd}...\${twostep_rev_rc} \
-  ${outdir}/01_init_QC/reads.fastq.gz |
+  -g "\"N{8}${twostep_fwd};max_error_rate=0.25...\${twostep_rev_rc}N{8};max_error_rate=0.25\"" \
+  ${outdir}/01_init_QC/reads_split.fastq.gz |
 cutadapt \
   --cores=24 \
   --length=${maxlen} \
   - |
 cutadapt \
   --cores=24 \
+  -e 0.25 \
   --action=retain \
   --discard-untrimmed \
   -g "N{8}${twostep_fwd};min_overlap=$((${#twostep_fwd}+8))...\${twostep_rev_rc}N{8};min_overlap=$((${#twostep_rev}+8))" \
