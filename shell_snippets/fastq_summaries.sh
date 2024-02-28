@@ -28,3 +28,5 @@ awk 'NR == FNR {
        sub(/\n$/, "")
        print ">"$0
      }' seqlist.txt RS='\n>' file.fasta > file_filt.fasta
+
+
