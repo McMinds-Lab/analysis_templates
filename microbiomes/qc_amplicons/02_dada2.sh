@@ -15,7 +15,9 @@ cat <<EOF > ${outdir}/02_dada2/02_dada2.sbatch
 #SBATCH --partition=rra
 #SBATCH --qos=rra
 #SBATCH --output=${outdir}/02_dada2/02_dada2.log
-#SBATCH --ntasks=${nthreads}
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=${nthreads}
 #SBATCH --mem=175G
 #SBATCH --time=3-00:00:00
 
