@@ -18,7 +18,7 @@ cat <<EOF > ${outdir}/01_init_QC/01_init_QC.sbatch
 #SBATCH --partition=rra
 #SBATCH --qos=rra
 #SBATCH --output=${outdir}/01_init_QC/01_init_QC.log
-#SBATCH --ntasks=24
+#SBATCH --ntasks=20
 #SBATCH --mem=175G
 #SBATCH --time=48:00:00
 
