@@ -19,8 +19,8 @@ cat <<EOF > ${outdir}/01_init_QC/01_init_QC.sbatch
 #SBATCH --qos=rra
 #SBATCH --output=${outdir}/01_init_QC/01_init_QC.log
 #SBATCH --ntasks=24
-#SBATCH --mem=20G
-#SBATCH --time=24:00:00
+#SBATCH --mem=175G
+#SBATCH --time=48:00:00
 
 mkdir -p ${outdir}/01_init_QC/demultiplexed/
 mkdir -p ${outdir}/01_init_QC/trimmed/
