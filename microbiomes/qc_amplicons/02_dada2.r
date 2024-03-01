@@ -14,7 +14,7 @@ filt_reads <- file.path(outdir, "filtered", basename(merged_reads))
 # filter out reads that are probably just primer dimer
 filt <- dada2::filterAndTrim(merged_reads, filt_reads, truncQ = 0, minLen = 50, compress = TRUE, multithread = nthreads, qualityType='FastqQuality')
 
-# note that the q-scores appear to be inflated for nanopore data. probably related to the fastq encoding inference, which doesn't have the option qualityType='FastqQuality' for this function
+# note that the q-scores appear to be inflated relative to Nanoplot results. This is because dada2 takes mean of raw q-scores, while nanoplot takes mean of probabilities (e.g. arithmetic vs geometric means)
 png(file.path(outdir, "quality_profile.png"), height=600, width=600)
 dada2::plotQualityProfile(filt_reads[1:10])
 dev.off()
