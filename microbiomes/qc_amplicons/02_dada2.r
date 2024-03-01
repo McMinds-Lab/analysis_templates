@@ -12,14 +12,15 @@ sample.names <- sub('.fastq.gz', '', basename(merged_reads))
 
 filt_reads <- file.path(outdir, "filtered", basename(merged_reads))
 # filter out reads that are probably just primer dimer
-filt <- dada2::filterAndTrim(merged_reads, filt_reads, truncQ = 0, minLen = 50, compress = TRUE, multithread = nthreads)
+filt <- dada2::filterAndTrim(merged_reads, filt_reads, truncQ = 0, minLen = 50, compress = TRUE, multithread = nthreads, qualityType='FastqQuality')
 
+# note that the q-scores appear to be inflated for nanopore data. probably related to the fastq encoding inference, which doesn't have the option qualityType='FastqQuality' for this function
 png(file.path(outdir, "quality_profile.png"), height=600, width=600)
 dada2::plotQualityProfile(filt_reads[1:10])
 dev.off()
 
 # only reads as many samples as needed to get to 1e8 bases (can be changed), with samples randomized
-err_merged_reads <- dada2::learnErrors(filt_reads, multithread = nthreads, randomize = TRUE, MAX_CONSIST = 30, pool = 'pseudo')
+err_merged_reads <- dada2::learnErrors(filt_reads, multithread = nthreads, randomize = TRUE, MAX_CONSIST = 30, pool = 'pseudo', qualityType='FastqQuality')
 
 pdf(file.path(outdir, "dada_err.pdf"))
 dada2::plotErrors(err_merged_reads, nominalQ=TRUE)
