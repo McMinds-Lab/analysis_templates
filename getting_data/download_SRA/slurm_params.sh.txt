@@ -1,7 +1,7 @@
 email=yourname@yourdomain.com
 
-## how many processors do you want to use
-nthreads=20
+## how many array jobs do you want to submit at a time
+narray=20
 
 ## max ram
 mem=20G

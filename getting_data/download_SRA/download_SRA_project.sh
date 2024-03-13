@@ -1,18 +1,19 @@
-## three or four positional arguments specifying 1) an SRA project ID starting with SRP, 2) the output directory, 3) either a path SLURM parameters file or the word 'true' or the word 'false' (If true, default slurm parameters will be used; if false, script will simply download samples with for loop and won't submit a slurm job), and 4) optional path to a script to set your PATH variable to include the entrez-direct and sratools packages
+## four or five positional arguments specifying 1) an SRA project ID starting with SRP, 2) the output directory, 3) a comma-separated list of acceptable sample types (e.g. 'WGA,AMPLICON') or the word 'all' for no filtering, 4) either a path SLURM parameters file or the word 'true' or the word 'false' (If true, default slurm parameters will be used; if false, script will simply download samples with for loop and won't submit a slurm job), and 5) optional path to a script to set your PATH variable to include the entrez-direct and sratools packages
 ## make sure you have 'prepare_path.sh' and 'slurm_params.sh' in the same directory as this script, if you need them (example files are included as 'prepare_path.sh.txt' and 'slurm_params.sh.txt')
 
 srp=$1
 outdir=$2
-slurm_params=$3
+accept=$3
+slurm_params=$4
 
 ## input error checking
-if [ $# -lt 3 ]; then
-  echo "First three positional arguments are required"
+if [ $# -lt 4 ]; then
+  echo "First four positional arguments are required"
 fi
 
 ## if tools are not automatically in path, put them there
-if [ $# -ge 4 ]; then
-  prepare_path=$4
+if [ $# -ge 5 ]; then
+  prepare_path=$5
   source ${prepare_path}
 fi
 
@@ -21,12 +22,13 @@ scriptdir=$( cd "$(dirname "$0")" ; pwd -P )
 
 ## prepare output directory
 mkdir -p ${outdir}
+cp ${scriptdir}/download_SRA_sample.sh ${outdir}
 
 ## download a list of samples, and some of their metadata, associated with the specified project
 esearch -db sra -query ${srp} | efetch -format runinfo > ${outdir}/runInfo.csv
 
 ## extract sample identifiers
-samples=($(grep SRR ${outdir}/runInfo.csv | cut -d ',' -f 1))
+samples=($(awk -v header='LibraryStrategy' -v accept=$(sed 's/^/^/;s/$/$/;s/,/$|^/g' <<< ${accept}) 'BEGIN {FS=","; column=0} NR == 1 {for (i=1;i<=NF;i++) {if ($i==header) {column=i}} } NR > 1 && $column ~ accept {print $1}' ${outdir}/runInfo.csv))
 
 ## require the explicit input of 'false' to enable for-loop
 if [ ${slurm_params} != "false" ]; then
@@ -48,7 +50,7 @@ if [ ${slurm_params} != "false" ]; then
   #SBATCH --mem=${mem:-1G}
   #SBATCH --job-name=${job_name:-download_SRA_project}
   #SBATCH --output=${outdir}/logs/download_SRA_project_%a.log
-  #SBATCH --array=0-$((${#samples[@]}-1))%${nthreads:-10}
+  #SBATCH --array=0-$((${#samples[@]}-1))%${narray:-10}
 
   ## use task ID to assign each batch job a single unique sample
   samples=(${samples[@]})
@@ -57,7 +59,7 @@ if [ ${slurm_params} != "false" ]; then
   subdir=${outdir}/\$(grep \${sample} ${outdir}/runInfo.csv | cut -d ',' -f 13)
 
   ## make sure the web requests of all array jobs aren't submitted at once
-  if [ \$SLURM_ARRAY_TASK_ID -lt ${nthreads:-1} ]; then
+  if [ \$SLURM_ARRAY_TASK_ID -lt ${narray:-10} ]; then
     sleep \$((\$SLURM_ARRAY_TASK_ID * 10))
   fi
 
@@ -75,7 +77,7 @@ else
     biosample=$(grep ${sample} ${outdir}/runInfo.csv | cut -d ',' -f 26)
     subdir=${outdir}/$(grep ${sample} ${outdir}/runInfo.csv | cut -d ',' -f 13)
 
-    bash ${scriptdir}/download_SRA_sample.sh ${sample} ${biosample} ${subdir} ${prepare_path}
+    bash ${outdir}/download_SRA_sample.sh ${sample} ${biosample} ${subdir} ${prepare_path}
 
   done
 
