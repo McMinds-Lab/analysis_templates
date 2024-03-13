@@ -4,15 +4,15 @@ download_SRA_sample.sh bundles the downloading of fastqs and their metadata for 
 
 use:
 
-configure slurm_params.sh for the slurm queue, parallelization, etc., and prepare_path.sh for loading packages and then:
+(optional) configure slurm_params.sh for the slurm queue, parallelization, etc., and prepare_path.sh for loading packages and then:
 
 download a project on a personal computer that needs the PATH set for entrez-direct and sratools:
 
-`bash download_SRA_project.sh SRP324501 destination_directory false /path/to/prepare_path.sh`
+`bash download_SRA_project.sh SRP324501 destination_directory 'WGA,WGS,AMPLICON' false /path/to/prepare_path.sh`
 
-download a project on a server that uses the SLURM scheduler and requires modules to be loaded:
+download a project on a server that uses the SLURM scheduler with customized options, and requires modules to be loaded:
 
-`bash download_SRA_project.sh SRP324501 destination_directory /path/to/slurm_params.sh /path/to/prepare_path.sh`
+`bash download_SRA_project.sh SRP324501 destination_directory 'WGA,WGS' /path/to/slurm_params.sh /path/to/prepare_path.sh`
 
 download the sequences and metadata from a single sample, when the software is already in your PATH:
 
