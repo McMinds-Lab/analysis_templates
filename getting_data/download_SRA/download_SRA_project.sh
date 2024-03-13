@@ -1,4 +1,4 @@
-## three or four positional arguments specifying 1) an SRA project ID starting with SRP, 2) the output directory, 3) either a path SLURM parameters file or the word 'false' (If false script will simply download samples with for loop and won't submit a slurm job), and 4) optional path to a script to set your PATH variable to include the entrez-direct and sratools packages
+## three or four positional arguments specifying 1) an SRA project ID starting with SRP, 2) the output directory, 3) either a path SLURM parameters file or the word 'true' or the word 'false' (If true, default slurm parameters will be used; if false, script will simply download samples with for loop and won't submit a slurm job), and 4) optional path to a script to set your PATH variable to include the entrez-direct and sratools packages
 ## make sure you have 'prepare_path.sh' and 'slurm_params.sh' in the same directory as this script, if you need them (example files are included as 'prepare_path.sh.txt' and 'slurm_params.sh.txt')
 
 srp=$1
@@ -34,8 +34,10 @@ if [ ${slurm_params} != "false" ]; then
   ## create a logs directory
   mkdir -p ${outdir}/logs
 
-  # get slurm parameters
-  source ${slurm_params}
+  if [ ${slurm_params} != "true" ]; then
+    # get slurm parameters
+    source ${slurm_params}
+  fi
 
   ## create a slrum submission script (strip indentation with sed before saving)
   cat <<__EOF | sed -e 's/^  //' > ${outdir}/download_SRA_samples.sbatch
