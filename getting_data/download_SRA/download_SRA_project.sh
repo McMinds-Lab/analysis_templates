@@ -17,7 +17,7 @@ if [ $# -ge 4 ]; then
 fi
 
 ## this tells the script where to find this file and download_SRA_sample.sh
-scriptdir=$(dirname $( cd "$(dirname "$0")" ; pwd -P ))
+scriptdir=$( cd "$(dirname "$0")" ; pwd -P )
 
 ## prepare output directory
 mkdir -p ${outdir}
@@ -48,7 +48,7 @@ if [ ${slurm_params} != "false" ]; then
   #SBATCH --mem=${mem:-1G}
   #SBATCH --job-name=${job_name:-download_SRA_project}
   #SBATCH --output=${outdir}/logs/download_SRA_project_%a.log
-  #SBATCH --array=0-$((${#samples[@]}-1))%${nthreads:-1}
+  #SBATCH --array=0-$((${#samples[@]}-1))%${nthreads:-10}
 
   ## use task ID to assign each batch job a single unique sample
   samples=(${samples[@]})
