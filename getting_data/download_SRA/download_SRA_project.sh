@@ -63,7 +63,7 @@ if [ ${slurm_params} != "false" ]; then
     sleep \$((\$SLURM_ARRAY_TASK_ID * 10))
   fi
 
-  bash ${scriptdir}/download_SRA_sample.sh \${sample} \${biosample} \${subdir} ${prepare_path}
+  bash ${outdir}/download_SRA_sample.sh \${sample} \${biosample} \${subdir} ${prepare_path}
 
 __EOF
 
