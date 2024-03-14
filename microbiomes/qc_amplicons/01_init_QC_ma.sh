@@ -124,7 +124,7 @@ for file in ${indir}/*_R1_001.fastq.gz; do
         --fastx_getseqs ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R1.fastq \
         --label_substr_match \
         --labels ${outdir}/01_init_QC/merged/\${sampleid}_merged_labels.txt \
-        --notmatchedfq ${outdir}/01_init_QC/merged/\${sampleid}_tmp.fastq.gz
+        --notmatchedfq ${outdir}/01_init_QC/merged/\${sampleid}_tmp.fastq
       
       source activate cutadapt-4.6
       cutadapt \
@@ -132,7 +132,7 @@ for file in ${indir}/*_R1_001.fastq.gz; do
         --minimum-length 100 \
         --cores=${nthreads} \
         -a $(tr ACGTRYSWKMBVDHacgtryswkmbvdh TGCAYRSWMKVBHDtgcayrswmkvbhd <<< ${primer_rev} | rev) \
-        ${outdir}/01_init_QC/merged/\${sampleid}_tmp.fastq.gz |
+        ${outdir}/01_init_QC/merged/\${sampleid}_tmp.fastq |
       gzip --best >> ${outdir}/01_init_QC/merged/\${sampleid}.fastq.gz
   
       rm ${outdir}/01_init_QC/merged/\${sampleid}_tmp.fastq.gz
