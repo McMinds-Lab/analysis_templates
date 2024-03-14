@@ -174,6 +174,7 @@ done
 
 rm ${outdir}/01_init_QC/merged/*unmerged*
 rm ${outdir}/01_init_QC/merged/*latest*
+rm ${outdir}/01_init_QC/merged/*_merged_labels.txt
 
 EOF
 
