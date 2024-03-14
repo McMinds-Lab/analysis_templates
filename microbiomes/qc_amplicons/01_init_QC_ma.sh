@@ -135,7 +135,7 @@ for file in ${indir}/*_R1_001.fastq.gz; do
         ${outdir}/01_init_QC/merged/\${sampleid}_tmp.fastq |
       gzip --best >> ${outdir}/01_init_QC/merged/\${sampleid}.fastq.gz
   
-      rm ${outdir}/01_init_QC/merged/\${sampleid}_tmp.fastq.gz
+      rm ${outdir}/01_init_QC/merged/\${sampleid}_tmp.fastq
 
     else
 
