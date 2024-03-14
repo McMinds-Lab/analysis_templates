@@ -100,6 +100,8 @@ for file in ${indir}/*_R1_001.fastq.gz; do
       --fastqout_notmerged_rev ${outdir}/01_init_QC/merged/\${sampleid}_tmp_R2.fastq \
       --fastqout - | gzip --best >> ${outdir}/01_init_QC/merged/\${sampleid}.fastq.gz
       
+      rm ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_Q\${thresh}t_R1.fastq
+      rm ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_Q\${thresh}t_R2.fastq
       mv -f ${outdir}/01_init_QC/merged/\${sampleid}_tmp_R1.fastq ${outdir}/01_init_QC/merged/\${sampleid}_latest_R1.fastq
       mv -f ${outdir}/01_init_QC/merged/\${sampleid}_tmp_R2.fastq ${outdir}/01_init_QC/merged/\${sampleid}_latest_R2.fastq
       
