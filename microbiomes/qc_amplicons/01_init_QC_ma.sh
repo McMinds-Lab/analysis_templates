@@ -38,7 +38,6 @@ mkdir -p ${outdir}/01_init_QC/merged
 # trim primers from sequences and discard any sequences that don't contain both full primers
 module purge
 module load hub.apps/anaconda3
-source activate cutadapt-3.5
 
 for file in ${indir}/*_R1_001.fastq.gz; do
 
@@ -47,7 +46,7 @@ for file in ${indir}/*_R1_001.fastq.gz; do
   sampleid=\${filename/_L001_R1*/}
   
   # trim primers and keep only the reads with the primers at exactly the beginning
-  source activate cutadapt-3.5
+  source activate cutadapt-4.6
   cutadapt \
     -e 0.25 \
     --cores=${nthreads} \
@@ -117,12 +116,24 @@ for file in ${indir}/*_R1_001.fastq.gz; do
     if [ "${maxee_rate}" = "fwd" ]; then
   
       echo 'adding unmerged forward reads\n'
-      
+        
+      source activate vsearch
       vsearch \
         --fastx_getseqs ${outdir}/01_init_QC/merged/\${sampleid}_unmerged_R1.fastq \
         --label_substr_match \
         --labels ${outdir}/01_init_QC/merged/\${sampleid}_merged_labels.txt \
-        --notmatchedfq - | gzip --best >> ${outdir}/01_init_QC/merged/\${sampleid}.fastq.gz
+        --notmatchedfq ${outdir}/01_init_QC/merged/\${sampleid}_tmp.fastq.gz
+      
+      source activate cutadapt-4.6
+      cutadapt \
+        -e 0.5 \
+        --minimum-length 100
+        --cores=${nthreads} \
+        -a $(tr ACGTRYSWKMBVDHacgtryswkmbvdh TGCAYRSWMKVBHDtgcayrswmkvbhd <<< ${primer_rev} | rev) \
+        ${outdir}/01_init_QC/merged/\${sampleid}_tmp.fastq.gz |
+      gzip --best >> ${outdir}/01_init_QC/merged/\${sampleid}.fastq.gz
+  
+      rm ${outdir}/01_init_QC/merged/\${sampleid}_tmp.fastq.gz
 
     else
 
