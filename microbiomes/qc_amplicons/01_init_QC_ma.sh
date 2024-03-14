@@ -129,7 +129,7 @@ for file in ${indir}/*_R1_001.fastq.gz; do
       source activate cutadapt-4.6
       cutadapt \
         -e 0.5 \
-        --minimum-length 100
+        --minimum-length 100 \
         --cores=${nthreads} \
         -a $(tr ACGTRYSWKMBVDHacgtryswkmbvdh TGCAYRSWMKVBHDtgcayrswmkvbhd <<< ${primer_rev} | rev) \
         ${outdir}/01_init_QC/merged/\${sampleid}_tmp.fastq.gz |
