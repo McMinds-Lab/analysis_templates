@@ -28,6 +28,8 @@ Here's a list of resources my students and I have found useful for learning the 
 
 ### Stats
 
+[Experimental design in ecology](https://doi.org/10.1111/ele.14400)
+
 [General principles and great examples](https://betanalpha.github.io/)
 
 [Why are you doing stats](https://arxiv.org/abs/2309.06668)
