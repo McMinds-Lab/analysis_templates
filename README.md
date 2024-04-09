@@ -34,6 +34,8 @@ Here's a list of resources my students and I have found useful for learning the 
 
 [Why are you doing stats](https://arxiv.org/abs/2309.06668)
 
+[All basic stats use linear models](https://lindeloev.github.io/tests-as-linear/)
+
 [Linear models / GLMMs](https://trialsjournal.biomedcentral.com/articles/10.1186/s13063-022-06097-z)
 
 [Permutation testing, bootstrapping, resampling](https://stats.stackexchange.com/a/140590)
