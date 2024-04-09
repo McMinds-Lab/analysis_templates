@@ -65,3 +65,5 @@ https://betanalpha.github.io/
 #### In Markdown
 
 https://www.markdownguide.org/basic-syntax/  
+
+[Add fancy equations to markdown](https://www.fabriziomusacchio.com/blog/2021-08-10-How_to_use_LaTeX_in_Markdown/)
