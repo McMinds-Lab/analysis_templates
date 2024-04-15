@@ -34,13 +34,15 @@ dada_merged <- dada2::dada(derepped, err = err_merged_reads, pool = 'pseudo', mu
 seqtab <- dada2::makeSequenceTable(dada_merged)
 rownames(seqtab) <- sample.names
 
-write.table(seqtab, file.path(outdir, 'asv.tsv'), sep='\t')
-
 ## write fasta with ASV representative seqs
 dna <- Biostrings::DNAStringSet(dada2::getSequences(seqtab))
 names(dna) <- sprintf(paste0('ASV%0',floor(log10(length(dna))) + 1,'d'),1:length(dna))
-
 Biostrings::writeXStringSet(dna, file.path(outdir, 'ASVs.fasta.gz'), compress = TRUE, format = 'fasta', width = 10000)
 
+## rename asvs and write ASV table
+colnames(seqtab) <- names(dna)
+write.table(seqtab, file.path(outdir, 'asv.tsv'), sep='\t')
+
+## save entire environment
 save.image(file.path(outdir, 'ASVs.RData'))
 
