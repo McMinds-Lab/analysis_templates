@@ -133,6 +133,9 @@ cat \
   <(multi_join \${files[@]} | tr ' ' '\t') |
   pigz > ${subdir}/counts_matrix.tsv.gz
 
+rm -rf ${subdir}/counts
+rm -rf ${subdir}/temp
+
 EOF
 
 ## run the samplewise commands as a slurm array, capturing the jobid, and run the merging code after waiting for the entire array to finish

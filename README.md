@@ -28,13 +28,21 @@ Here's a list of resources my students and I have found useful for learning the 
 
 ### Stats
 
+[Experimental design in ecology](https://doi.org/10.1111/ele.14400)
+
 [General principles and great examples](https://betanalpha.github.io/)
+
+[Why are you doing stats](https://arxiv.org/abs/2309.06668)
+
+[All basic stats use linear models](https://lindeloev.github.io/tests-as-linear/)
 
 [Linear models / GLMMs](https://trialsjournal.biomedcentral.com/articles/10.1186/s13063-022-06097-z)
 
 [Permutation testing, bootstrapping, resampling](https://stats.stackexchange.com/a/140590)
 
 #### Good analysis of how stats are related to causal inference
+
+[Mixed effects models and DAGs](https://www.biorxiv.org/content/10.1101/2024.02.26.582072v3)
 
 [Inferring Multiple Causality: The Limitations of Path Analysis](https://www.jstor.org/stable/pdf/2389934.pdf?refreqid=excelsior%3A510214cf80f9fb879aaee87301ea1e5d&ab_segments=&origin=&initiator=&acceptTC=1)
 
@@ -57,3 +65,5 @@ https://betanalpha.github.io/
 #### In Markdown
 
 https://www.markdownguide.org/basic-syntax/  
+
+[Add fancy equations to markdown](https://www.fabriziomusacchio.com/blog/2021-08-10-How_to_use_LaTeX_in_Markdown/)
