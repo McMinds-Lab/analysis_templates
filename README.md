@@ -51,6 +51,7 @@ Here's a list of resources my students and I have found useful for learning the 
 #### Shell and general HPC use
 
 [My own explainer for setting up a computer](computational_environment.md)
+
 [HPC Best Practices](https://arxiv.org/abs/2101.06737)
 
 #### In R
