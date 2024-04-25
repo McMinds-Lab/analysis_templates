@@ -20,6 +20,9 @@ At the moment, I pretty much put all of my shell customizations in `.bash_profil
 I log into the same servers over and over again, all the time. Rather than constantly having to type `ssh username@host.domain` all the time, I add `alias ssh_xx='ssh username@host.domain'` to my `.bash_profile` so all I have to do is type `ssh_xx` as a shortcut.
 This is especially useful when the server uses a special port or other options, or when you can use an ssh key instead of a password. The alias uses the appropriate options for the ssh command, which can be lengthy.
 
+# Terminal customization
+I am one of those terrible coders who gets trapped in `vi`/`vim` all the time (reminder: `:q` to escape!). I like the simplicity of `nano`. So I put `export EDITOR=nano` in my `.bash_profile` so it's the default, and I don't have to worry when tools like `git commit` want input.
+
 # R convenience
 I have the line `alias newr='open -n -a R.app'` in my `.bash_profile` so it's easy to open new windows of the R app. I should just use Rstudio more, but when I'm just exploring some quick data informally, I find that too complicated / too much screenspace. I often just open a new terminal window and type 'R' to do things interatively there, instead of the app, though.
 
