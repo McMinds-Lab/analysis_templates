@@ -11,7 +11,7 @@ meta <- read.table(args[[1]], sep='\t', header=TRUE)
 idx_tab <- read.table(args[[2]], sep=' ', header=FALSE)
 fwd_filter <- strsplit(args[[3]],',')[[1]]
 rev_filter <- strsplit(args[[4]],',')[[1]]
-out_fp <- args[[4]]
+out_fp <- args[[5]]
 
 meta_filt <- meta
 if(length(fwd_filter) > 0) {
