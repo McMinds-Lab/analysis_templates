@@ -35,7 +35,7 @@ dada_merged <- dada2::dada(derepped, err = err_merged_reads, pool = 'pseudo', mu
 
 #Construct ASV table
 seqtab <- dada2::makeSequenceTable(dada_merged)
-rownames(seqtab) <- sample.names
+rownames(seqtab) <- sample.names[file.exists(filt_reads)]
 
 ## write fasta with ASV representative seqs
 dna <- Biostrings::DNAStringSet(dada2::getSequences(seqtab))
