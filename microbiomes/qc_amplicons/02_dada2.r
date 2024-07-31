@@ -30,7 +30,7 @@ dada2::plotErrors(err_merged_reads, nominalQ=TRUE)
 dev.off()
 
 #denoise
-derepped <- dada2::derepFastq(filt_reads_exist)
+derepped <- dada2::derepFastq(filt_reads_exist, qualityType='FastqQuality')
 dada_merged <- dada2::dada(derepped, err = err_merged_reads, pool = 'pseudo', multithread = nthreads)
 
 #Construct ASV table
